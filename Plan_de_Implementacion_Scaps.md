@@ -2,7 +2,7 @@
 
 ### E-commerce de gorras con presentación de productos en 3D
 
-Desarrollo de Software Comisión S3:** Nicolás Yorlano · Pablo Alessandrini Flores · Gonzalo Lorenzo · Mauro Casale
+Desarrollo de Software Comisión S31:** Nicolás Yorlano · Pablo Alessandrini Flores · Gonzalo Lorenzo · Mauro Casale
 **Repositorio:** https://github.com/NicolasYorlano/Scaps
 **Salida a producción:** 8 de octubre de 2026
 **Ejecución:** sprints de 2 semanas (15 de junio – 8 de octubre de 2026)
