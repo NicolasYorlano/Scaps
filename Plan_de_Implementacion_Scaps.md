@@ -11,7 +11,7 @@
 
 ## 1. Resumen ejecutivo
 
-Scaps es el e-commerce de la marca de productos capilares Scaps que proyecta ampliar su catálogo (a futuro: pilusos, pasamontañas, boinas, viseras). El plan construye una **plataforma que escala a múltiples productos** desde el inicio, aunque hoy la marca tenga un solo modelo, y su sello distintivo es la **presentación de productos en 3D interactivo**.
+Scaps es el e-commerce de una marca de gorras que proyecta ampliar su catálogo (a futuro: pilusos, pasamontañas, boinas, viseras). El plan construye una **plataforma que escala a múltiples productos** desde el inicio, aunque hoy la marca tenga un solo modelo, y su sello distintivo es la **presentación de productos en 3D interactivo**.
 
 El objetivo es salir a producción el 8 de octubre con un MVP **de nivel de producción**: no un prototipo que funciona en la demo, sino software sólido en seguridad, pagos, manejo de errores y pruebas.
 
@@ -44,18 +44,18 @@ Prioriza un único lenguaje (TypeScript) de punta a punta.
 | 3D | React Three Fiber (R3F) + drei, sobre Three.js | Visor de solo visualización: cargar modelo, rotar y cambiar de producto. |
 | Estilos | Tailwind CSS | Maquetado veloz. |
 | Estado | Zustand | — |
-| Backend | NestJS *o* Supabase | El margen del cronograma permite una implementación propia con NestJS. |
-| Base de datos | PostgreSQL | Incluida en Supabase, o gestionada en Neon. |
-| ORM | Prisma | Solo si se usa NestJS. |
-| Autenticación | JWT + roles, o Supabase Auth / Clerk | — |
+| Backend | NestJS | Implementación propia. Mismo lenguaje (TypeScript) que el frontend. |
+| Base de datos | PostgreSQL | Gestionada en Neon (o en Railway / Render). |
+| ORM | Prisma | Tipado de punta a punta y migraciones simples. |
+| Autenticación | JWT + roles | Implementación propia en NestJS (guards + DTOs). |
 | Pagos | Mercado Pago Checkout Pro | Estándar en Argentina; versión por redirección. |
-| Modelos 3D | Archivos `.glb` + Cloudflare R2 / Supabase Storage | Comprimir con Draco. |
+| Modelos 3D | Archivos `.glb` + Cloudflare R2 | Comprimir con Draco. |
 | Hosting frontend | Vercel | Despliegue automático desde GitHub. |
-| Hosting backend | Railway / Render, o Supabase | — |
+| Hosting backend | Railway / Render | — |
 | CI/CD | GitHub Actions | Pruebas y despliegue en cada push. |
 | Gestión de tareas | GitHub Projects | Integrado con issues y Pull Requests. |
 
-**Aceleradores opcionales:** Supabase Auth o Clerk para la autenticación, un template (Refine, React Admin o Tailwind) para el panel administrativo, y Checkout Pro para pagos. Ahorran tiempo si se desea, pero el plazo disponible permite implementaciones propias si la cátedra lo exige.
+**Acelerador opcional:** para el panel administrativo se puede usar un template (Refine, React Admin o uno de Tailwind) en lugar de construirlo de cero. Es opcional y ayuda a ganar tiempo en la parte de menor prioridad.
 
 ---
 
@@ -64,7 +64,7 @@ Prioriza un único lenguaje (TypeScript) de punta a punta.
 Scaps combina una **landing inmersiva con un catálogo clásico**, bajo un **navbar persistente** (logo + navegación). Las vistas son:
 
 - **Landing:** al entrar, un visor 3D muestra el producto destacado (configurable por el administrador). El usuario lo gira y, con un botón, pasa al siguiente producto.
-- **Catálogo:** vista clásica en **cards**, con búsqueda y filtros. Al seleccionar una card, se pueden ver las imagenes del producto o abrir el visor 3D de ese producto. Las cards y el botón "siguiente" del visor son dos caminos complementarios para recorrer el catálogo.
+- **Catálogo:** vista clásica en **cards**, con búsqueda y filtros. Al seleccionar una card, se abre el visor 3D de ese producto. Las cards y el botón "siguiente" del visor son dos caminos complementarios para recorrer el catálogo.
 - **Carrito**, **Login** (página propia) y **Dashboard administrativo**.
 
 ```
@@ -77,7 +77,7 @@ NAVBAR persistente (logo + navegación)
 
 FRONTEND (React + Vite — Vercel)
         │  REST + JWT
-BACKEND (NestJS o Supabase)
+BACKEND (NestJS)
   Auth · Productos · Carrito · Órdenes · Stock · Métricas
         │
    PostgreSQL   +   Mercado Pago (checkout + webhook de confirmación)
@@ -93,11 +93,11 @@ scaps/
 ├─ apps/
 │  ├─ web/   → React + Vite   (Vercel)
 │  └─ api/   → NestJS         (Railway / Render)
-└─ packages/
-   └─ shared/ → tipos compartidos (opcional)
+├─ package.json        (workspaces: ["apps/*"])
+└─ config raíz         (ESLint, Prettier, .gitignore)
 ```
 
-Para un equipo chico alcanza con **npm o pnpm workspaces**; no se incorporan herramientas de monorepo como Turborepo o Nx. La única configuración extra de separar los despliegues es el **CORS** en el backend (definir qué orígenes acepta), que es menor y está muy documentado. Si se opta por Supabase, no hay backend propio que desplegar: el frontend va a Vercel y Supabase gestiona base de datos, autenticación y API —la alternativa con menos piezas para mantener.
+Para un equipo chico alcanza con **npm workspaces** (viene con Node, sin nada nuevo que instalar ni aprender); no se incorporan herramientas de monorepo como Turborepo o Nx. La única configuración extra de separar los despliegues es el **CORS** en el backend (definir qué orígenes acepta), que es menor y está muy documentado.
 
 ---
 
@@ -105,7 +105,7 @@ Para un equipo chico alcanza con **npm o pnpm workspaces**; no se incorporan her
 
 - **Sprints de 2 semanas**, con planificación, revisión y retrospectiva.
 - **Daily breve**, asíncrono por Discord si los horarios no coinciden.
-- **Tablero en GitHub Projects:** `Backlog → Por hacer → En curso → En revisión → Hecho`.
+- **Tablero en GitHub Projects:** `Backlog → To Do → In Progress → In Review → Done`.
 - **Control de versiones:** rama `main` protegida y siempre desplegable; una rama por funcionalidad; Pull Request con **revisión de un compañero** antes de integrar.
 - **Definición de "Hecho":** implementado, revisado, probado e integrado a `main` sin romper el despliegue.
 
@@ -160,7 +160,7 @@ El equipo trabaja con un **modelo de tareas (pull), no con roles fijos**. No se 
 
 Para que el modelo funcione —y no derive en que las tareas fáciles se eligen y las críticas (pagos, auth, despliegue) quedan sin tomar— se apoya en pocas reglas livianas:
 
-- **Backlog claro y en piezas chicas.** Cada tarea se redacta para completarse en pocos días, con descripción concreta y criterio de "hecho". Se agrupan por área (Auth, Catálogo, Visor 3D, Carrito, Pagos, Dashboard, Infraestructura), lo que organiza *el trabajo* y no a *las personas*, y se etiquetan por dificultad para que cada uno elija según su nivel.
+- **Backlog claro y en piezas chicas.** Cada tarea se redacta para completarse en pocos días, con descripción concreta y criterio de "hecho". Se agrupan por área (Auth, Catálogo, Visor 3D, Carrito, Pagos, Dashboard, Infraestructura), lo que organiza *el trabajo* y no a *las personas*.
 - **Tablero priorizado, una tarea en curso por persona.** En GitHub Projects, las tareas listas para tomar están ordenadas por prioridad. Cada uno toma de arriba hacia abajo y mantiene una sola tarea en curso hasta terminarla. Tomar siempre de las prioritarias evita que lo crítico quede para el final.
 - **Lo crítico no espera a que alguien se ofrezca.** Si una tarea prioritaria no la toma nadie, se reparte por turno (round-robin) en la sincronización. Ese es el "te toca por organización": un mecanismo de reparto, no una jerarquía.
 - **Coordinador rotativo (logística, no jefatura).** Cada sprint, una persona distinta mantiene el tablero al día, corre una sincronización breve (15 min, puede ser asíncrona por Discord) y hace visibles los bloqueos y las tareas críticas sin tomar. No decide sobre los demás; solo se asegura de que el trabajo se vea y fluya. Rota para que el peso sea parejo.
@@ -179,7 +179,7 @@ Dos notas para un equipo chico y con disponibilidad despareja:
 |---|---|---|
 | Origen de los modelos 3D sin definir | Alto | Decidir ya: modelar en Blender, comprar o que los provea la marca. Sigue siendo necesario aunque el visor sea solo de visualización. |
 | Integración con Mercado Pago | Alto | Checkout Pro (redirección), entorno de pruebas temprano, stock mediante webhook. |
-| Requisitos de la cátedra sobre auth/backend sin confirmar | Medio | Confirmar esta semana; el margen del cronograma permite implementación propia si se exige. |
+| Requisitos de la cátedra sobre auth/backend sin confirmar | Bajo | Se optó por construir el backend (NestJS) y la autenticación (JWT + roles): satisface el requisito en cualquier caso. Confirmar con la cátedra de todos modos. |
 | La app se ve incompleta con un solo producto | Medio | Construir para N productos, cargar datos de ejemplo y ocultar controles que no apliquen (ej. "siguiente" con un único producto). |
 | Sostener el nivel de producción bajo presión de tiempo | Medio | Revisión por Pull Request desde el inicio; sprint propio de endurecimiento y QA. |
 | Parciales en la etapa final | Bajo-medio | La ventana de contingencia (fines de septiembre – octubre) absorbe la carga académica. |
@@ -207,13 +207,12 @@ Para que el entregable sea de producción y no un prototipo, lo construido debe 
 
 1. Definir el origen de los modelos 3D.
 2. Confirmar los requisitos de la cátedra sobre autenticación y backend.
-3. Cerrar el stack a la luz de los dos puntos anteriores.
-4. Estructurar el repositorio con ESLint, Prettier y un workflow básico de GitHub Actions.
-5. Diseñar el modelo de datos: usuarios, roles, productos (con marca de destacado), stock, carrito y órdenes. **Definir si las gorras tienen variantes (color, talle, tipo) y contemplarlas desde la base de datos.**
-6. Definir el contrato de la API para habilitar el trabajo en paralelo.
-7. Elaborar los wireframes: landing/visor, catálogo, ficha → visor, carrito, login y dashboard.
-8. Cargar el backlog del MVP en GitHub Projects junto con los datos de ejemplo.
-9. Ejecutar el POC del visor: cargar una gorra `.glb` y rotarla.
+3. Estructurar el repositorio con ESLint, Prettier y un workflow básico de GitHub Actions.
+4. Diseñar el modelo de datos: usuarios, roles, productos (con marca de destacado), stock, carrito y órdenes. **Definir si las gorras tienen variantes (color, talle, tipo) y contemplarlas desde la base de datos.**
+5. Definir el contrato de la API para habilitar el trabajo en paralelo.
+6. Elaborar los wireframes: landing/visor, catálogo, ficha → visor, carrito, login y dashboard.
+7. Cargar el backlog del MVP en GitHub Projects junto con los datos de ejemplo.
+8. Ejecutar el POC del visor: cargar una gorra `.glb` y rotarla.
 
 ---
 
