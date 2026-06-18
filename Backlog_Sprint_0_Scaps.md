@@ -1,6 +1,8 @@
 # Backlog Sprint 0 — Scaps
 
-Descripción de cada tarea del Sprint 0, para que quien la tome sepa qué hacer y cuándo está terminada. Cuando alguien agarra una tarea, convierte la tarjeta *draft* en issue, pega acá su descripción y le aplica los labels indicados (área + prioridad).
+Backlog del Sprint 0 con la descripción de cada tarea, para armar el tablero del Project.
+
+Las dos secciones de abajo son las columnas del tablero: **To Do** (se pueden tomar ya) y **Backlog** (esperan una dependencia); dentro de To Do, el orden es la prioridad. Creá una tarjeta por tarea con su título y, en la descripción, *Qué hacer* y *Hecho cuando*. Los **labels** (área + prioridad) se aplican al convertir la tarjeta en issue, cuando alguien la toma —las tarjetas *draft* no aceptan labels.
 
 Las tareas marcadas como **consulta** o **configuración** no son código ni Pull Request: son verificaciones o ajustes en GitHub.
 
