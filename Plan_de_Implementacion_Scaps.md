@@ -52,7 +52,6 @@ Prioriza un único lenguaje (TypeScript) de punta a punta.
 | Modelos 3D e imágenes | `.glb` de un banco libre (CC0) + imágenes, en Cloudflare R2 | Comprimir los `.glb` con Draco. |
 | Hosting frontend | Vercel | Despliegue automático desde GitHub. |
 | Hosting backend | Railway / Render | — |
-| CI/CD | GitHub Actions | Pruebas y despliegue en cada push. |
 | Gestión de tareas | GitHub Projects | Integrado con issues y Pull Requests. |
 
 ---
@@ -115,8 +114,8 @@ Para un equipo chico alcanza con **npm workspaces** (viene con Node, sin nada nu
 
 | Sprint | Fechas | Foco | Entregables clave |
 |---|---|---|---|
-| **0** | 15–28 jun | Setup + POC del visor 3D | Repositorio + tooling + CI, **modelos `.glb` de un banco libre**, modelo de datos (diagrama entidad-relación), contrato de API, wireframes. **POC: cargar un `.glb` y rotarlo.** |
-| **1** | 29 jun – 12 jul | Autenticación + base del backend ‖ base del frontend | Auth con roles, CRUD de productos (API), **pipeline de despliegue activo** ‖ estructura React + landing. |
+| **0** | 15–28 jun | Setup + POC del visor 3D | Repositorio + tooling, **modelos `.glb` de un banco libre**, modelo de datos (diagrama entidad-relación), contrato de API, wireframes. **POC: cargar un `.glb` y rotarlo.** |
+| **1** | 29 jun – 12 jul | Autenticación + base del backend ‖ base del frontend | Auth con roles, CRUD de productos (API), **despliegue en Vercel/Railway activo** ‖ estructura React + landing. |
 | **2** | 13–26 jul | Catálogo + ficha + visor 3D ‖ datos | Catálogo en cards (búsqueda, filtros y ordenamiento), ficha de producto con galería de imágenes y opción **Ver en 3D** (visor: rotar) ‖ modelo de datos + stock. |
 | **3** | 27 jul – 9 ago | Carrito + pagos | Carrito, checkout, **Mercado Pago en entorno de pruebas**, **descuento automático de stock** al confirmarse el pago. |
 | **4** | 10–23 ago | Dashboard administrativo | CRUD de productos (interfaz), listado de órdenes, **selección del producto destacado**, métricas mínimas, Mercado Pago en producción. |
@@ -196,7 +195,7 @@ Para que el entregable sea de producción y no un prototipo, lo construido debe 
 - **Pagos confiables:** el stock se descuenta solo con la confirmación de Mercado Pago (webhook); manejo de pagos fallidos o abandonados.
 - **Robustez:** manejo de errores y estados de carga en toda la interfaz; la app no se rompe ante datos faltantes o respuestas lentas.
 - **Pruebas:** cobertura de los caminos críticos (login, checkout, descuento de stock).
-- **Calidad de código:** revisión por Pull Request, linter y formateo automáticos (ESLint + Prettier), integración y despliegue continuos.
+- **Calidad de código:** revisión por Pull Request, linter y formateo automáticos (ESLint + Prettier).
 - **Experiencia:** diseño responsive, HTTPS/SSL, performance del visor 3D y de las imágenes del catálogo.
 - **Documentación:** README, guía de instalación y contrato de la API.
 
@@ -206,7 +205,7 @@ Para que el entregable sea de producción y no un prototipo, lo construido debe 
 
 1. Conseguir modelos `.glb` de un banco libre (CC0) para el catálogo de demo.
 2. Confirmar los requisitos de la cátedra sobre autenticación y backend.
-3. Estructurar el repositorio con ESLint, Prettier y un workflow básico de GitHub Actions.
+3. Estructurar el repositorio con ESLint y Prettier.
 4. Diseñar el modelo de datos: usuarios, roles, productos (con marca de destacado, imágenes y modelo `.glb`), stock, carrito y órdenes.
 5. Definir el contrato de la API para habilitar el trabajo en paralelo.
 6. Elaborar los wireframes: landing/visor, catálogo, ficha de producto (galería de imágenes + opción 3D), carrito, login y dashboard.

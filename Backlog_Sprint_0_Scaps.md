@@ -70,12 +70,6 @@ Las tareas marcadas como **consulta** o **configuración** no son código ni Pul
 - **Qué hacer:** crear la app en `apps/api` con NestJS + TypeScript y un endpoint de health check.
 - **Hecho cuando:** el backend levanta en local y `GET /health` responde 200.
 
-### [infra] Configurar CI en GitHub Actions
-- **Labels:** `infra` · `prioridad-alta`
-- **Depende de:** Scaffold del frontend y del backend
-- **Qué hacer:** un workflow que en cada PR corra lint + build de `web` y `api`.
-- **Hecho cuando:** el check de CI aparece en los PR y queda en verde cuando todo compila y pasa el lint.
-
 ### [infra] Variables de entorno + .env.example
 - **Labels:** `infra` · `prioridad-media`
 - **Depende de:** Scaffold del frontend y del backend
