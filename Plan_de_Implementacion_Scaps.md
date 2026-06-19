@@ -92,6 +92,7 @@ scaps/
 ├─ apps/
 │  ├─ web/   → React + Vite   (Vercel)
 │  └─ api/   → NestJS         (Railway / Render)
+├─ docs/               (ERD, contrato de API, wireframes)
 ├─ package.json        (workspaces: ["apps/*"])
 └─ config raíz         (ESLint, Prettier, .gitignore)
 ```
@@ -178,7 +179,6 @@ Una nota para un equipo chico y con disponibilidad despareja:
 |---|---|---|
 | Disponibilidad de modelos 3D | Bajo | Resuelto: se usan modelos de un banco libre (CC0). Sin dependencia de modelar ni de conseguir gorras reales. |
 | Integración con Mercado Pago | Alto | Checkout Pro (redirección), entorno de pruebas temprano, stock mediante webhook. |
-| Requisitos de la cátedra sobre auth/backend sin confirmar | Bajo | Se optó por construir el backend (NestJS) y la autenticación (JWT + roles): satisface el requisito en cualquier caso. Confirmar con la cátedra de todos modos. |
 | Sostener el nivel de producción bajo presión de tiempo | Medio | Revisión por Pull Request desde el inicio; sprint propio de endurecimiento y QA. |
 | Parciales en la etapa final | Bajo-medio | La ventana de contingencia (fines de septiembre – octubre) absorbe la carga académica. |
 | Crecimiento del alcance | Medio | MVP cerrado; lo nuevo va a la segunda etapa. |
@@ -204,13 +204,12 @@ Para que el entregable sea de producción y no un prototipo, lo construido debe 
 ## 11. Primeros pasos (Sprint 0)
 
 1. Conseguir modelos `.glb` de un banco libre (CC0) para el catálogo de demo.
-2. Confirmar los requisitos de la cátedra sobre autenticación y backend.
-3. Estructurar el repositorio con ESLint y Prettier.
-4. Diseñar el modelo de datos: usuarios, roles, productos (con marca de destacado, imágenes y modelo `.glb`), stock, carrito y órdenes.
-5. Definir el contrato de la API para habilitar el trabajo en paralelo.
-6. Elaborar los wireframes: landing/visor, catálogo, ficha de producto (galería de imágenes + opción 3D), carrito, login y dashboard.
-7. Cargar el backlog del MVP en GitHub Projects.
-8. Ejecutar el POC del visor: cargar un `.glb` del banco y rotarlo.
+2. Estructurar el repositorio con ESLint y Prettier.
+3. Diseñar el modelo de datos: usuarios, roles, productos (con marca de destacado, imágenes y modelo `.glb`), stock, carrito y órdenes.
+4. Definir el contrato de la API para habilitar el trabajo en paralelo.
+5. Elaborar los wireframes: landing/visor, catálogo, ficha de producto (galería de imágenes + opción 3D), carrito, login y dashboard.
+6. Cargar el backlog del MVP en GitHub Projects.
+7. Ejecutar el POC del visor: cargar un `.glb` del banco y rotarlo.
 
 ---
 
