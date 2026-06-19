@@ -31,12 +31,6 @@ Las tareas marcadas como **configuración** no son código ni Pull Request: son 
 - **Qué hacer:** diseñar el **ERD** (diagrama entidad-relación): definir las tablas/entidades del MVP, sus campos y cómo se relacionan entre sí. Entidades: usuarios, roles, productos (con marca de "destacado", imágenes y modelo `.glb`), stock, carrito y órdenes. Se puede dibujar en una herramienta como dbdiagram.io o draw.io.
 - **Hecho cuando:** hay un ERD (diagrama + descripción de entidades, campos y relaciones) acordado por el equipo y guardado en `docs/`.
 
-### [setup] Definir el contrato de la API
-- **Labels:** `setup` · `prioridad-alta`
-- **Depende de:** Modelo de datos (ERD)
-- **Qué hacer:** listar todos los **endpoints** (las direcciones que expone la API) del MVP y, para cada uno, anotar el método (GET, POST, etc.), la ruta, qué recibe (request) y qué devuelve (response). Ejemplo: `GET /products` → devuelve la lista de productos. Cubrir productos, auth, carrito y órdenes. Esto es lo que permite que front y back trabajen en paralelo contra una interfaz acordada.
-- **Hecho cuando:** hay un documento con los endpoints y sus formatos, acordado por el equipo y guardado en `docs/`.
-
 ### [setup] Diseñar los wireframes
 - **Labels:** `setup` · `prioridad-media`
 - **Qué hacer:** hacer bocetos simples (sin diseño fino, solo dónde va cada elemento) de las pantallas del MVP: landing (visor 3D del destacado + un **CTA** —botón de llamado a la acción— hacia el catálogo), catálogo en cards, ficha de producto (galería de imágenes + opción Ver en 3D), carrito, login y dashboard. Pueden ser en Figma, Excalidraw o incluso a mano y fotografiados.
@@ -45,6 +39,12 @@ Las tareas marcadas como **configuración** no son código ni Pull Request: son 
 ---
 
 ## Backlog — esperan que se libere una dependencia
+
+### [setup] Definir el contrato de la API
+- **Labels:** `setup` · `prioridad-alta`
+- **Depende de:** Modelo de datos (ERD)
+- **Qué hacer:** listar todos los **endpoints** (las direcciones que expone la API) del MVP y, para cada uno, anotar el método (GET, POST, etc.), la ruta, qué recibe (request) y qué devuelve (response). Ejemplo: `GET /products` → devuelve la lista de productos. Cubrir productos, auth, carrito y órdenes. Esto es lo que permite que front y back trabajen en paralelo contra una interfaz acordada.
+- **Hecho cuando:** hay un documento con los endpoints y sus formatos, acordado por el equipo y guardado en `docs/`.
 
 ### [setup] Configurar ESLint + Prettier compartidos
 - **Labels:** `setup` · `prioridad-alta`
