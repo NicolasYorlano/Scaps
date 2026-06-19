@@ -50,7 +50,7 @@ Prioriza un único lenguaje (TypeScript) de punta a punta.
 | Autenticación | JWT + roles | Implementación propia en NestJS (guards + DTOs). |
 | Pagos | Mercado Pago Checkout Pro | Estándar en Argentina; versión por redirección. |
 | Modelos 3D e imágenes | `.glb` de un banco libre (CC0) + imágenes, en Cloudflare R2 | Comprimir los `.glb` con Draco. |
-| Hosting frontend | Vercel | Despliegue automático desde GitHub. |
+| Hosting frontend | Vercel | Deploy automático al hacer push (función nativa de Vercel, sin pipeline de CI/CD). |
 | Hosting backend | Railway / Render | — |
 | Gestión de tareas | GitHub Projects | Integrado con issues y Pull Requests. |
 
@@ -122,7 +122,7 @@ Para un equipo chico alcanza con **npm workspaces** (viene con Node, sin nada nu
 | **4** | 10–23 ago | Dashboard administrativo | CRUD de productos (interfaz), listado de órdenes, **selección del producto destacado**, métricas mínimas, Mercado Pago en producción. |
 | **5** | 24 ago – 6 sep | Estabilización | Pruebas de caminos críticos (login, checkout, stock), diseño responsive, corrección de errores. → **Fin del MVP funcional.** |
 | **6** | 7–20 sep | Endurecimiento de producción | Seguridad (auth, pagos, validación de entradas), performance (carga del 3D e imágenes), accesibilidad básica, documentación, carga de productos de demo. |
-| **Contingencia + salida** | 21 sep – 8 oct | Margen + producción | Buffer para parciales y ajustes, UAT, despliegue a producción, dominio + SSL, monitoreo y preparación de la demo. **Entrega: 8/10.** |
+| **Contingencia + salida** | 21 sep – 8 oct | Margen + producción | Buffer para ajustes finales, UAT, despliegue a producción, dominio + SSL, monitoreo y preparación de la demo. **Entrega: 8/10.** |
 
 **Puntos a tener presentes:**
 
@@ -142,7 +142,7 @@ Para un equipo chico alcanza con **npm workspaces** (viene con Node, sin nada nu
 - Autenticación con roles (administrador / usuario).
 - Carrito + checkout + **pago real con Mercado Pago**.
 - Descuento automático de stock al confirmarse la compra.
-- Dashboard administrativo: CRUD de productos, listado de órdenes y selección del producto destacado.
+- Dashboard administrativo: CRUD de productos, listado de órdenes, selección del producto destacado y métricas mínimas.
 - Productos de demo ficticios (modelos de un banco libre), con la plataforma lista para cargar productos reales.
 
 **Segunda etapa (fuera de esta entrega):**
@@ -161,7 +161,7 @@ El equipo trabaja con un **modelo de tareas (pull), no con roles fijos**. No se 
 
 Para que el modelo funcione —y no derive en que las tareas fáciles se eligen y las críticas (pagos, auth, despliegue) quedan sin tomar— se apoya en pocas reglas livianas:
 
-- **Backlog claro y en piezas chicas.** Cada tarea se redacta para completarse en pocos días, con descripción concreta y criterio de "hecho". Se agrupan por área (Auth, Catálogo, Visor 3D, Carrito, Pagos, Dashboard, Infraestructura), lo que organiza *el trabajo* y no a *las personas*.
+- **Backlog claro y en piezas chicas.** Cada tarea se redacta para completarse en pocos días, con descripción concreta y criterio de "hecho". Se agrupan por área (Auth, Catálogo, Visor 3D, Carrito, Pagos, Dashboard, Infraestructura, Setup, Documentación), lo que organiza *el trabajo* y no a *las personas*.
 - **Tablero priorizado, una tarea en curso por persona.** En GitHub Projects, las tareas listas para tomar están ordenadas por prioridad. Cada uno toma de arriba hacia abajo y mantiene una sola tarea en curso hasta terminarla. Tomar siempre de las prioritarias evita que lo crítico quede para el final.
 - **Lo crítico no espera a que alguien se ofrezca.** Si una tarea prioritaria no la toma nadie, se reparte por turno (round-robin) en la sincronización. Ese es el "te toca por organización": un mecanismo de reparto, no una jerarquía.
 - **Coordinador rotativo (logística, no jefatura).** Cada sprint, una persona distinta mantiene el tablero al día, corre una sincronización breve (15 min, puede ser asíncrona por Discord) y hace visibles los bloqueos y las tareas críticas sin tomar. No decide sobre los demás; solo se asegura de que el trabajo se vea y fluya. Rota para que el peso sea parejo.
@@ -203,13 +203,7 @@ Para que el entregable sea de producción y no un prototipo, lo construido debe 
 
 ## 11. Primeros pasos (Sprint 0)
 
-1. Conseguir modelos `.glb` de un banco libre (CC0) para el catálogo de demo.
-2. Estructurar el repositorio con ESLint y Prettier.
-3. Diseñar el modelo de datos: usuarios, roles, productos (con marca de destacado, imágenes y modelo `.glb`), stock, carrito y órdenes.
-4. Definir el contrato de la API para habilitar el trabajo en paralelo.
-5. Elaborar los wireframes: landing/visor, catálogo, ficha de producto (galería de imágenes + opción 3D), carrito, login y dashboard.
-6. Cargar el backlog del MVP en GitHub Projects.
-7. Ejecutar el POC del visor: cargar un `.glb` del banco y rotarlo.
+El Sprint 0 es preparación: dejar el repo, el tooling y los acuerdos de diseño listos para construir. Incluye conseguir los modelos 3D, inicializar el monorepo, diseñar el modelo de datos y el contrato de la API, los wireframes y un POC del visor. **El detalle de cada tarea —con su criterio de "hecho" y sus dependencias— está en el backlog del Sprint 0** (`Backlog_Sprint_0_Scaps.md`), que es la fuente de verdad para el tablero.
 
 ---
 
