@@ -11,7 +11,7 @@
 
 ## 1. Resumen ejecutivo
 
-Scaps es un e-commerce de una marca de gorras que proyecta ampliar su catálogo (a futuro: pilusos, pasamontañas, boinas, viseras, etc). El plan construye una **plataforma que escala a múltiples productos** desde el inicio, aunque hoy la marca tenga un solo modelo, y suma un **visor de productos en 3D interactivo** como rasgo distintivo.
+Scaps es un e-commerce de una marca de gorras que proyecta ampliar su catálogo (a futuro: pilusos, pasamontañas, boinas, viseras, etc). El plan construye una **plataforma que escala a múltiples productos** desde el inicio, aunque hoy la marca tenga unos pocos modelos, y suma un **visor de productos en 3D interactivo** como rasgo distintivo.
 
 El objetivo es salir a producción el 8 de octubre con un MVP **de nivel de producción**: no un prototipo que funciona en la demo, sino software sólido en seguridad, pagos, manejo de errores y pruebas.
 
