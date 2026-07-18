@@ -1,0 +1,6 @@
+{
+  "name": "@scaps/web",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Frontend de Scaps (React + Vite + TS). Placeholder del monorepo; se completa en la tarea de scaffold del frontend."
+}
