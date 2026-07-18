@@ -1,0 +1,9 @@
+{
+  "name": "scaps",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Monorepo de Scaps — e-commerce de gorras con visor 3D. Workspaces: apps/web (frontend) y apps/api (backend).",
+  "workspaces": [
+    "apps/*"
+  ]
+}
