@@ -49,7 +49,7 @@ Prioriza un único lenguaje (TypeScript) de punta a punta.
 | ORM | Prisma | Tipado de punta a punta y migraciones simples. |
 | Autenticación | JWT + roles | Implementación propia en NestJS (guards + DTOs). |
 | Pagos | Mercado Pago Checkout Pro | Estándar en Argentina; versión por redirección. |
-| Modelos 3D e imágenes | `.glb` de un banco libre (CC0) + imágenes, en Cloudflare R2 | Comprimir los `.glb` con Draco. |
+| Modelos 3D e imágenes | `.glb` de un banco libre (CC0 y/o CC BY 4.0) + imágenes, en Cloudflare R2 | Comprimir los `.glb` con Draco. Los modelos CC BY requieren atribución (registrada en `docs/glb/Creditos_Modelos_3D_Scaps.pdf`). |
 | Hosting frontend | Vercel | Deploy automático al hacer push (función nativa de Vercel, sin pipeline de CI/CD). |
 | Hosting backend | Railway / Render | — |
 | Gestión de tareas | GitHub Projects | Integrado con issues y Pull Requests. |
@@ -181,7 +181,7 @@ Una nota para un equipo chico y con disponibilidad despareja:
 
 | Riesgo | Impacto | Mitigación |
 |---|---|---|
-| Disponibilidad de modelos 3D | Bajo | Resuelto: se usan modelos de un banco libre (CC0). Sin dependencia de modelar ni de conseguir gorras reales. |
+| Disponibilidad de modelos 3D | Bajo | Resuelto: se usan modelos de un banco libre (CC0 y/o CC BY 4.0). Sin dependencia de modelar ni de conseguir gorras reales. Los modelos CC BY exigen atribución en la app y el README, registrada en `docs/glb/Creditos_Modelos_3D_Scaps.pdf`. |
 | Integración con Mercado Pago | Alto | Checkout Pro (redirección), entorno de pruebas temprano, stock mediante webhook. |
 | Sostener el nivel de producción bajo presión de tiempo | Medio | Revisión por Pull Request desde el inicio; sprint propio de endurecimiento y QA. |
 | Parciales en la etapa final | Bajo-medio | La ventana de contingencia (fines de septiembre – octubre) absorbe la carga académica. |
@@ -207,7 +207,7 @@ Para que el entregable sea de producción y no un prototipo, lo construido debe 
 
 ## 11. Primeros pasos (Sprint 0)
 
-El Sprint 0 es preparación: dejar el repo, el tooling y los acuerdos de diseño listos para construir. Incluye conseguir los modelos 3D, inicializar el monorepo, diseñar el modelo de datos y el contrato de la API, los wireframes y un POC del visor. **El detalle de cada tarea —con su criterio de "hecho" y sus dependencias— está en el backlog del Sprint 0** (`Sprint-0-Scaps`), que es la fuente de verdad para el tablero.
+El Sprint 0 es preparación: dejar el repo, el tooling y los acuerdos de diseño listos para construir. Incluye conseguir los modelos 3D, inicializar el monorepo, diseñar el modelo de datos y el contrato de la API, los wireframes y un POC del visor. **El detalle de cada tarea —con su criterio de "hecho" y sus dependencias— está en el backlog del Sprint 0** (`docs/sprints/Sprint 0/Sprint-0-Scaps.pdf`), que es la fuente de verdad para el tablero.
 
 
 
