@@ -78,18 +78,18 @@ Los archivos `.env` están ignorados por git y **nunca deben subirse al reposito
 
 Desde la raíz, para todo el repositorio:
 
-| Comando          | Qué hace                                 |
-| ---------------- | ---------------------------------------- |
-| `npm run lint`   | Revisa el código de las dos aplicaciones |
-| `npm run format` | Formatea el código con Prettier          |
+| Comando | Qué hace |
+|---|---|
+| `npm run lint` | Revisa el código de las dos aplicaciones |
+| `npm run format` | Formatea el código con Prettier |
 
 Para una aplicación en particular:
 
-| Comando                          | Qué hace                     |
-| -------------------------------- | ---------------------------- |
-| `npm run build -w @scaps/web`    | Compila el frontend          |
-| `npm run build -w @scaps/api`    | Compila el backend           |
-| `npm test -w @scaps/api`         | Tests unitarios del backend  |
+| Comando | Qué hace |
+|---|---|
+| `npm run build -w @scaps/web` | Compila el frontend |
+| `npm run build -w @scaps/api` | Compila el backend |
+| `npm test -w @scaps/api` | Tests unitarios del backend |
 | `npm run test:e2e -w @scaps/api` | Tests end-to-end del backend |
 
 ---

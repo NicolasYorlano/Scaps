@@ -2,7 +2,7 @@ dist
 coverage
 package-lock.json
 
-# Documentación del proyecto: se escribe y revisa a mano.
-# Prettier rellena las tablas markdown con espacios, lo que genera
-# diffs enormes y puramente cosméticos sobre la fuente de verdad del equipo.
-docs
+# Prettier no toca Markdown: son documentos que se escriben y revisan a mano.
+# Al formatearlos rellena las tablas con espacios, lo que genera diffs enormes
+# y puramente cosméticos, y deja el archivo más incómodo de editar.
+*.md
