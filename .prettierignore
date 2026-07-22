@@ -1,0 +1,8 @@
+dist
+coverage
+package-lock.json
+
+# Documentación del proyecto: se escribe y revisa a mano.
+# Prettier rellena las tablas markdown con espacios, lo que genera
+# diffs enormes y puramente cosméticos sobre la fuente de verdad del equipo.
+docs
