@@ -6,6 +6,10 @@
   "workspaces": [
     "apps/*"
   ],
+  "scripts": {
+    "lint": "eslint .",
+    "format": "prettier --write ."
+  },
   "devDependencies": {
     "typescript": "~5.9.0"
   },
