@@ -16,7 +16,11 @@ Este documento lista los endpoints de la API con **método, ruta, request y resp
 Authorization: Bearer <token>
 ```
 
-El token se obtiene en `POST /auth/login` o `POST /auth/register`. El frontend lo guarda **en memoria** (estado de Zustand, **no** `localStorage`) para bajar la superficie de robo por XSS; al recargar la página, la sesión se rehidrata con `GET /auth/me` mientras el token siga vivo. No hay logout en el servidor: al ser un JWT sin estado, cerrar sesión es descartar el token del lado del cliente. El esquema *access + refresh* queda como **deuda técnica para después del MVP**.
+El token se obtiene en `POST /auth/login` o `POST /auth/register`, y **vence a las 2 horas**. El frontend lo guarda en `localStorage`, junto con el usuario en el estado de Zustand; al arrancar la app, si hay token guardado, la sesión se rehidrata con `GET /auth/me`, y si responde `401` (token vencido) se descarta todo y se manda al login.
+
+**Por qué `localStorage` y no en memoria.** Guardarlo solo en memoria lo pierde en cada recarga de página, y eso rompe el checkout: Mercado Pago Checkout Pro redirige al usuario fuera del sitio y lo trae de vuelta con una carga completa, así que la página de retorno quedaría deslogueada y no podría consultar `GET /orders/:id` para mostrar el estado de la orden. El costo es la exposición a XSS; se acota con el vencimiento corto de 2 horas, y la superficie es chica porque la app no renderiza contenido cargado por usuarios.
+
+No hay logout en el servidor: al ser un JWT sin estado, cerrar sesión es borrar el token del cliente. La **cookie `httpOnly` con esquema *access + refresh*** queda como **deuda técnica para después del MVP**: es lo correcto en seguridad, pero con el frontend y el backend en dominios distintos exige `SameSite=None`, CORS con credenciales y manejo de CSRF, y hoy no hay dominio propio para evitar eso.
 
 **Roles.** Cada endpoint indica quién puede llamarlo:
 
@@ -53,7 +57,7 @@ Los recursos que no paginan (el carrito, una ficha) devuelven el objeto directo,
 
 **Códigos de estado que se usan.** `200` OK · `201` creado · `204` sin contenido · `400` request inválido · `401` sin autenticar (token faltante o vencido) · `403` sin permiso (rol) · `404` no encontrado · `409` conflicto (ej. email ya registrado, stock insuficiente).
 
-**CORS.** El backend acepta el origen del frontend (Vercel) — es la única config extra por separar los despliegues, ya prevista en el plan. No afecta las formas de este contrato.
+**CORS.** El backend acepta el origen del frontend (Vercel) — es la única config extra por separar los despliegues, ya prevista en el plan. **Tiene que aceptar también los previews de Pull Request**, que Vercel publica en una URL distinta por cada PR: si solo se permite el dominio de producción, quien revise un PR va a comer un error de CORS en todas las llamadas. Se resuelve permitiendo el patrón de los previews, no una URL fija. No afecta las formas de este contrato.
 
 **Nomenclatura de rutas y campos.**
 
@@ -262,7 +266,7 @@ Sube un `.glb` y devuelve su URL, para usarla como `glb_url`.
 ```
 
 **Notas**
-- Acepta `.glb` (`model/gltf-binary`), comprimido con **Draco** (ya previsto en el plan) para no golpear los límites de tamaño de request de Railway/Render. La compresión ocurre *antes* de subir; es un buen criterio de "hecho" para la tarea.
+- Acepta `.glb` (`model/gltf-binary`), comprimido con **Draco** (ya previsto en el plan) para no golpear los límites de tamaño de request de Render. La compresión ocurre *antes* de subir; es un buen criterio de "hecho" para la tarea.
 - Escape para el caso raro de un modelo que aún así se pase de la raya: subirlo a mano al bucket de R2 y pegar la URL directo en `glb_url` al crear el producto (el campo es un string; al backend le da igual cómo llegó la URL). No es el flujo oficial, pero sirve como válvula sin tocar arquitectura.
 
 #### `POST /uploads/image` · Admin
@@ -628,7 +632,7 @@ Para evitar confusiones al implementar:
 - **Las `back_urls` de Mercado Pago** (éxito / error / pendiente) son **páginas del frontend**, no rutas del backend. Ahí se aterriza tras pagar; desde ahí se consulta `GET /orders/:id`.
 - **El deploy en Vercel** es automático al hacer push (función nativa de Vercel), no una llamada a la API.
 - **El logout** es del lado del cliente (descartar el token).
-- **Servir imágenes y `.glb`** lo hace el CDN (Cloudflare R2) por URL directa; la API solo devuelve esas URLs.
+- **Servir imágenes y `.glb`** lo hace Cloudflare R2 por URL directa; la API solo devuelve esas URLs.
 
 ---
 
