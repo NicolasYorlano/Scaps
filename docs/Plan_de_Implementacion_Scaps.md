@@ -45,13 +45,13 @@ Prioriza un único lenguaje (TypeScript) de punta a punta.
 | Estilos | Tailwind CSS | Maquetado veloz. |
 | Estado | Zustand | — |
 | Backend | NestJS | Implementación propia. Mismo lenguaje (TypeScript) que el frontend. |
-| Base de datos | PostgreSQL | Gestionada en Neon (o en Railway / Render). |
+| Base de datos | PostgreSQL | Gestionada en Neon, plan gratuito. Un proyecto para producción y uno de desarrollo por integrante, para aislar los cupos. |
 | ORM | Prisma | Tipado de punta a punta y migraciones simples. |
 | Autenticación | JWT + roles | Implementación propia en NestJS (guards + DTOs). |
 | Pagos | Mercado Pago Checkout Pro | Estándar en Argentina; versión por redirección. |
 | Modelos 3D e imágenes | `.glb` de un banco libre (CC0 y/o CC BY 4.0) + imágenes, en Cloudflare R2 | Comprimir los `.glb` con Draco. Los modelos CC BY requieren atribución (registrada en `docs/glb/Creditos_Modelos_3D_Scaps.pdf`). |
 | Hosting frontend | Vercel | Deploy automático al hacer push (función nativa de Vercel, sin pipeline de CI/CD). |
-| Hosting backend | Railway / Render | — |
+| Hosting backend | Render | Plan gratuito: el servicio se duerme tras 15 min sin tráfico y tarda entre 30 y 60 s en despertar. |
 | Gestión de tareas | GitHub Projects | Integrado con issues y Pull Requests. |
 
 ---
@@ -83,19 +83,19 @@ BACKEND (NestJS)
   Auth · Productos · Direcciones · Carrito · Órdenes · Stock · Métricas
         │
    PostgreSQL   +   Mercado Pago (checkout + webhook de confirmación)
-   Imágenes y modelos .glb servidos desde CDN
+   Cloudflare R2: imágenes y modelos .glb (el navegador los pide directo por URL)
 ```
 
 El catálogo en cards y las fichas de producto son HTML estándar y, por lo tanto, indexables. Solo el visor 3D de la landing tiene posicionamiento (SEO) limitado, y no es un bloqueante: el alcance excluye derivar tráfico desde redes sociales.
 
-**Estructura del repositorio y despliegue.** El proyecto es un **monorepo**: un único repositorio con el frontend y el backend adentro. Esto es independiente del despliegue —el código vive junto, pero cada capa se despliega por separado, porque en ejecución son cosas distintas: el frontend compila a archivos estáticos (ideales para un CDN como Vercel) y el backend es un proceso persistente (Railway o Render). Se apunta cada plataforma a su carpeta dentro del repositorio.
+**Estructura del repositorio y despliegue.** El proyecto es un **monorepo**: un único repositorio con el frontend y el backend adentro. Esto es independiente del despliegue —el código vive junto, pero cada capa se despliega por separado, porque en ejecución son cosas distintas: el frontend compila a archivos estáticos (ideales para un CDN como Vercel) y el backend es un proceso persistente (Render). Se apunta cada plataforma a su carpeta dentro del repositorio.
 
 ```
 scaps/
 ├─ apps/
 │  ├─ web/   → React + Vite   (Vercel)
-│  └─ api/   → NestJS         (Railway / Render)
-├─ docs/               (ERD, contrato de API, wireframes)
+│  └─ api/   → NestJS         (Render)
+├─ docs/               (ERD, contrato de API, wireframes, backlogs de sprint, modelos .glb)
 ├─ package.json        (workspaces: ["apps/*"])
 └─ config raíz         (ESLint, Prettier, .gitignore)
 ```
@@ -119,18 +119,18 @@ Para un equipo chico alcanza con **npm workspaces** (viene con Node, sin nada nu
 | Sprint | Fechas | Foco | Entregables clave |
 |---|---|---|---|
 | **0** | 15–28 jun | Setup + POC del visor 3D | Repositorio + tooling, **modelos `.glb` de un banco libre**, modelo de datos (diagrama entidad-relación), contrato de API, wireframes. **POC: cargar un `.glb` y rotarlo.** |
-| **1** | 29 jun – 12 jul | Autenticación + base del backend ‖ base del frontend | Auth con roles, CRUD de productos (API), **despliegue en Vercel/Railway activo** ‖ estructura React + landing. |
+| **1** | 29 jun – 12 jul | Autenticación + base del backend ‖ base del frontend | Auth con roles, CRUD de productos (API), **despliegue en Vercel/Render activo** ‖ estructura React + landing. |
 | **2** | 13–26 jul | Catálogo + ficha + visor 3D ‖ datos | Catálogo en cards (búsqueda, filtros y ordenamiento), ficha de producto con galería de imágenes y opción **Ver en 3D** (visor: rotar) ‖ modelo de datos + stock. |
 | **3** | 27 jul – 9 ago | Carrito + pagos | Carrito, checkout con **dirección de envío** (libreta del usuario), **Mercado Pago en entorno de pruebas**, **descuento automático de stock** al confirmarse el pago. |
-| **4** | 10–23 ago | Dashboard administrativo | CRUD de productos (interfaz), listado de órdenes, **selección del producto destacado**, métricas mínimas, Mercado Pago en producción. |
+| **4** | 10–23 ago | Dashboard administrativo | CRUD de productos (interfaz), listado de órdenes, **selección del producto destacado**, métricas mínimas. |
 | **5** | 24 ago – 6 sep | Estabilización | Pruebas de caminos críticos (login, checkout, stock), diseño responsive, corrección de errores. → **Fin del MVP funcional.** |
 | **6** | 7–20 sep | Endurecimiento de producción | Seguridad (auth, pagos, validación de entradas), performance (carga del 3D e imágenes), accesibilidad básica, documentación, carga de productos de demo. |
-| **Contingencia + salida** | 21 sep – 8 oct | Margen + producción | Buffer para ajustes finales, UAT, despliegue a producción, dominio + SSL, monitoreo y preparación de la demo. **Entrega: 8/10.** |
+| **Contingencia + salida** | 21 sep – 8 oct | Margen + producción | Buffer para ajustes finales, UAT, despliegue a producción, monitoreo y preparación de la demo. **Entrega: 8/10.** |
 
 **Puntos a tener presentes:**
 
 - **Sprint 0 — el POC del visor es de bajo riesgo.** Cargar y rotar un modelo con R3F + drei es territorio conocido; valida el visor sin sobresaltos.
-- **Sprint 3 — Mercado Pago.** Trabajar en entorno de pruebas desde el primer día de la fase. El stock se descuenta cuando Mercado Pago **confirma el pago** (vía webhook), no al presionar "pagar".
+- **Sprint 3 — Mercado Pago.** Se trabaja en entorno de pruebas desde el primer día de la fase, **y ahí se queda**: la app no sale a producción real, solo se muestra la demo. El código es idéntico en los dos modos —lo único que cambia son las credenciales—, así que pasar a producción, si alguna vez hiciera falta, es cambiar dos variables de entorno. El stock se descuenta cuando Mercado Pago **confirma el pago** (vía webhook), no al presionar "pagar".
 - **El MVP funcional queda listo el 6/9.** Las cinco semanas siguientes se dedican a endurecimiento, QA y contingencia.
 
 ---
@@ -143,7 +143,7 @@ Para un equipo chico alcanza con **npm workspaces** (viene con Node, sin nada nu
 - Catálogo en cards con búsqueda, filtros y ordenamiento.
 - Ficha de producto con galería de imágenes y opción **Ver en 3D**.
 - Autenticación con roles (administrador / usuario).
-- Carrito + checkout (con **dirección de envío**) + **pago real con Mercado Pago**.
+- Carrito + checkout (con **dirección de envío**) + pago con **Mercado Pago en entorno de pruebas** (flujo completo: preferencia, redirección, webhook y confirmación).
 - Libreta de direcciones del usuario (varias, con una principal) para el checkout.
 - Descuento automático de stock al confirmarse la compra.
 - Dashboard administrativo: CRUD de productos, listado de órdenes, selección del producto destacado y métricas mínimas.
