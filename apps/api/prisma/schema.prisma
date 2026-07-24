@@ -1,0 +1,139 @@
+// Esquema de datos de Scaps — traducción del ERD (docs/modelo-de-datos).
+// Regla del equipo: la estructura se cambia SOLO editando este archivo y
+// generando una migración. Nunca a mano desde Neon/pgAdmin/DBeaver.
+//
+// Nota de convención: los campos escalares van en snake_case (es_admin,
+// creado_en, glb_url) a propósito, para que las respuestas de la API salgan
+// con la forma del contrato sin traducir nada en el medio.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum EstadoOrden {
+  PENDIENTE
+  PAGADA
+  RECHAZADA
+  CANCELADA
+}
+
+model Usuario {
+  id             String   @id @default(uuid()) @db.Uuid
+  email          String   @unique
+  password       String
+  nombre         String
+  apellido       String
+  telefono       String?
+  es_admin       Boolean  @default(false)
+  creado_en      DateTime @default(now())
+  actualizado_en DateTime @updatedAt
+
+  direcciones Direccion[]
+  carrito     Carrito?
+  ordenes     Orden[]
+}
+
+model Direccion {
+  id             String   @id @default(uuid()) @db.Uuid
+  usuario_id     String   @db.Uuid
+  es_principal   Boolean  @default(false)
+  calle          String
+  numero         String
+  piso_depto     String?
+  localidad      String
+  provincia      String
+  codigo_postal  String
+  creado_en      DateTime @default(now())
+  actualizado_en DateTime @updatedAt
+
+  usuario Usuario @relation(fields: [usuario_id], references: [id])
+}
+
+model Producto {
+  id             String   @id @default(uuid()) @db.Uuid
+  nombre         String
+  descripcion    String?
+  precio         Decimal  @db.Decimal(10, 2)
+  stock          Int
+  destacado      Boolean  @default(false)
+  glb_url        String
+  slug           String   @unique
+  activo         Boolean  @default(true)
+  creado_en      DateTime @default(now())
+  actualizado_en DateTime @updatedAt
+
+  imagenes      ProductoImagen[]
+  items_carrito ItemCarrito[]
+  items_orden   ItemOrden[]
+}
+
+model ProductoImagen {
+  id           String  @id @default(uuid()) @db.Uuid
+  producto_id  String  @db.Uuid
+  url          String
+  orden        Int
+  alt          String
+  es_principal Boolean @default(false)
+
+  producto Producto @relation(fields: [producto_id], references: [id])
+}
+
+model Carrito {
+  id             String   @id @default(uuid()) @db.Uuid
+  usuario_id     String   @unique @db.Uuid
+  actualizado_en DateTime @updatedAt
+
+  usuario Usuario       @relation(fields: [usuario_id], references: [id])
+  items   ItemCarrito[]
+}
+
+model ItemCarrito {
+  id          String @id @default(uuid()) @db.Uuid
+  carrito_id  String @db.Uuid
+  producto_id String @db.Uuid
+  cantidad    Int
+
+  carrito  Carrito  @relation(fields: [carrito_id], references: [id])
+  producto Producto @relation(fields: [producto_id], references: [id])
+
+  @@unique([carrito_id, producto_id])
+}
+
+model Orden {
+  id                  String      @id @default(uuid()) @db.Uuid
+  usuario_id          String      @db.Uuid
+  estado              EstadoOrden @default(PENDIENTE)
+  total               Decimal     @db.Decimal(10, 2)
+  mp_preference_id    String
+  mp_payment_id       String?
+  envio_calle         String
+  envio_numero        String
+  envio_piso_depto    String?
+  envio_localidad     String
+  envio_provincia     String
+  envio_codigo_postal String
+  envio_telefono      String
+  creado_en           DateTime    @default(now())
+  actualizado_en      DateTime    @updatedAt
+  pagada_en           DateTime?
+
+  usuario Usuario     @relation(fields: [usuario_id], references: [id])
+  items   ItemOrden[]
+}
+
+model ItemOrden {
+  id              String  @id @default(uuid()) @db.Uuid
+  orden_id        String  @db.Uuid
+  producto_id     String  @db.Uuid
+  cantidad        Int
+  precio_unitario Decimal @db.Decimal(10, 2)
+  nombre_producto String
+
+  orden    Orden    @relation(fields: [orden_id], references: [id])
+  producto Producto @relation(fields: [producto_id], references: [id])
+}
