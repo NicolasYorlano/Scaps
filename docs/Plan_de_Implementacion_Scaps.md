@@ -207,7 +207,7 @@ Para que el entregable sea de producción y no un prototipo, lo construido debe 
 
 ## 11. Primeros pasos (Sprint 0)
 
-El Sprint 0 es preparación: dejar el repo, el tooling y los acuerdos de diseño listos para construir. Incluye conseguir los modelos 3D, inicializar el monorepo, diseñar el modelo de datos y el contrato de la API, los wireframes y un POC del visor. **El detalle de cada tarea —con su criterio de "hecho" y sus dependencias— está en el backlog del Sprint 0** (`docs/sprints/Sprint 0/Sprint-0-Scaps.pdf`), que es la fuente de verdad para el tablero.
+El Sprint 0 es preparación: dejar el repo, el tooling y los acuerdos de diseño listos para construir. Incluye conseguir los modelos 3D, inicializar el monorepo, diseñar el modelo de datos y el contrato de la API, los wireframes y un POC del visor. **El detalle de cada tarea —con su criterio de "hecho" y sus dependencias— está en el backlog del Sprint 0** (`docs/sprints/Sprint-0-Scaps.pdf`), que es la fuente de verdad para el tablero.
 
 
 
