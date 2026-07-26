@@ -1,13 +1,13 @@
-import React, { Suspense } from 'react';
+import { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, useGLTF } from '@react-three/drei';
 
-const Modelo: React.FC = () => {
+function Modelo() {
   const { scene } = useGLTF('/modelo.glb');
   return <primitive object={scene} />;
-};
+}
 
-const Visor3D: React.FC = () => {
+function Visor3D() {
   return (
     <div style={{ width: '100%', height: '100%', backgroundColor: '#040404' }}>
       <Canvas camera={{ position: [0.4, 0.13, 0.5], fov: 50 }}>
@@ -21,6 +21,6 @@ const Visor3D: React.FC = () => {
       </Canvas>
     </div>
   );
-};
+}
 
 export default Visor3D;

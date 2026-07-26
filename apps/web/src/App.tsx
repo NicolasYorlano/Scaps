@@ -1,26 +1,34 @@
-import Visor3D from './components/Visor3D';
+import { BrowserRouter, Routes, Route } from 'react-router';
+import Navbar from './components/Navbar';
+import Landing from './pages/Landing';
+import Catalogo from './pages/Catalogo';
+import Producto from './pages/Producto';
+import Carrito from './pages/Carrito';
+import Checkout from './pages/Checkout';
+import MisDirecciones from './pages/MisDirecciones';
+import Login from './pages/Login';
+import Registro from './pages/Registro';
+import Admin from './pages/Admin';
+import NotFound from './pages/NotFound';
 
 export default function App() {
   return (
-    <main className="flex flex-1 flex-col items-center justify-center bg-slate-950 px-6">
-      <div
-        className="relative flex w-full max-w-5xl flex-col items-center justify-center border-4 border-slate-950 bg-slate-900 shadow-2xl overflow-hidden rounded-3xl" // <--- Agregado rounded-3xl aquí
-        style={{ minHeight: '65vh' }}
-      >
-        {}
-        <div className="absolute inset-0 z-0">
-          <Visor3D />
-        </div>
+    <BrowserRouter>
+      <div className="flex min-h-screen flex-col bg-slate-950">
+        <Navbar />
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          <Route path="/catalogo" element={<Catalogo />} />
+          <Route path="/producto/:slug" element={<Producto />} />
+          <Route path="/carrito" element={<Carrito />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/mis-direcciones" element={<MisDirecciones />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/registro" element={<Registro />} />
+          <Route path="/admin" element={<Admin />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
       </div>
-      <div className="w-full max-w-md rounded-xl border border-slate-800 bg-slate-900 p-8 text-center shadow-lg">
-        <span className="inline-block rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-400">
-          Scaffold OK
-        </span>
-        <h1 className="mt-4 text-3xl font-semibold text-slate-50">Scaps</h1>
-        <p className="mt-2 text-sm text-slate-400">
-          React + Vite + TypeScript + Tailwind v4
-        </p>
-      </div>
-    </main>
+    </BrowserRouter>
   );
 }
