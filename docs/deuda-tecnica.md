@@ -20,15 +20,20 @@ Cada entrada apunta a dónde se decidió. La fuente de verdad sigue siendo ese d
 
 ---
 
-## Los requests no se cancelan
+## Optimización de peticiones asíncronas
 
-**Hoy:** cuando una pantalla se desmonta o cambia de ruta, `useApiQuery` descarta la respuesta con un flag (`active`), pero el request sigue viajando hasta el final.
+**Hoy:** `useApiQuery` es un hook propio de ~30 líneas construido sobre `fetch`, y le faltan dos cosas.
 
-**Lo correcto:** cortarlo con `AbortController` y su `signal`.
+- **No cancela.** Cuando una pantalla se desmonta o cambia de ruta, descarta la respuesta con un flag (`active`) pero el request sigue viajando hasta el final. El flag evita la *race condition* visible —que una respuesta vieja pise la pantalla—; lo que queda es desperdicio de red.
+- **No gestiona el estado del servidor.** Sin caché (volver al catálogo desde una ficha vuelve a pedir todo), sin reintentos automáticos ante un fallo puntual —lo que en Render, que tarda entre 30 y 60 segundos en despertar, es justo lo que más se nota— y sin deduplicación, así que dos componentes que piden el mismo dato disparan dos requests.
 
-**Por qué no ahora:** el flag ya evita el problema visible —que una respuesta vieja pise la pantalla—. Lo que queda es desperdicio de red, invisible para el usuario con respuestas JSON chicas. Donde se notaría es en el catálogo, si la búsqueda consulta la API mientras se tipea.
+**Lo correcto:** migrar la capa de red a [TanStack Query](https://tanstack.com/query). Resuelve la cancelación por su cuenta —le pasa un `signal` a la función de fetch— y encima suma caché, reintentos y deduplicación, que es lo que un hook propio no va a cubrir sin volverse una librería en miniatura. Si se hace esto, **el parche de abajo deja de tener sentido**: no hay que implementarlo.
 
-**Dos trampas para cuando se implemente:**
+**Parche, si hace falta antes:** `AbortController` y su `signal` dentro del `useEffect` de `useApiQuery`. Cubre solo la cancelación, no el resto. Es la solución barata si el problema aprieta antes de que haya tiempo para la migración.
+
+**Por qué no ahora:** lo que falta no produce un bug visible, y las dos salidas son caras en el momento equivocado. TanStack es una dependencia nueva y el plan fija *stack mínimo* (principio 5: solo entra la tecnología que aporta un valor claro), así que su adopción es una decisión de equipo, no un detalle de implementación; además obliga a tocar todas las pantallas que ya consumen el hook.
+
+**Dos trampas, valen para las dos salidas:**
 
 - Un request abortado entra por el `catch` del `fetch` en `apps/web/src/lib/api.ts`, que hoy traduce todo a *"No se pudo conectar con el servidor"*. Sin detectar el `AbortError`, navegar entre pantallas va a mostrar un error de conexión falso.
 - Cancelar no es poner un timeout. Render tarda entre 30 y 60 segundos en despertar: un corte por tiempo rompería la primera llamada del día.
