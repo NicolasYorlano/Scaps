@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router';
 import Navbar from './components/Navbar';
+import SlowServerNotice from './components/SlowServerNotice';
 import Landing from './pages/Landing';
 import Catalogo from './pages/Catalogo';
 import Producto from './pages/Producto';
@@ -9,6 +10,7 @@ import MisDirecciones from './pages/MisDirecciones';
 import Login from './pages/Login';
 import Registro from './pages/Registro';
 import Admin from './pages/Admin';
+import Health from './pages/Health';
 import NotFound from './pages/NotFound';
 
 export default function App() {
@@ -26,8 +28,10 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/registro" element={<Registro />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/health" element={<Health />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <SlowServerNotice />
       </div>
     </BrowserRouter>
   );
