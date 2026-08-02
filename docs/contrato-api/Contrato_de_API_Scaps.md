@@ -20,7 +20,7 @@ El token se obtiene en `POST /auth/login` o `POST /auth/register`, y **vence a l
 
 **Por qué `localStorage` y no en memoria.** Guardarlo solo en memoria lo pierde en cada recarga de página, y eso rompe el checkout: Mercado Pago Checkout Pro redirige al usuario fuera del sitio y lo trae de vuelta con una carga completa, así que la página de retorno quedaría deslogueada y no podría consultar `GET /orders/:id` para mostrar el estado de la orden. El costo es la exposición a XSS; se acota con el vencimiento corto de 2 horas, y la superficie es chica porque la app no renderiza contenido cargado por usuarios.
 
-No hay logout en el servidor: al ser un JWT sin estado, cerrar sesión es borrar el token del cliente. La **cookie `httpOnly` con esquema *access + refresh*** queda como **deuda técnica para después del MVP**: es lo correcto en seguridad, pero con el frontend y el backend en dominios distintos exige `SameSite=None`, CORS con credenciales y manejo de CSRF, y hoy no hay dominio propio para evitar eso.
+No hay logout en el servidor: al ser un JWT sin estado, cerrar sesión es borrar el token del cliente. La alternativa con cookie `httpOnly` y esquema *access + refresh* está registrada en [deuda técnica](../deuda-tecnica.md).
 
 **Roles.** Cada endpoint indica quién puede llamarlo:
 

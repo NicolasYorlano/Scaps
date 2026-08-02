@@ -109,7 +109,7 @@ Cada aplicación se levanta por separado, **cada una en su propia terminal**.
 npm run dev -w @scaps/web
 ```
 
-Abrí **http://localhost:5173** — vas a ver el visor 3D con el modelo de demo, que se puede rotar con el mouse.
+Queda disponible en **http://localhost:5173**.
 
 ### Backend
 
@@ -119,7 +119,7 @@ npm run start:dev -w @scaps/api
 
 Queda escuchando en **http://localhost:3000**.
 
-Para comprobar que responde, abrí **http://localhost:3000/health**: tiene que devolver `{"status":"ok"}`.
+Todas las rutas cuelgan del prefijo `/api`. Para comprobar que responde, abrí **http://localhost:3000/api/health**: tiene que devolver `{"status":"ok"}`.
 
 ---
 
@@ -166,6 +166,7 @@ Toda la documentación del proyecto está en [`docs/`](docs/):
 - **[Wireframes](docs/wireframes/wireframes-mvp.md)** — bocetos de las pantallas del MVP
 - **[Modelos 3D](docs/glb/)** — los `.glb` de demo y sus créditos de licencia
 - **[Sprints](docs/sprints/)** — backlog de cada sprint; la guía de trabajo del equipo está en el de Sprint 0
+- **[Deuda técnica](docs/deuda-tecnica.md)** — lo que se resuelve después del MVP, y por qué
 
 ---
 
