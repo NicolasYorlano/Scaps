@@ -8,9 +8,9 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
+      whitelist: true,  // Activa la validación basada en el DTO
+      forbidNonWhitelisted: true, // Rechaza la petición si hay datos extra
+      transform: true,  // Transforma los payloads a las clases DTO reales
     }),
   );
   app.enableCors({ origin: process.env.CORS_ORIGIN });
