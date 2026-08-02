@@ -91,9 +91,7 @@ export function useApiQuery<T>(path: string) {
  *     api.post<LoginResponse>('/auth/login', { email, password }),
  *   );
  */
-export function useApiAction<Args extends unknown[], T>(
-  action: (...args: Args) => Promise<T>,
-) {
+export function useApiAction<Args extends unknown[], T>(action: (...args: Args) => Promise<T>) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<ApiError | null>(null);
 
