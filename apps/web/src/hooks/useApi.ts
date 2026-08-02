@@ -6,7 +6,7 @@ import { api, ApiError } from '../lib/api';
 // está en curso (para el spinner) y si falló (para el mensaje de error).
 //
 // Estos hooks son ese puente. Sin ellos, cada pantalla repetiría los mismos
-// useState y el mismo try/catch. Son dos porque, hay dos momentos distintos en
+// useState y el mismo try/catch. Son dos porque hay dos momentos distintos en
 // los que se llama a la API:
 //
 //   useApiQuery  → al abrir la pantalla (leer)
