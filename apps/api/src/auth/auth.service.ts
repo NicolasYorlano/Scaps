@@ -11,6 +11,13 @@ import { toUserResponse, type UserResponse } from './user-response';
 // para encarecer una fuerza bruta sin que el registro se sienta lento.
 const SALT_ROUNDS = 10;
 
+// Hash de descarte, generado con el mismo costo que los reales. Se compara
+// contra él cuando el email no existe: sin eso, ese camino responde ~75ms más
+// rápido que el de clave incorrecta, y esa diferencia alcanza para averiguar
+// qué emails están registrados. Generarlo (no fijarlo como string) lo mantiene
+// sincronizado si SALT_ROUNDS cambia.
+const DUMMY_HASH = bcrypt.hashSync('no-importa', SALT_ROUNDS);
+
 // Vencimiento del token, fijado por el contrato. No es configuración por
 // entorno: vale lo mismo en local que en producción.
 const TOKEN_EXPIRATION = '2h';
@@ -60,10 +67,17 @@ export class AuthService {
       where: { email: dto.email },
     });
 
+    // Fuera del if a propósito: adentro, el || cortocircuitaría y el compare no
+    // correría cuando el email no existe. Así los dos caminos tardan lo mismo.
+    const passwordOk = await bcrypt.compare(
+      dto.password,
+      usuario?.password ?? DUMMY_HASH,
+    );
+
     // Un solo error para los dos casos (email inexistente y clave incorrecta):
     // distinguirlos convierte al login en un oráculo para averiguar qué emails
     // están registrados.
-    if (!usuario || !(await bcrypt.compare(dto.password, usuario.password))) {
+    if (!usuario || !passwordOk) {
       throw new UnauthorizedException('Credenciales inválidas'); /* 401 */
     }
 
