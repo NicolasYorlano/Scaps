@@ -1,0 +1,94 @@
+# Verificación manual de los endpoints de autenticación.
+#
+# Requiere la extensión REST Client de VS Code (humao.rest-client): abrí este
+# archivo y tocá "Send Request" arriba de cada llamada.
+#
+# Con la API levantada:  npm run start:dev -w @scaps/api
+#
+# Los casos 1 a 7 son, en orden, los siete criterios de "hecho" de la tarjeta
+# "[auth] Registro, login y datos del usuario actual". Corrélos de arriba hacia
+# abajo: el 2 necesita que el 1 ya haya creado el usuario, y el 6 usa el token
+# que devuelve el 4.
+#
+# Para volver a empezar de cero (que el caso 1 vuelva a dar 201), borrá el
+# usuario de prueba:  DELETE FROM "Usuario" WHERE email = 'test-auth@scaps.dev';
+
+@host = http://localhost:3000/api
+@email = test-auth@scaps.dev
+@password = una-clave-segura
+
+### 1 · Registro con datos válidos → 201 + { user, token }, es_admin: false
+# @name register
+POST {{host}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}",
+  "nombre": "Test",
+  "apellido": "Auth"
+}
+
+### 2 · El mismo registro otra vez → 409
+POST {{host}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}",
+  "nombre": "Test",
+  "apellido": "Auth"
+}
+
+### 3 · Registro con password de 5 caracteres → 400 con message como lista
+POST {{host}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "corta@scaps.dev",
+  "password": "12345",
+  "nombre": "Test",
+  "apellido": "Auth"
+}
+
+### 4 · Login con la clave correcta → 200 + { user, token }
+# @name login
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+@token = {{login.response.body.$.token}}
+
+### 5 · Login con la clave incorrecta → 401
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "clave-incorrecta"
+}
+
+### 6 · Datos del usuario actual con token → 200 + el objeto user
+GET {{host}}/auth/me
+Authorization: Bearer {{token}}
+
+### 7 · Datos del usuario actual sin header → 401
+GET {{host}}/auth/me
+
+### 8 · Registro intentando inyectar es_admin → 400
+# El ValidationPipe de main.ts tiene forbidNonWhitelisted, y es_admin no está
+# en el DTO: la petición se rechaza entera. Nadie se hace admin por la API.
+POST {{host}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "admin-trucho@scaps.dev",
+  "password": "una-clave-segura",
+  "nombre": "Test",
+  "apellido": "Auth",
+  "es_admin": true
+}
