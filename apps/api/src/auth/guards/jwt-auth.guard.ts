@@ -26,7 +26,7 @@ export class JwtAuthGuard implements CanActivate {
     const token = this.extractToken(request);
 
     if (!token) {
-      throw new UnauthorizedException('Falta el token de autenticación');
+      throw new UnauthorizedException('Falta el token de autenticación'); /* 401 */
     }
 
     let payload: JwtPayload;
