@@ -25,6 +25,7 @@ export class AuthController {
     return this.auth.login(dto);
   }
 
+  // Devuelve el usuario actual. Todo el trabajo lo hizo el guard.
   @Get('me')
   @UseGuards(JwtAuthGuard)
   me(@CurrentUser() user: UserResponse): UserResponse {
