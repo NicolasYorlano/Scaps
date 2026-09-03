@@ -1,24 +1,35 @@
-# Verificación manual de los endpoints de autenticación.
+# Autenticación — llamadas de prueba contra la API local.
 #
-# Requiere la extensión REST Client de VS Code (humao.rest-client): abrí este
-# archivo y tocá "Send Request" arriba de cada llamada.
+# Cada caso anota al lado la respuesta que se espera. Si alguna deja de
+# coincidir, cambió el comportamiento del endpoint.
 #
-# Con la API levantada:  npm run start:dev -w @scaps/api
+# Requiere la extensión REST Client (humao.rest-client): tocá "Send Request"
+# arriba de cada llamada, con la API corriendo:
 #
-# Los casos 1 a 7 son, en orden, los siete criterios de "hecho" de la tarjeta
-# "[auth] Registro, login y datos del usuario actual". Corrélos de arriba hacia
-# abajo: el 2 necesita que el 1 ya haya creado el usuario, y el 6 usa el token
-# que devuelve el 4.
+#     npm run start:dev -w @scaps/api
 #
-# Para volver a empezar de cero (que el caso 1 vuelva a dar 201), borrá el
-# usuario de prueba:  DELETE FROM "Usuario" WHERE email = 'test-auth@scaps.dev';
+# Mandalos en orden: el 2 depende del usuario que crea el 1, y el 6 necesita
+# el token que devuelve el 4.
+#
+# El caso 1 deja un usuario en la base. Para volver a empezar de cero hay que
+# borrarlo. Una forma es la GUI de Prisma —pestaña Usuario, buscar el email de
+# prueba, Delete record—:
+#
+#     cd apps/api
+#     npx prisma studio
+#
+# Es una vía entre varias: sirve igual cualquier cliente de la base, o un
+# DELETE por SQL.
 
 @host = http://localhost:3000/api
 @email = test-auth@scaps.dev
 @password = una-clave-segura
 
+# Para el caso 6: copiá acá el `token` que devuelve el caso 4. Vence a las
+# 2 horas; pasado ese rato hay que mandar el 4 de nuevo y volver a copiarlo.
+@token = pegar-aca-el-token-del-caso-4
+
 ### 1 · Registro con datos válidos → 201 + { user, token }, es_admin: false
-# @name register
 POST {{host}}/auth/register
 Content-Type: application/json
 
@@ -30,6 +41,8 @@ Content-Type: application/json
 }
 
 ### 2 · El mismo registro otra vez → 409
+# El email es único en la base. El conflicto lo detecta el índice al insertar,
+# no una consulta previa.
 POST {{host}}/auth/register
 Content-Type: application/json
 
@@ -40,7 +53,8 @@ Content-Type: application/json
   "apellido": "Auth"
 }
 
-### 3 · Registro con password de 5 caracteres → 400 con message como lista
+### 3 · Registro con una contraseña de 5 caracteres → 400
+# El mínimo son 8. `message` viene como lista: puede fallar más de un campo.
 POST {{host}}/auth/register
 Content-Type: application/json
 
@@ -52,7 +66,7 @@ Content-Type: application/json
 }
 
 ### 4 · Login con la clave correcta → 200 + { user, token }
-# @name login
+# 200 y no 201: iniciar sesión no crea ningún recurso.
 POST {{host}}/auth/login
 Content-Type: application/json
 
@@ -61,9 +75,9 @@ Content-Type: application/json
   "password": "{{password}}"
 }
 
-@token = {{login.response.body.$.token}}
-
 ### 5 · Login con la clave incorrecta → 401
+# Mismo mensaje que si el email no existiera, a propósito: si fueran distintos,
+# se podría averiguar qué emails están registrados.
 POST {{host}}/auth/login
 Content-Type: application/json
 
@@ -72,16 +86,19 @@ Content-Type: application/json
   "password": "clave-incorrecta"
 }
 
-### 6 · Datos del usuario actual con token → 200 + el objeto user
+### 6 · Usuario actual, con token → 200 + el objeto user
+# Usa la variable @token de arriba. Si responde 401, es que quedó sin pegar o
+# que el token venció.
 GET {{host}}/auth/me
 Authorization: Bearer {{token}}
 
-### 7 · Datos del usuario actual sin header → 401
+### 7 · Usuario actual, sin header → 401
 GET {{host}}/auth/me
 
 ### 8 · Registro intentando inyectar es_admin → 400
-# El ValidationPipe de main.ts tiene forbidNonWhitelisted, y es_admin no está
-# en el DTO: la petición se rechaza entera. Nadie se hace admin por la API.
+# `es_admin` no está en el DTO y el ValidationPipe corre con
+# forbidNonWhitelisted, así que la petición se rechaza entera. Los admins no
+# se crean por la API.
 POST {{host}}/auth/register
 Content-Type: application/json
 
