@@ -48,7 +48,7 @@ Los recursos que no paginan (el carrito, una ficha) devuelven el objeto directo,
 ```json
 {
   "statusCode": 400,
-  "message": ["email debe ser un correo válido", "password debe tener al menos 8 caracteres"],
+  "message": ["El email no es válido", "La contraseña debe tener al menos 8 caracteres"],
   "error": "Bad Request"
 }
 ```

@@ -4,10 +4,10 @@ import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 // comparan credenciales. Una clave vieja más corta que la regla de hoy tiene
 // que poder loguearse, y el largo mínimo en el login no valida nada útil.
 export class LoginDto {
-  @IsEmail({}, { message: 'email debe ser un correo válido' })
+  @IsEmail({}, { message: 'El email no es válido' })
   email: string;
 
-  @IsString({ message: 'password debe ser texto' })
-  @IsNotEmpty({ message: 'password es obligatorio' })
+  @IsString({ message: 'La contraseña debe ser texto' })
+  @IsNotEmpty({ message: 'La contraseña es obligatoria' })
   password: string;
 }
