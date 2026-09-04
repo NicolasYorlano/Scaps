@@ -19,6 +19,7 @@ export default function App() {
       <div className="flex min-h-screen flex-col bg-slate-950">
         <Navbar />
         <Routes>
+	  <Route path="/dev-capturas" element={<DevCapturas />} />
           <Route path="/" element={<Landing />} />
           <Route path="/catalogo" element={<Catalogo />} />
           <Route path="/producto/:slug" element={<Producto />} />
