@@ -8,8 +8,9 @@
 #
 #     npm run start:dev -w @scaps/api
 #
-# Mandalos en orden: el 2 depende del usuario que crea el 1, y el 6 necesita
-# el token que devuelve el 4.
+# Mandalos en orden: el 2 depende del usuario que crea el 1, y el 6 y el 10
+# necesitan el token que devuelve el 4. Del 11 al 13 son un bloque: crean un
+# segundo usuario, lo ascienden a admin a mano y prueban la ruta protegida.
 #
 # El caso 1 deja un usuario en la base. Para volver a empezar de cero hay que
 # borrarlo. Una forma es la GUI de Prisma —pestaña Usuario, buscar el email de
@@ -25,9 +26,16 @@
 @email = test-auth@scaps.dev
 @password = una-clave-segura
 
-# Para el caso 6: copiá acá el `token` que devuelve el caso 4. Vence a las
-# 2 horas; pasado ese rato hay que mandar el 4 de nuevo y volver a copiarlo.
+# Para los casos 6 y 10: copiá acá el `token` que devuelve el caso 4. Vence a
+# las 2 horas; pasado ese rato hay que mandar el 4 de nuevo y volver a copiarlo.
 @token = pegar-aca-el-token-del-caso-4
+
+# El admin es un usuario aparte del de arriba: hace falta uno común y uno admin
+# al mismo tiempo, para los casos 10 y 13.
+@adminEmail = test-admin@scaps.dev
+
+# Para el caso 13: copiá acá el `token` que devuelve el caso 12.
+@adminToken = pegar-aca-el-token-del-caso-12
 
 ### 1 · Registro con datos válidos → 201 + { user, token }, es_admin: false
 POST {{host}}/auth/register
@@ -109,3 +117,55 @@ Content-Type: application/json
   "apellido": "Auth",
   "es_admin": true
 }
+
+### 9 · Ruta de admin, sin token → 401
+# Corta JwtAuthGuard, AdminGuard ni llega a correr: sin token no hay a quién
+# mirarle el rol.
+GET {{host}}/auth/admin-check
+
+### 10 · Ruta de admin, con el token de un usuario común → 403
+# La diferencia con el 9: el token es válido, lo que falta es el permiso.
+GET {{host}}/auth/admin-check
+Authorization: Bearer {{token}}
+
+### 11 · Alta del usuario que va a ser admin → 201, es_admin: false
+# Nace como usuario común, igual que cualquiera: no hay forma de pedir un admin
+# por la API (ver caso 8). El ascenso es el paso de abajo.
+POST {{host}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "{{adminEmail}}",
+  "password": "{{password}}",
+  "nombre": "Test",
+  "apellido": "Admin"
+}
+
+# ---------------------------------------------------------------------------
+# Acá se para y se marca el usuario a mano. Es el único camino hasta que exista
+# el seed, que es el que va a crear el admin de verdad:
+#
+#     cd apps/api
+#     npx prisma studio
+#
+# Pestaña Usuario → la fila de test-admin@scaps.dev → es_admin en true → Save.
+#
+# Tocar una fila no choca con la regla del repo: esa regla es sobre la
+# estructura de la base, que se cambia solo por migración. Esto son datos.
+# ---------------------------------------------------------------------------
+
+### 12 · Login del admin → 200 + { user, token }, es_admin: true
+# Si `es_admin` viene en false, el paso de Prisma Studio quedó sin guardar.
+# Copiá el `token` de la respuesta en la variable @adminToken de arriba.
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{adminEmail}}",
+  "password": "{{password}}"
+}
+
+### 13 · Ruta de admin, con el token del admin → 200 + { ok, email }
+# Si responde 403, el token es de un usuario común; si responde 401, venció.
+GET {{host}}/auth/admin-check
+Authorization: Bearer {{adminToken}}
