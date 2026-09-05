@@ -46,7 +46,7 @@ cp apps/web/.env.example apps/web/.env
 
 Los archivos `.env` están ignorados por git y **nunca deben subirse al repositorio**.
 
-La única variable que tenés que completar para desarrollar es `DATABASE_URL`, con la cadena de tu base de Neon (ver la sección siguiente). Las de Mercado Pago y almacenamiento todavía no se usan.
+La única variable que tenés que completar para desarrollar es `DATABASE_URL`, con la cadena de tu base de Neon (ver la sección siguiente). Si además vas a correr los tests, sumá `DATABASE_URL_TEST`. Las de Mercado Pago y almacenamiento todavía no se usan.
 
 ---
 
@@ -90,6 +90,20 @@ npx prisma migrate dev
 Para ver las tablas: `npx prisma studio` (también desde `apps/api`).
 
 > ⚠️ La cadena incluye tu contraseña. No la pegues en el chat del equipo ni la subas al repositorio.
+
+### Crear tu base de test
+
+Solo si vas a correr los tests. También se hace una sola vez, y **no** hace falta otro proyecto de Neon: alcanza con una rama del que ya tenés.
+
+**1.** En el panel de Neon, entrá a **Branches** y creá una con **Create branch**. Nombrala `test`, para que se lea igual que la variable. Sale con el esquema ya puesto, porque lo hereda de la rama padre. El plan gratuito permite 10 por proyecto.
+
+> En ese mismo diálogo, cambiá **Auto-delete** a **Never**: viene en *After 1 day*. Si lo dejás, la rama desaparece mañana y los tests empiezan a fallar con un error de conexión que no dice que el problema es ese.
+
+**2.** Copiá su connection string igual que antes —con **Copy snippet** y *connection pooling* apagado— y pegala en `apps/api/.env` como `DATABASE_URL_TEST`.
+
+**Por qué una base aparte y no la de desarrollo.** Una prueba automática tiene que dar el mismo resultado siempre, y para eso arranca de un estado conocido: los tests borran los datos que tocan antes de empezar. Si apuntaran a tu base de desarrollo, te la vaciarían en cada corrida. Y si dos personas apuntaran a la misma, correr los tests a la vez las haría fallar a las dos.
+
+Si la variable falta, o si es igual a `DATABASE_URL`, los tests cortan al arrancar con un error en vez de tocar nada.
 
 ### Regla del equipo
 
@@ -138,8 +152,8 @@ Para una aplicación en particular:
 |---|---|
 | `npm run build -w @scaps/web` | Compila el frontend |
 | `npm run build -w @scaps/api` | Compila el backend |
-| `npm test -w @scaps/api` | Tests unitarios del backend |
-| `npm run test:e2e -w @scaps/api` | Tests end-to-end del backend |
+| `npm test -w @scaps/api` | Todos los tests del backend (unitarios y end-to-end) |
+| `npm run test:e2e -w @scaps/api` | Solo los end-to-end |
 
 ---
 
