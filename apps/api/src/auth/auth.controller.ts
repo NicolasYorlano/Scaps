@@ -1,6 +1,7 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
 import { AuthService, type AuthResult } from './auth.service';
 import { CurrentUser } from './decorators/current-user.decorator';
+import { Roles } from './decorators/roles.decorator';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
@@ -30,5 +31,14 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   me(@CurrentUser() user: UserResponse): UserResponse {
     return user;
+  }
+
+  // Andamiaje para probar AdminGuard, no está en el contrato: se borra cuando
+  // existan los endpoints admin reales. El email confirma que el usuario llegó
+  // completo al handler, no solo que el guard dejó pasar.
+  @Get('admin-check')
+  @Roles('admin')
+  adminCheck(@CurrentUser() user: UserResponse): { ok: true; email: string } {
+    return { ok: true, email: user.email };
   }
 }
