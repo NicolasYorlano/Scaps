@@ -13,14 +13,15 @@ describe('HealthController (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    // Mismo prefijo que en main.ts: si alguien quitara el exclude, este test lo detecta.
-    app.setGlobalPrefix('api', { exclude: ['health'] });
+    // Copia del prefijo de main.ts, que createNestApplication no aplica. Ya
+    // estuvo desincronizado una vez y pasaba probando una app que no existía.
+    app.setGlobalPrefix('api');
     await app.init();
   });
 
-  it('/health (GET) responde 200', () => {
+  it('/api/health (GET) responde 200', () => {
     return request(app.getHttpServer())
-      .get('/health')
+      .get('/api/health')
       .expect(200)
       .expect({ status: 'ok' });
   });
