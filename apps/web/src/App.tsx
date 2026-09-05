@@ -12,6 +12,7 @@ import Registro from './pages/Registro';
 import Admin from './pages/Admin';
 import Health from './pages/Health';
 import NotFound from './pages/NotFound';
+import DevCapturas from "./pages/devcapturas";
 
 export default function App() {
   return (

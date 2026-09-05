@@ -20,5 +20,9 @@
     "prettier": "^3.9.6",
     "typescript": "~5.9.0",
     "typescript-eslint": "^8.65.0"
+  },
+  "allowScripts": {
+    "unrs-resolver@1.12.2": true,
+    "@parcel/watcher@2.6.0": true
   }
 }
