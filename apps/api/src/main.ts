@@ -3,6 +3,8 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 
+// Los test e2e replican esta config a mano (createNestApplication no la aplica):
+// si cambiás algo acá, actualizá también los test/*.e2e-spec.ts.
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix('api');
