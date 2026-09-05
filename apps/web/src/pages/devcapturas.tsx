@@ -1,6 +1,7 @@
 import { Canvas, useThree } from '@react-three/fiber'
 import { useGLTF } from '@react-three/drei'
 import { useRef, useState, useEffect, Suspense } from 'react'
+import * as THREE from 'three'
 
 const ANGULOS = {
   frente:      [0, 0, 4],
@@ -12,13 +13,48 @@ const ANGULOS = {
 
 const ANGULO_PORTADA: keyof typeof ANGULOS = 'tresCuartos' // mismo ángulo en los 4 productos
 
-const PRODUCTOS = ['cap-danlyvostok', 'cap-modelo2', 'cap-modelo3', 'cap-modelo4']
+const PRODUCTOS = ['cap-danlyvostok', 'cap-filipmatlak-negra', 'cap-filipmatlak-oliva', 'cap-vanarsdale']
 
 const MAX_KB = 200
 
+// Tamaño "de mundo" al que se normaliza CUALQUIER gorra, sin importar su
+// escala real en el .glb. Esto es lo que faltaba: sin esto, cap-danlyvostok
+// (bounding box ~48 unidades) se ve mucho más grande en cámara que
+// cap-vanarsdale (~13 unidades), aunque la cámara esté a la misma distancia.
+// Ajustá este valor si querés que la gorra ocupe más o menos frame (a mayor
+// TARGET_SIZE, más "cerca" se ve con la misma distancia de cámara).
+const TARGET_SIZE = 2.2
+
 function Modelo({ url }: { url: string }) {
   const { scene } = useGLTF(url)
-  return <primitive object={scene} />
+  const ref = useRef<THREE.Group>(null)
+
+  useEffect(() => {
+    if (!ref.current) return
+
+    // 1) bounding box del modelo tal cual viene del .glb (escala 1)
+    const box = new THREE.Box3().setFromObject(ref.current)
+    const size = new THREE.Vector3()
+    const center = new THREE.Vector3()
+    box.getSize(size)
+    box.getCenter(center)
+
+    // 2) escala uniforme para que la dimensión más grande mida TARGET_SIZE
+    const maxDim = Math.max(size.x, size.y, size.z)
+    const escala = maxDim > 0 ? TARGET_SIZE / maxDim : 1
+
+    // 3) centrar en el origen (el centro real del modelo, no su pivote)
+    //    la posición se aplica en espacio del padre, por eso el centro
+    //    original hay que escalarlo también
+    ref.current.scale.setScalar(escala)
+    ref.current.position.set(-center.x * escala, -center.y * escala, -center.z * escala)
+  }, [scene])
+
+  return (
+    <group ref={ref}>
+      <primitive object={scene} />
+    </group>
+  )
 }
 
 function CamaraFija({ angulo, onListo }: { angulo: keyof typeof ANGULOS; onListo: () => void }) {
