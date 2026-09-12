@@ -1,6 +1,9 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router';
 import Navbar from './components/Navbar';
 import SlowServerNotice from './components/SlowServerNotice';
+import RequireAdmin from './components/RequireAdmin';
+import { useSessionStore } from './stores/session-store';
 import Landing from './pages/Landing';
 import Catalogo from './pages/Catalogo';
 import Producto from './pages/Producto';
@@ -14,6 +17,12 @@ import Health from './pages/Health';
 import NotFound from './pages/NotFound';
 
 export default function App() {
+  // Una sola vez al arrancar la app: si hay token en localStorage, confirma
+  // contra /auth/me que sigue vivo antes de dar la sesión por buena.
+  useEffect(() => {
+    void useSessionStore.getState().hydrate();
+  }, []);
+
   return (
     <BrowserRouter>
       <div className="flex min-h-screen flex-col bg-slate-950">
@@ -27,7 +36,14 @@ export default function App() {
           <Route path="/mis-direcciones" element={<MisDirecciones />} />
           <Route path="/login" element={<Login />} />
           <Route path="/registro" element={<Registro />} />
-          <Route path="/admin" element={<Admin />} />
+          <Route
+            path="/admin"
+            element={
+              <RequireAdmin>
+                <Admin />
+              </RequireAdmin>
+            }
+          />
           <Route path="/health" element={<Health />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
