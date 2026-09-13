@@ -167,7 +167,7 @@ async function seedProductos() {
     });
 
     // ProductoImagen no tiene una clave única propia (no hay como "upsertear"
-    // una fila puntual), así que para que la segunda corrida no duplique
+    // una fila puntual), para que la segunda corrida no duplique
     // imágenes se borran las del producto y se recrean iguales. Al ir todo
     // dentro de una transacción, si createMany falla no queda el producto sin
     // ninguna imagen.
