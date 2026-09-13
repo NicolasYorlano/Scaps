@@ -123,11 +123,10 @@ async function seedAdmin() {
 
   const hash = await bcrypt.hash(password, SALT_ROUNDS);
 
-  // Upsert por email: en una base vacía crea el admin: si ya existe (segunda
-  // corrida), lo deja con el mismo hash y es_admin en vez de duplicarlo.
+  // Upsert (update-insert) por email: en una bd vacía crea el admin, si ya existe 
+  // (segunda corrida) lo deja con el mismo hash y es_admin en vez de duplicarlo.
   // A propósito re-sincroniza el hash con el ADMIN_PASSWORD actual del entorno
-  // en cada corrida: este script fija un estado conocido para desarrollo/tests,
-  // no preserva cambios manuales de contraseña.
+  // en cada corrida.  
   const admin = await prisma.usuario.upsert({
     where: { email },
     update: { password: hash, es_admin: true },
