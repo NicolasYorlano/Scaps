@@ -46,7 +46,7 @@ cp apps/web/.env.example apps/web/.env
 
 Los archivos `.env` están ignorados por git y **nunca deben subirse al repositorio**.
 
-La única variable que tenés que completar para desarrollar es `DATABASE_URL`, con la cadena de tu base de Neon (ver la sección siguiente). Si además vas a correr los tests, sumá `DATABASE_URL_TEST`. Las de Mercado Pago y almacenamiento todavía no se usan.
+Para desarrollar tenés que completar `DATABASE_URL`, con la cadena de tu base de Neon (ver la sección siguiente), y `ADMIN_EMAIL` / `ADMIN_PASSWORD`, las credenciales del admin que crea el seed. Si además vas a correr los tests, sumá `DATABASE_URL_TEST`. Las de Mercado Pago y almacenamiento todavía no se usan.
 
 ---
 
@@ -87,7 +87,15 @@ cd apps/api
 npx prisma migrate dev
 ```
 
-Para ver las tablas: `npx prisma studio` (también desde `apps/api`).
+**5.** Cargá los datos de demo (el admin y los cuatro productos), también desde `apps/api`:
+
+```bash
+npm run seed
+```
+
+El admin sale de `ADMIN_EMAIL` y `ADMIN_PASSWORD`: los admins no se crean por la API, este es el único camino. Se puede correr todas las veces que quieras sin duplicar nada, pero cada corrida pisa la clave del admin y los datos de los productos de demo con lo que dicen tu `.env` y el script.
+
+Para ver las tablas: `npx prisma studio`. Para rehacer tu base desde cero: `npx prisma migrate reset`, que borra todo, aplica las migraciones y corre el seed. Los dos, también desde `apps/api`.
 
 > ⚠️ La cadena incluye tu contraseña. No la pegues en el chat del equipo ni la subas al repositorio.
 
@@ -154,6 +162,7 @@ Para una aplicación en particular:
 | `npm run build -w @scaps/api` | Compila el backend |
 | `npm test -w @scaps/api` | Todos los tests del backend (unitarios y end-to-end) |
 | `npm run test:e2e -w @scaps/api` | Solo los end-to-end |
+| `npm run seed -w @scaps/api` | Carga el admin y los productos de demo en tu base |
 
 ---
 
