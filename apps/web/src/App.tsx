@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router';
 import Navbar from './components/Navbar';
 import SlowServerNotice from './components/SlowServerNotice';
 import RequireAdmin from './components/RequireAdmin';
+import RequireAuth from './components/RequireAuth';
 import { useSessionStore } from './stores/session-store';
 import Landing from './pages/Landing';
 import Catalogo from './pages/Catalogo';
@@ -31,9 +32,30 @@ export default function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/catalogo" element={<Catalogo />} />
           <Route path="/producto/:slug" element={<Producto />} />
-          <Route path="/carrito" element={<Carrito />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/mis-direcciones" element={<MisDirecciones />} />
+          <Route
+            path="/carrito"
+            element={
+              <RequireAuth>
+                <Carrito />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/checkout"
+            element={
+              <RequireAuth>
+                <Checkout />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/mis-direcciones"
+            element={
+              <RequireAuth>
+                <MisDirecciones />
+              </RequireAuth>
+            }
+          />
           <Route path="/login" element={<Login />} />
           <Route path="/registro" element={<Registro />} />
           <Route
