@@ -199,6 +199,11 @@ Catálogo. Devuelve **solo productos activos** en formato *card* (liviano, sin `
 **Notas**
 - Los filtros son acotados a propósito: no hay categorías ni variantes en el MVP, así que hoy se filtra por texto, rango de precio y disponibilidad. Se puede ampliar sin romper el contrato.
 - `imagen_principal` **siempre viene presente**: todo producto tiene al menos una imagen con una marcada como principal (la portada), garantizado desde su creación (relación 1..* del modelo de datos).
+- `page` arranca en `1`, con un máximo de `10000`; `limit` vale `20` por defecto, con un máximo de `50`. Una página más allá del final devuelve `data: []`, no `404`; sin resultados, `total_pages` es `0`.
+- `precio_min` y `precio_max` van con el formato de los montos, sin signo y con hasta dos decimales (`5000` o `5000.50`). Si el mínimo supera al máximo, `400`.
+- `en_stock=false` equivale a omitirlo: no existe un filtro de "sin stock".
+- `q` no distingue mayúsculas de minúsculas.
+- Un parámetro que no está en la tabla, o uno con un valor inválido (un precio vacío incluido), devuelve `400`.
 
 ### `GET /products/featured` · Público
 
