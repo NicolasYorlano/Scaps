@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { api } from '../lib/api';
+import { api, ApiError } from '../lib/api';
 import { clearToken, getToken, setToken } from '../lib/token';
 
 // Mismo shape que UserResponse del backend (ver docs/contrato-api): es el
@@ -64,13 +64,13 @@ export const useSessionStore = create<SessionStore>((set) => ({
 
     try {
       const user = await api.get<SessionUser>('/auth/me');
+      // Un login o logout durante la espera deja vieja esta respuesta.
+      if (getToken() !== token) return;
       set({ user, status: 'authenticated' });
-    } catch {
-      // 401 (token vencido) o cualquier otro fallo: en ningún caso hay forma
-      // de confirmar que el token sigue vivo, así que se trata igual — se
-      // descarta y queda anónimo. No hace falta distinguir el motivo: el
-      // resultado para el usuario es el mismo, volver a loguearse.
-      clearToken();
+    } catch (error) {
+      if (getToken() !== token) return;
+      // Solo un 401 invalida el token: un corte de red o un 5xx no dicen nada de él.
+      if (error instanceof ApiError && error.status === 401) clearToken();
       set({ user: null, status: 'anonymous' });
     }
   },
