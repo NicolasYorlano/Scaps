@@ -12,7 +12,7 @@ export const PRODUCT_SORTS = [
 
 export type ProductSort = (typeof PRODUCT_SORTS)[number];
 
-// Monto sin signo y con hasta dos decimales. Queda como string: así nunca pasa por un float.
+// Monto sin signo, con punto decimal y con hasta dos decimales. Queda como string: así nunca pasa por un float.
 const MONEY_PATTERN = /^\d+(\.\d{1,2})?$/;
 
 export class ListProductsQueryDto extends PaginationQueryDto {
