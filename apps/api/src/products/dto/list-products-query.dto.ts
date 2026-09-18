@@ -29,8 +29,7 @@ export class ListProductsQueryDto extends PaginationQueryDto {
   @Matches(MONEY_PATTERN, {message: 'El precio máximo debe ser un monto válido'})
   precio_max?: string;
 
-  // Boolean('false') es true, así que se convierte a mano. Cualquier otro valor
-  // queda como está y lo rechaza @IsBoolean.
+  // Boolean('false') es true, así que se convierte a mano. Cualquier otro valor queda como está y lo rechaza @IsBoolean.
   @IsOptional()
   @Transform(({ value }: { value: unknown }) =>
     value === 'true' ? true : value === 'false' ? false : value,
