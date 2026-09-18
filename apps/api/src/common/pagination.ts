@@ -29,12 +29,7 @@ export interface Paginated<T> {
   meta: { page: number; limit: number; total: number; total_pages: number };
 }
 
-export function paginate<T>(
-  data: T[],
-  total: number,
-  page: number,
-  limit: number,
-): Paginated<T> {
+export function paginate<T>(data: T[], total: number, page: number, limit: number): Paginated<T> {
   return {
     data,
     meta: { page, limit, total, total_pages: Math.ceil(total / limit) },
