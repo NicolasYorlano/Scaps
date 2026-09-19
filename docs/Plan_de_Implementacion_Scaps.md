@@ -13,21 +13,22 @@
 
 Scaps es un e-commerce de una marca de gorras que proyecta ampliar su catálogo (a futuro: pilusos, pasamontañas, boinas, viseras, etc). El plan construye una **plataforma que escala a múltiples productos** desde el inicio, aunque hoy la marca tenga unos pocos modelos, y suma un **visor de productos en 3D interactivo** como rasgo distintivo.
 
-El objetivo es salir a producción el 8 de octubre con un MVP **de nivel de producción**: no un prototipo que funciona en la demo, sino software sólido en seguridad, pagos, manejo de errores y pruebas.
+El objetivo es salir a producción el 8 de octubre con un MVP **de nivel de producción**: no un prototipo que funciona en la demo, sino software sólido en seguridad, manejo de errores y pruebas.
 
-Dos definiciones de alcance ordenan el proyecto:
+Tres definiciones de alcance ordenan el proyecto:
 
 - **El visor 3D es solo de visualización** en esta etapa (rotar el producto, sin personalizar). En la ficha de cada producto se ven imágenes y hay una opción para verlo en 3D. La personalización (accesorios, color/material, packaging) queda para una segunda etapa, con la arquitectura preparada para incorporarla sin reescribir.
 - **Catálogo con productos de demo:** los productos son ficticios y sus modelos 3D salen de un banco libre, lo que evita depender de modelar o conseguir gorras reales. La plataforma está diseñada para cargar productos reales más adelante sin cambios estructurales.
+- **Sin pago en línea en esta etapa:** el recorrido del MVP llega hasta el carrito. El checkout con dirección de envío y el pago con Mercado Pago quedan para una segunda etapa; el modelo de datos y el contrato de la API ya los contemplan, así que incorporarlos no obliga a reescribir nada.
 
-El cronograma deja el MVP funcional terminado a comienzos de septiembre y reserva las semanas siguientes para endurecimiento, QA y contingencia. La prioridad es la **calidad de lo entregado**, no sumar funciones.
+El cronograma deja el MVP funcional terminado a fines de agosto y reserva las semanas siguientes para estabilización, endurecimiento, QA y contingencia. La prioridad es la **calidad de lo entregado**, no sumar funciones.
 
 ---
 
 ## 2. Principios del plan
 
 1. **Construir para N productos, mostrar con productos de demo.** La plataforma soporta múltiples productos; para la demo se cargan productos ficticios con modelos de un banco libre, y queda diseñada para cargar productos reales más adelante sin cambios estructurales.
-2. **Nivel de producción, no prototipo.** Todo lo que entra al MVP se construye con estándar de producción: seguridad real en autenticación y pagos, validaciones, manejo de errores y pruebas de los caminos críticos (detalle en la Sección 10).
+2. **Nivel de producción, no prototipo.** Todo lo que entra al MVP se construye con estándar de producción: seguridad real en autenticación, validaciones, manejo de errores y pruebas de los caminos críticos (detalle en la Sección 10).
 3. **Alcance bloqueado, tiempo a la calidad.** El MVP está cerrado; el margen del cronograma va a QA, endurecimiento y contingencia, no a funciones nuevas. Sumar features reintroduce riesgo.
 4. **Frentes en paralelo.** Backend y frontend avanzan en simultáneo desde el Sprint 1, trabajando contra un contrato de API definido temprano.
 5. **Stack mínimo.** El equipo es chico: se incorpora solo la tecnología que aporta un valor claro y se evitan herramientas que sumen complejidad sin necesidad. Ante la duda entre dos opciones, gana la más simple de operar.
@@ -48,7 +49,6 @@ Prioriza un único lenguaje (TypeScript) de punta a punta.
 | Base de datos | PostgreSQL | Gestionada en Neon, plan gratuito. Un proyecto para producción y uno de desarrollo por integrante, para aislar los cupos. |
 | ORM | Prisma | Tipado de punta a punta y migraciones simples. |
 | Autenticación | JWT + roles | Implementación propia en NestJS (guards + DTOs). |
-| Pagos | Mercado Pago Checkout Pro | Estándar en Argentina; versión por redirección. |
 | Modelos 3D e imágenes | `.glb` de un banco libre (CC0 y/o CC BY 4.0) + imágenes, en Cloudflare R2 | Comprimir los `.glb` con Draco. Los modelos CC BY requieren atribución (registrada en `docs/glb/Creditos_Modelos_3D_Scaps.pdf`). |
 | Hosting frontend | Vercel | Deploy automático al hacer push (función nativa de Vercel, sin pipeline de CI/CD). |
 | Hosting backend | Render | Plan gratuito: el servicio se duerme tras 15 min sin tráfico y tarda entre 30 y 60 s en despertar. |
@@ -63,8 +63,7 @@ Scaps combina una **landing inmersiva con un catálogo clásico**, bajo un **nav
 - **Landing:** al entrar, un visor 3D muestra el producto destacado (configurable por el administrador), que el usuario puede rotar. Un llamado a la acción claro (**Ver catálogo**) lleva a explorar el resto de los productos.
 - **Catálogo:** vista clásica en **cards**, con búsqueda, filtros y ordenamiento (por precio, nombre, etc.). Al seleccionar una card se abre la ficha del producto.
 - **Ficha de producto:** muestra la **galería de imágenes** del producto y un botón **Ver en 3D**; al tocarlo se abre el visor 3D de ese producto (rotarlo). El 3D es una opción, no la vista por defecto.
-- **Carrito y checkout:** el checkout captura la **dirección de envío**; propone la dirección principal del usuario, que puede confirmar o editar.
-- **Mis direcciones:** libreta donde el usuario gestiona sus direcciones de envío (puede tener varias, con una marcada como principal).
+- **Carrito:** el usuario agrega productos, ajusta cantidades y ve el total, validado contra el stock disponible. El checkout y el pago quedan para la segunda etapa.
 - **Login** (página propia) y **Dashboard administrativo**.
 
 ```
@@ -72,17 +71,16 @@ NAVBAR persistente (logo + navegación)
   ├─ Landing  → Visor 3D del producto destacado (rotar) + CTA "Ver catálogo"
   ├─ Catálogo → Cards (buscar · filtrar · ordenar) → Ficha (galería de imágenes)
   │       └─ opción "Ver en 3D" → Visor 3D del producto
-  ├─ Carrito → Checkout (dirección de envío)
-  ├─ Mis direcciones (libreta del usuario)
+  ├─ Carrito
   ├─ Login
-  └─ Dashboard admin (CRUD · órdenes · marcar destacado)
+  └─ Dashboard admin (CRUD de productos · galería · marcar destacado)
 
 FRONTEND (React + Vite — Vercel)
         │  REST + JWT
 BACKEND (NestJS)
-  Auth · Productos · Direcciones · Carrito · Órdenes · Stock · Métricas
+  Auth · Productos · Carrito · Stock
         │
-   PostgreSQL   +   Mercado Pago (checkout + webhook de confirmación)
+   PostgreSQL
    Cloudflare R2: imágenes y modelos .glb (el navegador los pide directo por URL)
 ```
 
@@ -121,17 +119,17 @@ Para un equipo chico alcanza con **npm workspaces** (viene con Node, sin nada nu
 | **0** | 15–28 jun | Setup + POC del visor 3D | Repositorio + tooling, **modelos `.glb` de un banco libre**, modelo de datos (diagrama entidad-relación), contrato de API, wireframes. **POC: cargar un `.glb` y rotarlo.** |
 | **1** | 29 jun – 12 jul | Autenticación + base del backend ‖ base del frontend | Auth con roles, CRUD de productos (API), **despliegue en Vercel/Render activo** ‖ estructura React + landing. |
 | **2** | 13–26 jul | Catálogo + ficha + visor 3D ‖ datos | Catálogo en cards (búsqueda, filtros y ordenamiento), ficha de producto con galería de imágenes y opción **Ver en 3D** (visor: rotar) ‖ modelo de datos + stock. |
-| **3** | 27 jul – 9 ago | Carrito + pagos | Carrito, checkout con **dirección de envío** (libreta del usuario), **Mercado Pago en entorno de pruebas**, **descuento automático de stock** al confirmarse el pago. |
-| **4** | 10–23 ago | Dashboard administrativo | CRUD de productos (interfaz), listado de órdenes, **selección del producto destacado**, métricas mínimas. |
-| **5** | 24 ago – 6 sep | Estabilización | Pruebas de caminos críticos (login, checkout, stock), diseño responsive, corrección de errores. → **Fin del MVP funcional.** |
-| **6** | 7–20 sep | Endurecimiento de producción | Seguridad (auth, pagos, validación de entradas), performance (carga del 3D e imágenes), accesibilidad básica, documentación, carga de productos de demo. |
+| **3** | 27 jul – 9 ago | Carrito | Carrito completo: agregar y quitar productos, cambiar cantidades, subtotales y total, validación contra stock, persistido por usuario. |
+| **4** | 10–23 ago | Dashboard administrativo | CRUD de productos (interfaz), gestión de la galería de imágenes, **selección del producto destacado**. → **Fin del MVP funcional.** |
+| **5** | 24 ago – 6 sep | Estabilización | Pruebas de caminos críticos (login, catálogo, carrito), diseño responsive, corrección de errores. |
+| **6** | 7–20 sep | Endurecimiento de producción | Seguridad (auth, validación de entradas), performance (carga del 3D e imágenes), accesibilidad básica, documentación, carga de productos de demo. |
 | **Contingencia + salida** | 21 sep – 8 oct | Margen + producción | Buffer para ajustes finales, UAT, despliegue a producción, monitoreo y preparación de la demo. **Entrega: 8/10.** |
 
 **Puntos a tener presentes:**
 
 - **Sprint 0 — el POC del visor es de bajo riesgo.** Cargar y rotar un modelo con R3F + drei es territorio conocido; valida el visor sin sobresaltos.
-- **Sprint 3 — Mercado Pago.** Se trabaja en entorno de pruebas desde el primer día de la fase, **y ahí se queda**: la app no sale a producción real, solo se muestra la demo. El código es idéntico en los dos modos —lo único que cambia son las credenciales—, así que pasar a producción, si alguna vez hiciera falta, es cambiar dos variables de entorno. El stock se descuenta cuando Mercado Pago **confirma el pago** (vía webhook), no al presionar "pagar".
-- **El MVP funcional queda listo el 6/9.** Las cinco semanas siguientes se dedican a endurecimiento, QA y contingencia.
+- **Sprint 3 — el carrito cierra el recorrido del MVP.** Sin checkout no hay órdenes ni descuento automático de stock: el stock se muestra y lo edita el administrador desde el dashboard, pero no se mueve solo.
+- **El MVP funcional queda listo el 23/8.** Las casi siete semanas siguientes se dedican a estabilización, endurecimiento, QA y contingencia.
 
 ---
 
@@ -143,19 +141,18 @@ Para un equipo chico alcanza con **npm workspaces** (viene con Node, sin nada nu
 - Catálogo en cards con búsqueda, filtros y ordenamiento.
 - Ficha de producto con galería de imágenes y opción **Ver en 3D**.
 - Autenticación con roles (administrador / usuario).
-- Carrito + checkout (con **dirección de envío**) + pago con **Mercado Pago en entorno de pruebas** (flujo completo: preferencia, redirección, webhook y confirmación).
-- Libreta de direcciones del usuario (varias, con una principal) para el checkout.
-- Descuento automático de stock al confirmarse la compra.
-- Dashboard administrativo: CRUD de productos, listado de órdenes, selección del producto destacado y métricas mínimas.
+- Carrito: agregar y quitar productos, cambiar cantidades y ver el total.
+- Dashboard administrativo: CRUD de productos, gestión de la galería de imágenes y selección del producto destacado.
 - Productos de demo ficticios (modelos de un banco libre), con la plataforma lista para cargar productos reales.
 
 **Segunda etapa (fuera de esta entrega):**
 
+- **Checkout y pagos:** checkout con dirección de envío, libreta de direcciones del usuario, pago con **Mercado Pago Checkout Pro** y descuento automático de stock al confirmarse el pago.
+- **Órdenes:** historial del cliente, listado para el administrador y métricas de ventas del dashboard.
 - Personalización en 3D: accesorios, color/material y packaging.
-- Métricas avanzadas en el dashboard.
 - Nuevos tipos de producto (pilusos, pasamontañas, boinas, viseras).
 
-La arquitectura se diseña para incorporar la personalización más adelante sin reescritura.
+La arquitectura se diseña para incorporar todo esto más adelante sin reescritura: el modelo de datos y el contrato de la API ya contemplan órdenes, direcciones y el flujo de pago.
 
 ---
 
@@ -163,7 +160,7 @@ La arquitectura se diseña para incorporar la personalización más adelante sin
 
 El equipo trabaja con un **modelo de tareas (pull), no con roles fijos**. No se asigna un responsable por área: el trabajo vive en un backlog priorizado y cada integrante toma la tarea que sigue. Es más flexible para un equipo chico y evita la rigidez de "esta persona es la dueña de tal parte".
 
-Para que el modelo funcione —y no derive en que las tareas fáciles se eligen y las críticas (pagos, auth, despliegue) quedan sin tomar— se apoya en pocas reglas livianas:
+Para que el modelo funcione —y no derive en que las tareas fáciles se eligen y las críticas (auth, carrito, despliegue) quedan sin tomar— se apoya en pocas reglas livianas:
 
 - **Backlog claro y en piezas chicas.** Cada tarea se redacta para completarse en pocos días, con descripción concreta y criterio de "hecho". Se agrupan por área (Auth, Catálogo, Visor 3D, Carrito, Pagos, Dashboard, Infraestructura, Setup, Documentación), lo que organiza *el trabajo* y no a *las personas*.
 - **Tablero priorizado, una tarea en curso por persona.** En GitHub Projects, las tareas listas para tomar están ordenadas por prioridad. Cada uno toma de arriba hacia abajo y mantiene una sola tarea en curso hasta terminarla. Tomar siempre de las prioritarias evita que lo crítico quede para el final.
@@ -182,7 +179,6 @@ Una nota para un equipo chico y con disponibilidad despareja:
 | Riesgo | Impacto | Mitigación |
 |---|---|---|
 | Disponibilidad de modelos 3D | Bajo | Resuelto: se usan modelos de un banco libre (CC0 y/o CC BY 4.0). Sin dependencia de modelar ni de conseguir gorras reales. Los modelos CC BY exigen atribución en la app y el README, registrada en `docs/glb/Creditos_Modelos_3D_Scaps.pdf`. |
-| Integración con Mercado Pago | Alto | Checkout Pro (redirección), entorno de pruebas temprano, stock mediante webhook. |
 | Sostener el nivel de producción bajo presión de tiempo | Medio | Revisión por Pull Request desde el inicio; sprint propio de endurecimiento y QA. |
 | Parciales en la etapa final | Bajo-medio | La ventana de contingencia (fines de septiembre – octubre) absorbe la carga académica. |
 | Crecimiento del alcance | Medio | MVP cerrado; lo nuevo va a la segunda etapa. |
@@ -196,9 +192,8 @@ Una nota para un equipo chico y con disponibilidad despareja:
 Para que el entregable sea de producción y no un prototipo, lo construido debe cumplir:
 
 - **Seguridad:** contraseñas hasheadas, control de acceso por rol, validación de entradas en el backend, secretos en variables de entorno (nunca versionados).
-- **Pagos confiables:** el stock se descuenta solo con la confirmación de Mercado Pago (webhook); manejo de pagos fallidos o abandonados.
 - **Robustez:** manejo de errores y estados de carga en toda la interfaz; la app no se rompe ante datos faltantes o respuestas lentas.
-- **Pruebas:** cobertura de los caminos críticos (login, checkout, descuento de stock).
+- **Pruebas:** cobertura de los caminos críticos (login, catálogo, carrito).
 - **Calidad de código:** revisión por Pull Request, linter y formateo automáticos (ESLint + Prettier).
 - **Experiencia:** diseño responsive, HTTPS/SSL, performance del visor 3D y de las imágenes del catálogo.
 - **Documentación:** README, guía de instalación y contrato de la API.
