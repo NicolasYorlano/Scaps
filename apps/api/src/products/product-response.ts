@@ -22,9 +22,7 @@ export const DETAIL_INCLUDE = {
 } satisfies Prisma.ProductoInclude;
 
 type ProductCardRow = Prisma.ProductoGetPayload<{ select: typeof CARD_SELECT }>;
-type ProductDetailRow = Prisma.ProductoGetPayload<{
-  include: typeof DETAIL_INCLUDE;
-}>;
+type ProductDetailRow = Prisma.ProductoGetPayload<{include: typeof DETAIL_INCLUDE}>;
 
 // Las formas exactas del contrato: "card" en el catálogo, "detalle" en la ficha.
 export interface ProductCardResponse {
