@@ -76,7 +76,7 @@ export class ProductsService {
   }
 
   async findFeatured(): Promise<ProductDetailResponse> {
-    // Debería haber uno solo; el orden vuelve determinístico el caso en que no.
+    // Debería haber uno solo; el orden vuelve determinístico en caso de que no.
     const product = await this.prisma.producto.findFirst({
       where: { ...PUBLIC_WHERE, destacado: true },
       include: DETAIL_INCLUDE,
