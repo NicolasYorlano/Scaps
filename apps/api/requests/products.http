@@ -1,0 +1,250 @@
+# Productos (administración) — llamadas de prueba contra la API local.
+#
+# Cada caso anota al lado la respuesta que se espera. Si alguna deja de
+# coincidir, cambió el comportamiento del endpoint.
+#
+# Requiere la extensión REST Client (humao.rest-client) y la API corriendo
+# sobre una base con el seed:
+#
+#     npm run seed -w @scaps/api
+#     npm run start:dev -w @scaps/api
+#
+# Mandalos en orden: el 1 y el 2 dan los tokens, y del 15 en adelante usan el
+# producto que crea el 6. El 2 usa el usuario que crea el caso 1 de auth.http.
+#
+# La baja es lógica, así que los productos que crea este archivo quedan en la
+# base, y en una segunda corrida el slug del 6 y del 7 sube de sufijo. Para
+# borrarlos, desde apps/api: npx prisma studio, y en el producto de prueba
+# primero sus filas de ProductoImagen y después la de Producto.
+
+@host = http://localhost:3000/api
+@r2 = https://pub-6128219e47234ffb824474fa3df9636d.r2.dev
+
+# Copiá acá el `token` que devuelven el 1 y el 2. Vencen a las 2 horas.
+@adminToken = pegar-aca-el-token-del-caso-1
+@userToken = pegar-aca-el-token-del-caso-2
+
+# Para los casos 15 a 23: copiá acá el `id` que devuelve el caso 6.
+@productId = pegar-aca-el-id-del-caso-6
+
+### 1 · Login del admin del seed → 200 + { user, token }, es_admin: true
+# Pide el ADMIN_EMAIL y el ADMIN_PASSWORD de apps/api/.env: la clave no va
+# escrita acá porque este archivo se commitea.
+# @prompt adminEmail ADMIN_EMAIL de apps/api/.env
+# @prompt adminPassword ADMIN_PASSWORD de apps/api/.env
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{adminEmail}}",
+  "password": "{{adminPassword}}"
+}
+
+### 2 · Login del usuario común → 200 + { user, token }, es_admin: false
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "test-auth@scaps.dev",
+  "password": "una-clave-segura"
+}
+
+### 3 · Listado de admin, sin token → 401
+GET {{host}}/admin/products
+
+### 4 · Listado de admin, con un usuario común → 403
+# Lo mismo vale para las otras cuatro rutas de este archivo: @Roles protege
+# el controller entero.
+GET {{host}}/admin/products
+Authorization: Bearer {{userToken}}
+
+### 5 · Listado de admin → 200 + { data, meta }, con activos e inactivos
+# Objetos completos (con glb_url e imágenes), no las cards del catálogo.
+GET {{host}}/admin/products
+Authorization: Bearer {{adminToken}}
+
+### 6 · Crear un producto → 201, slug "gorra-prueba-nandu", activo: true, destacado: false
+# Ninguna imagen viene marcada como principal: la toma la de menor orden (la
+# de "frente"). Copiá el `id` de la respuesta en @productId.
+POST {{host}}/products
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "nombre": "Gorra Prueba Ñandú",
+  "descripcion": "Producto de prueba del CRUD de admin.",
+  "precio": "19999.50",
+  "stock": 10,
+  "glb_url": "{{r2}}/cap-filipmatlak-oliva.glb",
+  "imagenes": [
+    { "url": "{{r2}}/cap-filipmatlak-oliva-costado.webp", "alt": "Gorra de prueba de costado", "orden": 1 },
+    { "url": "{{r2}}/cap-filipmatlak-oliva-frente.webp", "alt": "Gorra de prueba de frente", "orden": 0 }
+  ]
+}
+
+### 7 · El mismo nombre otra vez → 201, slug "gorra-prueba-nandu-2"
+POST {{host}}/products
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "nombre": "Gorra Prueba Ñandú",
+  "precio": "19999.50",
+  "stock": 10,
+  "glb_url": "{{r2}}/cap-filipmatlak-oliva.glb",
+  "imagenes": [{ "url": "{{r2}}/cap-filipmatlak-oliva-frente.webp", "alt": "Gorra de prueba de frente" }]
+}
+
+### 8 · Un slug explícito que ya existe → 409
+# Un slug elegido a mano no se corrige con sufijo: se rechaza.
+POST {{host}}/products
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "nombre": "Otra gorra",
+  "slug": "cap-vanarsdale",
+  "precio": "19999.50",
+  "stock": 10,
+  "glb_url": "{{r2}}/cap-filipmatlak-oliva.glb",
+  "imagenes": [{ "url": "{{r2}}/cap-filipmatlak-oliva-frente.webp", "alt": "Gorra de prueba de frente" }]
+}
+
+### 9 · El slug reservado "featured" → 400
+# GET /products/featured taparía la ficha de ese producto.
+POST {{host}}/products
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "nombre": "Featured",
+  "slug": "featured",
+  "precio": "19999.50",
+  "stock": 10,
+  "glb_url": "{{r2}}/cap-filipmatlak-oliva.glb",
+  "imagenes": [{ "url": "{{r2}}/cap-filipmatlak-oliva-frente.webp", "alt": "Gorra de prueba de frente" }]
+}
+
+### 10 · Precio 0 → 400
+POST {{host}}/products
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "nombre": "Gorra gratis",
+  "precio": "0.00",
+  "stock": 10,
+  "glb_url": "{{r2}}/cap-filipmatlak-oliva.glb",
+  "imagenes": [{ "url": "{{r2}}/cap-filipmatlak-oliva-frente.webp", "alt": "Gorra de prueba de frente" }]
+}
+
+### 11 · Precio como número de JSON → 400
+# Los montos viajan como string, igual que en las respuestas.
+POST {{host}}/products
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "nombre": "Gorra con precio numérico",
+  "precio": 19999.5,
+  "stock": 10,
+  "glb_url": "{{r2}}/cap-filipmatlak-oliva.glb",
+  "imagenes": [{ "url": "{{r2}}/cap-filipmatlak-oliva-frente.webp", "alt": "Gorra de prueba de frente" }]
+}
+
+### 12 · Stock negativo → 400
+POST {{host}}/products
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "nombre": "Gorra sin stock",
+  "precio": "19999.50",
+  "stock": -1,
+  "glb_url": "{{r2}}/cap-filipmatlak-oliva.glb",
+  "imagenes": [{ "url": "{{r2}}/cap-filipmatlak-oliva-frente.webp", "alt": "Gorra de prueba de frente" }]
+}
+
+### 13 · Sin imágenes → 400
+# Todo producto tiene al menos una (relación 1..* del modelo de datos).
+POST {{host}}/products
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "nombre": "Gorra sin fotos",
+  "precio": "19999.50",
+  "stock": 10,
+  "glb_url": "{{r2}}/cap-filipmatlak-oliva.glb",
+  "imagenes": []
+}
+
+### 14 · Dos imágenes principales → 400
+POST {{host}}/products
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "nombre": "Gorra con dos portadas",
+  "precio": "19999.50",
+  "stock": 10,
+  "glb_url": "{{r2}}/cap-filipmatlak-oliva.glb",
+  "imagenes": [
+    { "url": "{{r2}}/cap-filipmatlak-oliva-frente.webp", "alt": "De frente", "es_principal": true },
+    { "url": "{{r2}}/cap-filipmatlak-oliva-costado.webp", "alt": "De costado", "es_principal": true }
+  ]
+}
+
+### 15 · Producto por id → 200 + el producto completo
+GET {{host}}/admin/products/{{productId}}
+Authorization: Bearer {{adminToken}}
+
+### 16 · Editar el nombre → 200, el slug sigue siendo "gorra-prueba-nandu"
+# La URL del producto queda estable aunque cambie el nombre.
+PATCH {{host}}/products/{{productId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "nombre": "Gorra Prueba Renombrada",
+  "precio": "17999.00"
+}
+
+### 17 · Editar las imágenes por PATCH → 400
+# La galería tiene sus propios endpoints (/products/:id/images).
+PATCH {{host}}/products/{{productId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "imagenes": []
+}
+
+### 18 · Dar de baja → 204
+# Baja lógica: activo pasa a false (y destacado también), la fila queda.
+DELETE {{host}}/products/{{productId}}
+Authorization: Bearer {{adminToken}}
+
+### 19 · Ficha pública del producto dado de baja → 404
+GET {{host}}/products/gorra-prueba-nandu
+
+### 20 · Listado de admin, solo inactivos → 200, incluye el producto dado de baja
+GET {{host}}/admin/products?activo=false
+Authorization: Bearer {{adminToken}}
+
+### 21 · Reactivar → 200, activo: true, y vuelve al catálogo público
+PATCH {{host}}/products/{{productId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "activo": true
+}
+
+### 22 · Un id que no es uuid → 400
+GET {{host}}/admin/products/abc
+Authorization: Bearer {{adminToken}}
+
+### 23 · Un uuid que no existe → 404
+DELETE {{host}}/products/00000000-0000-4000-8000-000000000000
+Authorization: Bearer {{adminToken}}
