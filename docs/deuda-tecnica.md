@@ -51,3 +51,15 @@ Cada entrada apunta a dónde se decidió. La fuente de verdad sigue siendo ese d
 **Por qué no ahora:** hasta la salida a producción no hay tráfico real —el consumo es el del equipo y el de la demo—, así que el límite no protegería de nada y suma una dependencia, en contra del principio de stack mínimo del plan. Mientras tanto el riesgo queda acotado: la fuerza bruta contra una clave choca con el mínimo de 8 caracteres y con el costo del hash (bcrypt en 10 rondas, ~75 ms por intento, unos 13 por segundo), y la enumeración de emails ya está cerrada por los dos canales —el mensaje de error es idéntico para email inexistente y clave incorrecta, y desde el arreglo del hash de descarte el tiempo de respuesta también—.
 
 **Decidido en:** revisión de la tarjeta *"[auth] Registro, login y datos del usuario actual"* (Sprint 1).
+
+---
+
+## Sin inicio de sesión con Google
+
+**Hoy:** la única forma de entrar es email y contraseña contra nuestra base. No hay login con proveedores externos.
+
+**Lo correcto:** sumar *"Ingresá con Google"* mediante **OpenID Connect** (la capa de identidad sobre OAuth 2.0; OAuth solo autoriza, no autentica). El backend valida el `id_token` que firma Google y, a partir de ahí, emite **nuestro** JWT como hasta ahora: el resto de la autenticación —guards, `@Roles`, `GET /auth/me`— no cambia.
+
+**Por qué no ahora:** no está en el contrato de API ni en el alcance comprometido del MVP, y no es un agregado aislado: `Usuario.password` es obligatorio en el esquema y una cuenta de Google no tiene contraseña, así que pide migración. Además hay que decidir qué pasa cuando un email ya registrado con contraseña entra por Google —unir las cuentas exige verificar `email_verified`, o se abre un robo de cuenta— y eso es una decisión de producto, no un detalle de implementación.
+
+**Decidido en:** consulta sobre el alcance de la autenticación, septiembre de 2026.
