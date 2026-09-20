@@ -118,7 +118,7 @@ Para un equipo chico alcanza con **npm workspaces** (viene con Node, sin nada nu
 |---|---|---|---|
 | **0** | 15–28 jun | Setup + POC del visor 3D | Repositorio + tooling, **modelos `.glb` de un banco libre**, modelo de datos (diagrama entidad-relación), contrato de API, wireframes. **POC: cargar un `.glb` y rotarlo.** |
 | **1** | 29 jun – 12 jul | Autenticación + base del backend ‖ base del frontend | Auth con roles, CRUD de productos (API), **despliegue en Vercel/Render activo** ‖ estructura React + landing. |
-| **2** | 13–26 jul | Catálogo + ficha + visor 3D ‖ datos | Catálogo en cards (búsqueda, filtros y ordenamiento), ficha de producto con galería de imágenes y opción **Ver en 3D** (visor: rotar) ‖ modelo de datos + stock. |
+| **2** | 13–26 jul | Catálogo + ficha + visor 3D | Catálogo en cards (búsqueda, filtros y ordenamiento), ficha de producto con galería de imágenes y opción **Ver en 3D**, visor del producto destacado en la landing (visor: rotar). |
 | **3** | 27 jul – 9 ago | Carrito | Carrito completo: agregar y quitar productos, cambiar cantidades, subtotales y total, validación contra stock, persistido por usuario. |
 | **4** | 10–23 ago | Dashboard administrativo | CRUD de productos (interfaz), gestión de la galería de imágenes, **selección del producto destacado**. → **Fin del MVP funcional.** |
 | **5** | 24 ago – 6 sep | Estabilización | Pruebas de caminos críticos (login, catálogo, carrito), diseño responsive, corrección de errores. |
