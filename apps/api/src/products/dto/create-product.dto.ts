@@ -1,20 +1,5 @@
 import { Type } from 'class-transformer';
-import {
-  ArrayMaxSize,
-  ArrayMinSize,
-  IsArray,
-  IsInt,
-  IsNotEmpty,
-  IsNotIn,
-  IsOptional,
-  IsString,
-  IsUrl,
-  Matches,
-  Max,
-  MaxLength,
-  Min,
-  ValidateNested,
-} from 'class-validator';
+import { ArrayMaxSize, ArrayMinSize, IsArray, IsInt, IsNotEmpty, IsNotIn, IsOptional, IsString, IsUrl, Matches, Max, MaxLength, Min, ValidateNested} from 'class-validator';
 import { RESERVED_SLUGS, SLUG_PATTERN } from '../slug';
 import { ProductImageDto } from './product-image.dto';
 
