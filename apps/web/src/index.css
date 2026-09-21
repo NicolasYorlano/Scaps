@@ -1,1 +1,36 @@
 @import 'tailwindcss';
+
+/* Guía visual Scaps (docs/wireframes/Guía visual Scaps e-commerce.pdf) —
+   sistema oscuro monocromo, sin color de acento ni colores de sistema (nada de rojo/verde):
+   la jerarquía se hace con fondos "de profundo a elevado", con el peso del
+   texto (Inter, solo 400/500) y con línea, nunca con relleno saturado. */
+@theme {
+  /* Fondos, de más profundo a más elevado */
+  --color-scaps-page: #090909; /* Página */
+  --color-scaps-sunken: #0d0d0d; /* Campo hundido · sidebar admin */
+  --color-scaps-canvas: #121212; /* Lienzo de pantalla */
+  --color-scaps-card: #171717; /* Contenedor · card base */
+  --color-scaps-nav: #1c1c1c; /* Nav / topbar */
+  --color-scaps-card-highlight: #202020; /* Card destacado · header de tabla · resumen */
+  --color-scaps-placeholder: #242424; /* Placeholder de imagen */
+
+  /* Texto */
+  --color-scaps-text: #f5f5f5; /* primario */
+  --color-scaps-text-secondary: #c2c2c2; /* secundario */
+  --color-scaps-text-muted: #9b9b9b; /* apagado */
+  --color-scaps-text-annotation: #737373; /* anotación / placeholder / deshabilitado */
+  --color-scaps-text-on-primary: #f2f2f2; /* texto sobre acción primaria y estados afirmativos */
+
+  /* Bordes */
+  --color-scaps-border: #333333; /* borde de contenedor y card */
+  --color-scaps-border-input: #4d4d4d; /* borde de input y botón secundario */
+  --color-scaps-border-row: #262626; /* separador de filas dentro de una card */
+  --color-scaps-border-primary: #8a8a8a; /* borde de acción primaria y elemento activo */
+
+  /* Radio único del sistema (pill 99px para badges, no usado todavía) */
+  --radius-scaps: 8px;
+
+  /* Excepción a "sin colores de sistema", a pedido explícito: marca el
+     campo con el dato inválido — el resto del sistema sigue monocromo. */
+  --color-scaps-error: #dc2626;
+}
