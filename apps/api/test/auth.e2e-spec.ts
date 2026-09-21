@@ -91,10 +91,9 @@ describe('Auth (e2e)', () => {
     return request(app.getHttpServer()).get('/api/auth/me').expect(401);
   });
 
-  // Cuando exista GET /admin/products, este caso pasa a esa ruta.
   it('rechaza una ruta de admin con un usuario común', () => {
     return request(app.getHttpServer())
-      .get('/api/auth/admin-check')
+      .get('/api/admin/products')
       .set('Authorization', `Bearer ${token}`)
       .expect(403); // 403 y no 401: el token es válido, lo que falta es el permiso.
   });

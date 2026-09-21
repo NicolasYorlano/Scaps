@@ -2,7 +2,7 @@
 
 ### E-commerce de gorras con visor de productos en 3D
 
-**Equipo (Comisión S31):** Nicolás Yorlano · Pablo Alessandrini Flores · Gonzalo Lorenzo · Mauro Casale
+**Equipo (Comisión S31):** Nicolás Yorlano · Pablo Alessandrini Flores · Mauro Casale
 **Repositorio:** https://github.com/NicolasYorlano/Scaps
 **Salida a producción:** 8 de octubre de 2026
 **Ejecución:** sprints de 2 semanas (15 de junio – 8 de octubre de 2026)
@@ -93,7 +93,7 @@ scaps/
 ├─ apps/
 │  ├─ web/   → React + Vite   (Vercel)
 │  └─ api/   → NestJS         (Render)
-├─ docs/               (ERD, contrato de API, wireframes, backlogs de sprint, modelos .glb)
+├─ docs/               (modelo de datos, contrato de API, guía visual, backlogs de sprint, modelos .glb)
 ├─ package.json        (workspaces: ["apps/*"])
 └─ config raíz         (ESLint, Prettier, .gitignore)
 ```
@@ -105,7 +105,6 @@ Para un equipo chico alcanza con **npm workspaces** (viene con Node, sin nada nu
 ## 5. Metodología de trabajo
 
 - **Sprints de 2 semanas**, con planificación, revisión y retrospectiva.
-- **Daily breve**, asíncrono por Discord si los horarios no coinciden.
 - **Tablero en GitHub Projects:** `Backlog → To Do → In Progress → In Review → Done`.
 - **Control de versiones:** rama `main` protegida y siempre desplegable; una rama por funcionalidad; Pull Request con **revisión de un compañero** antes de integrar.
 - **Definición de "Hecho":** implementado, revisado, probado e integrado a `main` sin romper el despliegue.

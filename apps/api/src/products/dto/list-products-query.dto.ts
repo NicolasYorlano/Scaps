@@ -1,6 +1,7 @@
-import { Transform } from 'class-transformer';
 import {IsBoolean, IsIn, IsOptional, IsString, Matches, MaxLength} from 'class-validator';
+import { MONEY_PATTERN } from '../../common/money';
 import { PaginationQueryDto } from '../../common/pagination';
+import { QueryBoolean } from '../../common/query-boolean';
 
 export const PRODUCT_SORTS = [
   'precio_asc',
@@ -11,9 +12,6 @@ export const PRODUCT_SORTS = [
 ] as const;
 
 export type ProductSort = (typeof PRODUCT_SORTS)[number];
-
-// Monto sin signo, con punto decimal y con hasta dos decimales. Queda como string: así nunca pasa por un float.
-const MONEY_PATTERN = /^\d+(\.\d{1,2})?$/;
 
 export class ListProductsQueryDto extends PaginationQueryDto {
   @IsOptional()
@@ -29,11 +27,8 @@ export class ListProductsQueryDto extends PaginationQueryDto {
   @Matches(MONEY_PATTERN, {message: 'El precio máximo debe ser un monto válido'})
   precio_max?: string;
 
-  // Boolean('false') es true, así que se convierte a mano. Cualquier otro valor queda como está y lo rechaza @IsBoolean.
   @IsOptional()
-  @Transform(({ value }: { value: unknown }) =>
-    value === 'true' ? true : value === 'false' ? false : value,
-  )
+  @QueryBoolean()
   @IsBoolean({ message: 'El filtro de stock debe ser true o false' })
   en_stock?: boolean;
 

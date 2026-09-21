@@ -119,11 +119,11 @@ Content-Type: application/json
 ### 9 · Ruta de admin, sin token → 401
 # Corta JwtAuthGuard, AdminGuard ni llega a correr: sin token no hay a quién
 # mirarle el rol.
-GET {{host}}/auth/admin-check
+GET {{host}}/admin/products
 
 ### 10 · Ruta de admin, con el token de un usuario común → 403
 # La diferencia con el 9: el token es válido, lo que falta es el permiso.
-GET {{host}}/auth/admin-check
+GET {{host}}/admin/products
 Authorization: Bearer {{token}}
 
 
@@ -142,7 +142,7 @@ Content-Type: application/json
   "password": "{{adminPassword}}"
 }
 
-### 12 · Ruta de admin, con el token del admin → 200 + { ok, email }
+### 12 · Ruta de admin, con el token del admin → 200 + { data, meta }
 # Si responde 403, el token es de un usuario común; si responde 401, venció.
-GET {{host}}/auth/admin-check
+GET {{host}}/admin/products
 Authorization: Bearer {{adminToken}}
