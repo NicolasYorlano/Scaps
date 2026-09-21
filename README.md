@@ -186,7 +186,7 @@ Toda la documentación del proyecto está en [`docs/`](docs/):
 - **[Plan de implementación](docs/Plan_de_Implementacion_Scaps.md)** — alcance del MVP, stack, cronograma y decisiones tomadas
 - **[Contrato de la API](docs/contrato-api/Contrato_de_API_Scaps.md)** — endpoints con método, ruta, request y response
 - **[Modelo de datos](docs/modelo-de-datos/)** — tablas, campos y diagrama entidad-relación
-- **[Wireframes](docs/wireframes/wireframes-mvp.md)** — bocetos de las pantallas del MVP
+- **[Guía visual](docs/wireframes/Gu%C3%ADa%20visual%20Scaps%20e-commerce.pdf)** — las doce pantallas del MVP en modo oscuro, con paleta, medidas y grilla. Reemplaza a los wireframes
 - **[Modelos 3D](docs/glb/)** — los `.glb` de demo y sus créditos de licencia
 - **[Sprints](docs/sprints/)** — backlog de cada sprint; la guía de trabajo del equipo está en el de Sprint 0
 - **[Deuda técnica](docs/deuda-tecnica.md)** — lo que se resuelve después del MVP, y por qué
