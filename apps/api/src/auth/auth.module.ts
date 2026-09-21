@@ -26,5 +26,8 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtAuthGuard, AdminGuard],
+  // Los guards de @Roles se instancian en el módulo del controller que los usa,
+  // y JwtAuthGuard necesita JwtService: sin este export, ese módulo no arranca.
+  exports: [JwtModule],
 })
 export class AuthModule {}

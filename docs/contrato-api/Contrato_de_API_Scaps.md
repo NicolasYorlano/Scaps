@@ -200,7 +200,7 @@ Catálogo. Devuelve **solo productos activos** en formato *card* (liviano, sin `
 - Los filtros son acotados a propósito: no hay categorías ni variantes en el MVP, así que hoy se filtra por texto, rango de precio y disponibilidad. Se puede ampliar sin romper el contrato.
 - `imagen_principal` **siempre viene presente**: todo producto tiene al menos una imagen con una marcada como principal (la portada), garantizado desde su creación (relación 1..* del modelo de datos).
 - `page` arranca en `1`, con un máximo de `10000`; `limit` vale `20` por defecto, con un máximo de `50`. Una página más allá del final devuelve `data: []`, no `404`; sin resultados, `total_pages` es `0`.
-- `precio_min` y `precio_max` van con el formato de los montos, sin signo y con hasta dos decimales (`5000` o `5000.50`). Si el mínimo supera al máximo, `400`.
+- `precio_min` y `precio_max` van con el formato de los montos, sin signo, con hasta dos decimales y hasta `99999999.99` (`5000` o `5000.50`). Si el mínimo supera al máximo, `400`.
 - `en_stock=false` equivale a omitirlo: no existe un filtro de "sin stock".
 - `q` no distingue mayúsculas de minúsculas.
 - Un parámetro que no está en la tabla, o uno con un valor inválido (un precio vacío incluido), devuelve `400`.
@@ -295,6 +295,8 @@ Listado para el dashboard: **incluye inactivos**, con todos los campos. Mismos `
 
 Un producto por `id` (incluye inactivos y su galería). Para precargar el formulario de edición. Response `200` — objeto **Producto (detalle)**.
 
+En esta ruta y en las mutaciones por `id`: `400` si el `id` no es un uuid, `404` si no existe.
+
 ### `POST /products` · Admin
 
 Crea un producto **completo**: sus datos, el modelo 3D y sus imágenes, en una sola operación. El `slug` se genera solo a partir del `nombre` (y se garantiza único); se puede pasar uno para sobreescribir.
@@ -321,18 +323,23 @@ Los archivos (el `.glb` y las imágenes) se suben **antes** —cada uno a su end
 **Notas**
 - `glb_url` es obligatorio (el visor es el rasgo distintivo). La URL sale de `POST /uploads/model`.
 - `imagenes` requiere **al menos una** (relación 1..* del modelo de datos: un producto no existe sin imagen). Cada URL sale de `POST /uploads/image`. El `alt` es obligatorio por imagen; `orden` y `es_principal` son opcionales.
-- Exactamente una imagen es la portada (`es_principal`). Si no se marca ninguna, el backend toma la primera; si se marca más de una, es `400`.
+- Exactamente una imagen es la portada (`es_principal`). Si no se marca ninguna, el backend toma la primera de la galería (la de menor `orden`); si se marca más de una, es `400`. Una imagen sin `orden` toma su posición en la lista.
 - El producto y sus imágenes se crean en una sola transacción, así que nace cumpliendo el 1..* y puede quedar activo de una (sin estado intermedio).
-- Validaciones del backend: `precio > 0`, `stock ≥ 0`. `400` si no cumplen.
-- `409` si el `slug` (autogenerado o pasado) colisiona y no se puede resolver.
+- Validaciones del backend: `precio > 0`, `stock ≥ 0`. `400` si no cumplen. Topes: `precio` hasta `99999999.99` (lo que entra en la columna) y `stock` hasta `1000000`. `glb_url` y las `url` de las imágenes, `https`. Hasta 10 imágenes por producto.
+- El `slug` autogenerado saca tildes y signos (`"Gorra Ñandú"` → `gorra-nandu`); si ya existe, suma `-2`, `-3`… Un `slug` pasado a mano solo lleva minúsculas, números y guiones, y si ya existe da `409` en vez de corregirse. `featured` está reservado (`400`): la ruta `GET /products/featured` taparía esa ficha.
 
 ### `PATCH /products/:id` · Admin
 
-Edición parcial. Se mandan solo los campos a cambiar (mismos que en el POST, más `activo`). Response `200` — objeto **Producto (detalle)**.
+Edición parcial. Se mandan solo los campos a cambiar: `nombre`, `descripcion`, `precio`, `stock`, `glb_url` y `activo`, con las mismas validaciones que en el POST. Response `200` — objeto **Producto (detalle)**.
+
+**Notas**
+- Las imágenes no se editan acá sino con los endpoints de la galería (más abajo), y el `slug` no se edita nunca: la URL queda estable. Mandar `imagenes` o `slug` es `400`.
+- `descripcion: null` borra la descripción; el resto de los campos no acepta `null`.
+- `activo: false` es una baja, igual que el `DELETE`: también saca el flag `destacado`.
 
 ### `DELETE /products/:id` · Admin
 
-**Baja lógica:** setea `activo = false`, no borra la fila (así no se rompen las órdenes que ya compraron ese producto; ver modelo de datos). Para reactivarlo: `PATCH { "activo": true }`. Response `204`.
+**Baja lógica:** setea `activo = false`, no borra la fila (así no se rompen las órdenes que ya compraron ese producto; ver modelo de datos). Si era el destacado, le saca el flag. Para reactivarlo: `PATCH { "activo": true }`, que no lo vuelve a destacar. Response `204`.
 
 ### `PUT /products/featured` · Admin
 
