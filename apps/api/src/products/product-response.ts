@@ -72,8 +72,8 @@ export function toProductCard(row: ProductCardRow): ProductCardResponse {
   };
 }
 
-// Allowlist, igual que toUserResponse: un campo que se sume al modelo no sale
-// en la respuesta hasta que alguien lo agregue acá.
+// Allowlist: un campo que se sume al modelo no sale en la respuesta hasta 
+// que alguien lo agregue acá.
 export function toProductDetail(row: ProductDetailRow): ProductDetailResponse {
   return {
     id: row.id,
