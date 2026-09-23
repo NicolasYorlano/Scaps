@@ -1,7 +1,6 @@
 import { IsBoolean, IsInt, IsNotEmpty, IsOptional, IsString, IsUrl, Max, MaxLength, Min } from 'class-validator';
 
-// Una imagen de la galería. El archivo ya está subido: acá viaja su URL. La
-// regla básica va al final de cada campo (ver create-product.dto.ts).
+// Una imagen de la galería. El archivo ya está subido: acá viaja su URL. 
 export class ProductImageDto {
   @IsUrl({ protocols: ['https'], require_protocol: true }, { message: 'La imagen debe ser una URL https válida' })
   url: string;
