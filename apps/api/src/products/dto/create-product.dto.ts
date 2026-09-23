@@ -25,9 +25,7 @@ export class CreateProductDto {
   descripcion?: string | null;
 
   // Como string y no como número de JSON, que pasaría por float.
-  @Matches(POSITIVE_MONEY_PATTERN, {
-    message: 'El precio debe ser mayor que 0 y venir como texto, por ejemplo "15999.00"',
-  })
+  @Matches(POSITIVE_MONEY_PATTERN, {message: 'El precio debe ser mayor que 0 y venir como texto, por ejemplo "15999.00"'})
   precio: string;
 
   @Max(MAX_STOCK, { message: `El stock no puede ser mayor que ${MAX_STOCK}` })
