@@ -42,7 +42,7 @@ export class ProductsService {
       include: DETAIL_INCLUDE,
     });
 
-    // Un producto inactivo da el mismo 404 que uno inexistente.
+    // Un producto inactivo o sin imágenes da el mismo 404 que uno inexistente.
     if (!product) {
       throw new NotFoundException('Producto no encontrado'); /* 404 */
     }
