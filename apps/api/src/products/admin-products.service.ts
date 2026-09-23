@@ -71,7 +71,7 @@ export class AdminProductsService {
     }
   }
 
-  // Nunca toca el slug: la URL queda estable aunque cambie el nombre.
+  // Nunca toca el slug ni las imágenes: la URL queda estable y la galería se edita por su cuenta.
   async update(id: string, dto: UpdateProductDto): Promise<ProductDetailResponse> {
     try {
       const product = await this.prisma.producto.update({
@@ -119,8 +119,7 @@ export class AdminProductsService {
   }
 }
 
-// Exactamente una portada. Si no viene marcada, es la primera de la galería
-// (menor orden; sin orden, cuenta la posición en la lista).
+// Exactamente una portada por producto: si el admin no marca ninguna, la elige el backend.
 function withCover(imagenes: ProductImageDto[]) {
   if (imagenes.filter((imagen) => imagen.es_principal).length > 1) {
     throw new BadRequestException('Solo una imagen puede ser la principal'); /* 400 */
@@ -133,6 +132,8 @@ function withCover(imagenes: ProductImageDto[]) {
     es_principal: imagen.es_principal ?? false,
   }));
 
+  // La ficha muestra la galería por `orden`, no por el orden del arreglo, así
+  // que la portada es la de menor `orden`; si empatan, la que vino antes.
   if (!gallery.some((imagen) => imagen.es_principal)) {
     gallery.reduce((first, imagen) => (imagen.orden < first.orden ? imagen : first)).es_principal = true;
   }
