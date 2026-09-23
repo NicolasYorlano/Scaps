@@ -1,11 +1,8 @@
 import { Type } from 'class-transformer';
 import { ArrayMaxSize, ArrayMinSize, IsArray, IsInt, IsNotEmpty, IsNotIn, IsOptional, IsString, IsUrl, Matches, Max, MaxLength, Min, ValidateNested} from 'class-validator';
+import { POSITIVE_MONEY_PATTERN } from '../../common/money';
 import { RESERVED_SLUGS, SLUG_PATTERN } from '../slug';
 import { ProductImageDto } from './product-image.dto';
-
-// El formato de los montos (ver common/money.ts) con al menos un dígito
-// distinto de 0, que en ese formato equivale a ser mayor que 0.
-const POSITIVE_MONEY_PATTERN = /^(?=.*[1-9])\d{1,8}(\.\d{1,2})?$/;
 
 // Más que cualquier stock real. Sin tope, un número enorme desborda el Int de
 // la columna y Prisma responde 500.
