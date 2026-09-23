@@ -19,6 +19,13 @@
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": true,
     "strictBindCallApply": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    // Los campos de los DTO los llena el ValidationPipe, no un constructor. Va explícito porque 
+    // TypeScript 6 lo activa por defecto y marca cada propiedad en rojo; el build usa la 5.9 y no lo hace.
+    "strictPropertyInitialization": false,
+    // Los @types viven hoisteados en la raíz del monorepo. TypeScript 6 ya no
+    // los busca solo, así que los tests quedaban sin `describe` ni `expect`.
+    "types": ["node", "jest"],
+    "typeRoots": ["./node_modules/@types", "../../node_modules/@types"]
   }
 }
