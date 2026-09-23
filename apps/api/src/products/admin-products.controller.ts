@@ -11,9 +11,8 @@ import type { ProductDetailResponse } from './product-response';
 const ProductId = () =>
   Param('id', new ParseUUIDPipe({ exceptionFactory: () => new BadRequestException('El id no es válido') }));
 
-// @Roles en la clase protege todas las rutas, también las que se sumen después.
-// Los paths van enteros porque el contrato reparte estas rutas entre
-// /admin/products (lecturas) y /products (mutaciones).
+// @Roles en la clase protege todas las rutas. Los paths van enteros porque el 
+// contrato reparte estas rutas entre /admin/products (lecturas) y /products (mutaciones).
 @Controller()
 @Roles('admin')
 export class AdminProductsController {
