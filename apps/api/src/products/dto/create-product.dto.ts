@@ -8,8 +8,6 @@ import { ProductImageDto } from './product-image.dto';
 // la columna y Prisma responde 500.
 const MAX_STOCK = 1_000_000;
 
-// class-validator devuelve los mensajes de abajo hacia arriba y el front
-// muestra el primero: la regla básica (obligatorio, tipo) va al final.
 export class CreateProductDto {
   @MaxLength(100, { message: 'El nombre no puede superar los 100 caracteres' })
   @IsString({ message: 'El nombre debe ser texto' })
