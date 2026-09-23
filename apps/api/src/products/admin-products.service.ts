@@ -16,7 +16,7 @@ export class AdminProductsService {
 
   async findAll(query: AdminListProductsQueryDto): Promise<Paginated<ProductDetailResponse>> {
     const { activo, sort, page, limit } = query;
-    // Sin el filtro público: el admin ve también los inactivos.
+    // Sin el filtro público: el admin ve también los inactivos y/o sin imágenes.
     const where: Prisma.ProductoWhereInput = { ...catalogFilters(query), activo };
 
     const [total, rows] = await Promise.all([
