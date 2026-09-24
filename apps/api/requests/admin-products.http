@@ -1,0 +1,434 @@
+# Productos (administración) — llamadas de prueba contra la API local.
+#
+# Cada caso anota al lado la respuesta que se espera. Si alguna deja de
+# coincidir, cambió el comportamiento del endpoint.
+#
+# Requiere la extensión REST Client (humao.rest-client) y la API corriendo
+# sobre una base con el seed:
+#
+#     npm run seed -w @scaps/api
+#     npm run start:dev -w @scaps/api
+#
+# Los tokens y el id del producto NO se copian a mano: los casos 1, 2 y 12
+# están nombrados (`# @name`) y el resto lee su respuesta. Mandá el 1 y el 2
+# una vez —el 2 usa el usuario que crea el caso 1 de auth.http— y después los
+# demás en orden. Si reiniciás VS Code, las respuestas se pierden y hay que
+# volver a mandar el 1, el 2 y el 12.
+#
+# La baja es lógica, así que los productos que crea este archivo quedan en la
+# base, y en una segunda corrida los slugs suben de sufijo. Para borrarlos,
+# desde apps/api: npx prisma studio, y en cada producto de prueba primero sus
+# filas de ProductoImagen y después la de Producto.
+
+@host = http://localhost:3000/api
+@r2 = https://pub-6128219e47234ffb824474fa3df9636d.r2.dev
+
+@adminToken = {{loginAdmin.response.body.$.token}}
+@userToken = {{loginUser.response.body.$.token}}
+@productId = {{crearProducto.response.body.$.id}}
+@productSlug = {{crearProducto.response.body.$.slug}}
+
+### 1 · Login del admin del seed → 200 + { user, token }, es_admin: true
+# Pide el ADMIN_EMAIL y el ADMIN_PASSWORD de apps/api/.env: la clave no va
+# escrita acá porque este archivo se commitea.
+# @name loginAdmin
+# @prompt adminEmail ADMIN_EMAIL de apps/api/.env
+# @prompt adminPassword ADMIN_PASSWORD de apps/api/.env
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{adminEmail}}",
+  "password": "{{adminPassword}}"
+}
+
+### 2 · Login del usuario común → 200 + { user, token }, es_admin: false
+# @name loginUser
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "test-auth@scaps.dev",
+  "password": "una-clave-segura"
+}
+
+### 3 · Listado de admin, sin token → 401
+GET {{host}}/admin/products
+
+### 4 · Listado de admin, con un usuario común → 403
+GET {{host}}/admin/products
+Authorization: Bearer {{userToken}}
+
+### 5 · Alta sin token → 401
+# El guard corre antes de validar el cuerpo, así que el body vacío no importa.
+POST {{host}}/products
+Content-Type: application/json
+
+{}
+
+### 6 · Alta con un usuario común → 403
+POST {{host}}/products
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{}
+
+### 7 · Listado de admin → 200 + { data, meta }, con activos e inactivos
+# Objetos completos (con glb_url e imágenes), no las cards del catálogo.
+GET {{host}}/admin/products
+Authorization: Bearer {{adminToken}}
+
+### 8 · Listado con los filtros del catálogo → 200, 1 resultado por página
+# Son los mismos parámetros que el catálogo público (product-filters.ts).
+GET {{host}}/admin/products?q=filipmatlak&sort=precio_asc&limit=1
+Authorization: Bearer {{adminToken}}
+
+### 9 · Listado solo de activos → 200, sin los dados de baja
+GET {{host}}/admin/products?activo=true
+Authorization: Bearer {{adminToken}}
+
+### 10 · Filtro activo con un valor que no es booleano → 400
+GET {{host}}/admin/products?activo=si
+Authorization: Bearer {{adminToken}}
+
+### 11 · Un parámetro que no existe → 400
+# forbidNonWhitelisted: la petición se rechaza entera.
+GET {{host}}/admin/products?color=rojo
+Authorization: Bearer {{adminToken}}
+
+### 12 · Crear un producto → 201, activo: true, destacado: false
+# El slug sale del nombre: "gorra-prueba-nandu" en una base limpia, o con
+# sufijo (-2, -3…) si quedó uno de una corrida anterior.
+# Ninguna imagen viene marcada como principal y el orden está invertido: la
+# portada es la de orden 0, no la primera de la lista.
+# Lo usan del 27 en adelante.
+# @name crearProducto
+POST {{host}}/products
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "nombre": "Gorra Prueba Ñandú",
+  "descripcion": "Producto de prueba del CRUD de admin.",
+  "precio": "19999.50",
+  "stock": 10,
+  "glb_url": "{{r2}}/cap-filipmatlak-oliva.glb",
+  "imagenes": [
+    { "url": "{{r2}}/cap-filipmatlak-oliva-costado.webp", "alt": "Gorra de prueba de costado", "orden": 1 },
+    { "url": "{{r2}}/cap-filipmatlak-oliva-frente.webp", "alt": "Gorra de prueba de frente", "orden": 0 }
+  ]
+}
+
+### 13 · Crear sin orden ni portada → 201, la portada es la primera de la lista
+# Sin `orden`, cada imagen toma su posición: "frente" queda en 0 y es la portada.
+POST {{host}}/products
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "nombre": "Gorra Prueba Sin Orden",
+  "precio": "19999.50",
+  "stock": 10,
+  "glb_url": "{{r2}}/cap-filipmatlak-oliva.glb",
+  "imagenes": [
+    { "url": "{{r2}}/cap-filipmatlak-oliva-frente.webp", "alt": "Gorra de prueba de frente" },
+    { "url": "{{r2}}/cap-filipmatlak-oliva-costado.webp", "alt": "Gorra de prueba de costado" }
+  ]
+}
+
+### 14 · El mismo nombre del 12 otra vez → 201, con el slug del 12 más un sufijo
+# Dos productos pueden llamarse igual; el slug es el que no se repite.
+POST {{host}}/products
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "nombre": "Gorra Prueba Ñandú",
+  "precio": "19999.50",
+  "stock": 10,
+  "glb_url": "{{r2}}/cap-filipmatlak-oliva.glb",
+  "imagenes": [{ "url": "{{r2}}/cap-filipmatlak-oliva-frente.webp", "alt": "Gorra de prueba de frente" }]
+}
+
+### 15 · Un slug explícito que ya existe → 409
+# Un slug elegido a mano no se corrige con sufijo: se rechaza.
+POST {{host}}/products
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "nombre": "Otra gorra",
+  "slug": "cap-vanarsdale",
+  "precio": "19999.50",
+  "stock": 10,
+  "glb_url": "{{r2}}/cap-filipmatlak-oliva.glb",
+  "imagenes": [{ "url": "{{r2}}/cap-filipmatlak-oliva-frente.webp", "alt": "Gorra de prueba de frente" }]
+}
+
+### 16 · El slug reservado "featured" → 400
+# GET /products/featured taparía la ficha de ese producto.
+POST {{host}}/products
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "nombre": "Featured",
+  "slug": "featured",
+  "precio": "19999.50",
+  "stock": 10,
+  "glb_url": "{{r2}}/cap-filipmatlak-oliva.glb",
+  "imagenes": [{ "url": "{{r2}}/cap-filipmatlak-oliva-frente.webp", "alt": "Gorra de prueba de frente" }]
+}
+
+### 17 · Intentar nacer destacado → 400
+# `destacado` no está en el DTO: el único camino es PUT /products/featured.
+POST {{host}}/products
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "nombre": "Gorra colada",
+  "precio": "19999.50",
+  "stock": 10,
+  "destacado": true,
+  "glb_url": "{{r2}}/cap-filipmatlak-oliva.glb",
+  "imagenes": [{ "url": "{{r2}}/cap-filipmatlak-oliva-frente.webp", "alt": "Gorra de prueba de frente" }]
+}
+
+### 18 · Precio 0 → 400
+POST {{host}}/products
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "nombre": "Gorra gratis",
+  "precio": "0.00",
+  "stock": 10,
+  "glb_url": "{{r2}}/cap-filipmatlak-oliva.glb",
+  "imagenes": [{ "url": "{{r2}}/cap-filipmatlak-oliva-frente.webp", "alt": "Gorra de prueba de frente" }]
+}
+
+### 19 · Precio como número de JSON → 400
+# Los montos viajan como string, igual que en las respuestas.
+POST {{host}}/products
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "nombre": "Gorra con precio numérico",
+  "precio": 19999.5,
+  "stock": 10,
+  "glb_url": "{{r2}}/cap-filipmatlak-oliva.glb",
+  "imagenes": [{ "url": "{{r2}}/cap-filipmatlak-oliva-frente.webp", "alt": "Gorra de prueba de frente" }]
+}
+
+### 20 · Precio más grande de lo que entra en la columna → 400
+# Decimal(10,2): hasta 99999999.99. Sin este tope, Prisma responde 500.
+POST {{host}}/products
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "nombre": "Gorra carísima",
+  "precio": "100000000.00",
+  "stock": 10,
+  "glb_url": "{{r2}}/cap-filipmatlak-oliva.glb",
+  "imagenes": [{ "url": "{{r2}}/cap-filipmatlak-oliva-frente.webp", "alt": "Gorra de prueba de frente" }]
+}
+
+### 21 · Stock negativo → 400
+POST {{host}}/products
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "nombre": "Gorra sin stock",
+  "precio": "19999.50",
+  "stock": -1,
+  "glb_url": "{{r2}}/cap-filipmatlak-oliva.glb",
+  "imagenes": [{ "url": "{{r2}}/cap-filipmatlak-oliva-frente.webp", "alt": "Gorra de prueba de frente" }]
+}
+
+### 22 · Stock más grande que el tope → 400
+# El Int de la columna es de 32 bits; el DTO corta en 1.000.000.
+POST {{host}}/products
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "nombre": "Gorra con stock infinito",
+  "precio": "19999.50",
+  "stock": 2000000000,
+  "glb_url": "{{r2}}/cap-filipmatlak-oliva.glb",
+  "imagenes": [{ "url": "{{r2}}/cap-filipmatlak-oliva-frente.webp", "alt": "Gorra de prueba de frente" }]
+}
+
+### 23 · Sin imágenes → 400
+# Todo producto tiene al menos una (relación 1..* del modelo de datos).
+POST {{host}}/products
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "nombre": "Gorra sin fotos",
+  "precio": "19999.50",
+  "stock": 10,
+  "glb_url": "{{r2}}/cap-filipmatlak-oliva.glb",
+  "imagenes": []
+}
+
+### 24 · Dos imágenes principales → 400
+POST {{host}}/products
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "nombre": "Gorra con dos portadas",
+  "precio": "19999.50",
+  "stock": 10,
+  "glb_url": "{{r2}}/cap-filipmatlak-oliva.glb",
+  "imagenes": [
+    { "url": "{{r2}}/cap-filipmatlak-oliva-frente.webp", "alt": "De frente", "es_principal": true },
+    { "url": "{{r2}}/cap-filipmatlak-oliva-costado.webp", "alt": "De costado", "es_principal": true }
+  ]
+}
+
+### 25 · Imagen sin alt → 400
+# El alt es obligatorio por accesibilidad (ver modelo de datos).
+POST {{host}}/products
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "nombre": "Gorra sin alt",
+  "precio": "19999.50",
+  "stock": 10,
+  "glb_url": "{{r2}}/cap-filipmatlak-oliva.glb",
+  "imagenes": [{ "url": "{{r2}}/cap-filipmatlak-oliva-frente.webp" }]
+}
+
+### 26 · URL que no es https → 400
+POST {{host}}/products
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "nombre": "Gorra con modelo inseguro",
+  "precio": "19999.50",
+  "stock": 10,
+  "glb_url": "http://example.com/gorra.glb",
+  "imagenes": [{ "url": "{{r2}}/cap-filipmatlak-oliva-frente.webp", "alt": "Gorra de prueba de frente" }]
+}
+
+### 27 · Producto por id → 200 + el producto completo
+GET {{host}}/admin/products/{{productId}}
+Authorization: Bearer {{adminToken}}
+
+### 28 · Editar el nombre y el precio → 200, el slug no cambia
+# La URL del producto queda estable aunque cambie el nombre.
+PATCH {{host}}/products/{{productId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "nombre": "Gorra Prueba Renombrada",
+  "precio": "17999.00"
+}
+
+### 29 · Editar las imágenes por PATCH → 400
+# La galería tiene sus propios endpoints (/products/:id/images).
+PATCH {{host}}/products/{{productId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "imagenes": []
+}
+
+### 30 · Editar el slug → 400
+# No se edita nunca: rompería los enlaces ya compartidos.
+PATCH {{host}}/products/{{productId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "slug": "otro-slug"
+}
+
+### 31 · Borrar el nombre con null → 400
+# El PATCH acepta que falte un campo, no que venga vacío.
+PATCH {{host}}/products/{{productId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "nombre": null
+}
+
+### 32 · Borrar la descripción con null → 200, descripcion: null
+# La descripción sí es opcional en el modelo, así que null la limpia.
+PATCH {{host}}/products/{{productId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "descripcion": null
+}
+
+### 33 · Precio inválido en el PATCH → 400
+# El PATCH valida igual que el alta: los DTOs comparten las reglas.
+PATCH {{host}}/products/{{productId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "precio": "0"
+}
+
+### 34 · Dar de baja con PATCH → 200, activo: false y destacado: false
+# Con PUT /products/featured (tarea de galería) este caso además prueba que la
+# baja le saca el destacado.
+PATCH {{host}}/products/{{productId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "activo": false
+}
+
+### 35 · Ficha pública del producto dado de baja → 404
+GET {{host}}/products/{{productSlug}}
+
+### 36 · Listado de admin, solo inactivos → 200, incluye el producto dado de baja
+GET {{host}}/admin/products?activo=false
+Authorization: Bearer {{adminToken}}
+
+### 37 · Reactivar → 200, activo: true
+# Y vuelve a responder la ficha pública del 35.
+PATCH {{host}}/products/{{productId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "activo": true
+}
+
+### 38 · Dar de baja con DELETE → 204
+# Baja lógica: la fila queda, para no romper carritos ni órdenes.
+DELETE {{host}}/products/{{productId}}
+Authorization: Bearer {{adminToken}}
+
+### 39 · Ficha pública después del DELETE → 404
+GET {{host}}/products/{{productSlug}}
+
+### 40 · Un id que no es uuid → 400
+GET {{host}}/admin/products/abc
+Authorization: Bearer {{adminToken}}
+
+### 41 · Un uuid que no existe → 404
+GET {{host}}/admin/products/00000000-0000-4000-8000-000000000000
+Authorization: Bearer {{adminToken}}
+
+### 42 · Dar de baja un uuid que no existe → 404
+DELETE {{host}}/products/00000000-0000-4000-8000-000000000000
+Authorization: Bearer {{adminToken}}

@@ -1,4 +1,4 @@
-# Productos (administración) — llamadas de prueba contra la API local.
+# Catálogo público — llamadas de prueba contra la API local.
 #
 # Cada caso anota al lado la respuesta que se espera. Si alguna deja de
 # coincidir, cambió el comportamiento del endpoint.
@@ -9,242 +9,98 @@
 #     npm run seed -w @scaps/api
 #     npm run start:dev -w @scaps/api
 #
-# Mandalos en orden: el 1 y el 2 dan los tokens, y del 15 en adelante usan el
-# producto que crea el 6. El 2 usa el usuario que crea el caso 1 de auth.http.
+# Son todos GET sin token: no crean ni modifican nada, se pueden mandar en
+# cualquier orden y las veces que quieras. Los totales que anota cada caso son
+# los de una base recién seedeada (4 productos); si quedaron productos de
+# prueba de admin-products.http, los números suben.
 #
-# La baja es lógica, así que los productos que crea este archivo quedan en la
-# base, y en una segunda corrida el slug del 6 y del 7 sube de sufijo. Para
-# borrarlos, desde apps/api: npx prisma studio, y en el producto de prueba
-# primero sus filas de ProductoImagen y después la de Producto.
+# Lo que necesita un producto dado de baja o sin destacado vive en
+# admin-products.http, que es el único que puede mutar datos.
 
 @host = http://localhost:3000/api
-@r2 = https://pub-6128219e47234ffb824474fa3df9636d.r2.dev
 
-# Copiá acá el `token` que devuelven el 1 y el 2. Vencen a las 2 horas.
-@adminToken = pegar-aca-el-token-del-caso-1
-@userToken = pegar-aca-el-token-del-caso-2
+### 1 · Catálogo completo → 200 + { data, meta }
+# Con la base recién seedeada son los 4 productos, todos activos.
+# Formato card: id, nombre, slug, precio, destacado, imagen_principal, stock.
+# Sin glb_url ni galería, y los precios como string de dos decimales
+# ("24999.00"). imagen_principal viene siempre.
+GET {{host}}/products
 
-# Para los casos 15 a 23: copiá acá el `id` que devuelve el caso 6.
-@productId = pegar-aca-el-id-del-caso-6
+### 2 · Búsqueda por nombre → 200, las 2 Filipmatlak
+# En mayúsculas a propósito: la búsqueda no distingue mayúsculas.
+GET {{host}}/products?q=FILIPMATLAK
 
-### 1 · Login del admin del seed → 200 + { user, token }, es_admin: true
-# Pide el ADMIN_EMAIL y el ADMIN_PASSWORD de apps/api/.env: la clave no va
-# escrita acá porque este archivo se commitea.
-# @prompt adminEmail ADMIN_EMAIL de apps/api/.env
-# @prompt adminPassword ADMIN_PASSWORD de apps/api/.env
-POST {{host}}/auth/login
-Content-Type: application/json
+### 3 · Búsqueda sin resultados → 200, total: 0 y total_pages: 0
+# Lista vacía, no 404: el catálogo existe aunque no haya coincidencias.
+GET {{host}}/products?q=inexistente
 
-{
-  "email": "{{adminEmail}}",
-  "password": "{{adminPassword}}"
-}
+### 4 · Rango de precio y orden descendente → 200, Vanarsdale y después Danlyvostok
+GET {{host}}/products?precio_min=23000&sort=precio_desc
 
-### 2 · Login del usuario común → 200 + { user, token }, es_admin: false
-POST {{host}}/auth/login
-Content-Type: application/json
+### 5 · Orden por nombre → 200, alfabético
+# Los otros valores de sort: precio_asc, precio_desc, nombre_desc y recientes
+# (el que se usa si no se manda ninguno).
+GET {{host}}/products?sort=nombre_asc
 
-{
-  "email": "test-auth@scaps.dev",
-  "password": "una-clave-segura"
-}
+### 6 · Solo con stock → 200, los que tienen stock > 0
+# Con el seed son los 4. en_stock=false equivale a no mandarlo.
+GET {{host}}/products?en_stock=true
 
-### 3 · Listado de admin, sin token → 401
-GET {{host}}/admin/products
+### 7 · Segunda página, de a 3 → 200
+# Con el seed: 1 producto y total_pages 2.
+GET {{host}}/products?page=2&limit=3
 
-### 4 · Listado de admin, con un usuario común → 403
-# Lo mismo vale para las otras cuatro rutas de este archivo: @Roles protege
-# el controller entero.
-GET {{host}}/admin/products
-Authorization: Bearer {{userToken}}
+### 8 · Una página más allá del final → 200, data vacío
+# No es 404: la página existe, no tiene filas.
+GET {{host}}/products?page=50
 
-### 5 · Listado de admin → 200 + { data, meta }, con activos e inactivos
-# Objetos completos (con glb_url e imágenes), no las cards del catálogo.
-GET {{host}}/admin/products
-Authorization: Bearer {{adminToken}}
+### 9 · El límite máximo → 200
+GET {{host}}/products?limit=50
 
-### 6 · Crear un producto → 201, slug "gorra-prueba-nandu", activo: true, destacado: false
-# Ninguna imagen viene marcada como principal: la toma la de menor orden (la
-# de "frente"). Copiá el `id` de la respuesta en @productId.
-POST {{host}}/products
-Authorization: Bearer {{adminToken}}
-Content-Type: application/json
+### 10 · Precio mínimo mayor que el máximo → 400
+GET {{host}}/products?precio_min=30000&precio_max=10000
 
-{
-  "nombre": "Gorra Prueba Ñandú",
-  "descripcion": "Producto de prueba del CRUD de admin.",
-  "precio": "19999.50",
-  "stock": 10,
-  "glb_url": "{{r2}}/cap-filipmatlak-oliva.glb",
-  "imagenes": [
-    { "url": "{{r2}}/cap-filipmatlak-oliva-costado.webp", "alt": "Gorra de prueba de costado", "orden": 1 },
-    { "url": "{{r2}}/cap-filipmatlak-oliva-frente.webp", "alt": "Gorra de prueba de frente", "orden": 0 }
-  ]
-}
+### 11 · Un orden que no existe → 400
+GET {{host}}/products?sort=barato
 
-### 7 · El mismo nombre otra vez → 201, slug "gorra-prueba-nandu-2"
-POST {{host}}/products
-Authorization: Bearer {{adminToken}}
-Content-Type: application/json
+### 12 · en_stock con un valor que no es booleano → 400
+GET {{host}}/products?en_stock=si
 
-{
-  "nombre": "Gorra Prueba Ñandú",
-  "precio": "19999.50",
-  "stock": 10,
-  "glb_url": "{{r2}}/cap-filipmatlak-oliva.glb",
-  "imagenes": [{ "url": "{{r2}}/cap-filipmatlak-oliva-frente.webp", "alt": "Gorra de prueba de frente" }]
-}
+### 13 · Límite por encima del máximo → 400
+GET {{host}}/products?limit=51
 
-### 8 · Un slug explícito que ya existe → 409
-# Un slug elegido a mano no se corrige con sufijo: se rechaza.
-POST {{host}}/products
-Authorization: Bearer {{adminToken}}
-Content-Type: application/json
+### 14 · Límite en 0 → 400
+GET {{host}}/products?limit=0
 
-{
-  "nombre": "Otra gorra",
-  "slug": "cap-vanarsdale",
-  "precio": "19999.50",
-  "stock": 10,
-  "glb_url": "{{r2}}/cap-filipmatlak-oliva.glb",
-  "imagenes": [{ "url": "{{r2}}/cap-filipmatlak-oliva-frente.webp", "alt": "Gorra de prueba de frente" }]
-}
+### 15 · Página por encima del tope → 400
+# Sin este tope, el salto de filas se va del rango de Prisma y responde 500.
+GET {{host}}/products?page=10001
 
-### 9 · El slug reservado "featured" → 400
-# GET /products/featured taparía la ficha de ese producto.
-POST {{host}}/products
-Authorization: Bearer {{adminToken}}
-Content-Type: application/json
+### 16 · Precio con un formato inválido → 400
+# Hasta dos decimales y como mucho 99999999.99, que es lo que entra en la columna.
+GET {{host}}/products?precio_min=1.999
 
-{
-  "nombre": "Featured",
-  "slug": "featured",
-  "precio": "19999.50",
-  "stock": 10,
-  "glb_url": "{{r2}}/cap-filipmatlak-oliva.glb",
-  "imagenes": [{ "url": "{{r2}}/cap-filipmatlak-oliva-frente.webp", "alt": "Gorra de prueba de frente" }]
-}
+### 17 · Un parámetro que no existe → 400
+# forbidNonWhitelisted: el front no puede mandar parámetros de más.
+GET {{host}}/products?color=rojo
 
-### 10 · Precio 0 → 400
-POST {{host}}/products
-Authorization: Bearer {{adminToken}}
-Content-Type: application/json
+### 18 · Producto destacado → 200, el objeto completo de cap-danlyvostok
+# Trae glb_url y la galería, no la card. Su ruta se declara antes que
+# /products/:slug; si no, "featured" se leería como un slug.
+# Para ver el 404 de "no hay destacado", dar de baja el destacado con el caso
+# 34 de admin-products.http y volver acá.
+GET {{host}}/products/featured
 
-{
-  "nombre": "Gorra gratis",
-  "precio": "0.00",
-  "stock": 10,
-  "glb_url": "{{r2}}/cap-filipmatlak-oliva.glb",
-  "imagenes": [{ "url": "{{r2}}/cap-filipmatlak-oliva-frente.webp", "alt": "Gorra de prueba de frente" }]
-}
+### 19 · Ficha por slug → 200, el producto completo
+# imagenes ordenadas por `orden`, con exactamente una es_principal, y sin
+# producto_id.
+GET {{host}}/products/cap-vanarsdale
 
-### 11 · Precio como número de JSON → 400
-# Los montos viajan como string, igual que en las respuestas.
-POST {{host}}/products
-Authorization: Bearer {{adminToken}}
-Content-Type: application/json
+### 20 · Un slug que no existe → 404
+# Un producto dado de baja responde este mismo 404: lo prueban los casos 34 y
+# 35 de admin-products.http, que primero lo dan de baja.
+GET {{host}}/products/no-existe
 
-{
-  "nombre": "Gorra con precio numérico",
-  "precio": 19999.5,
-  "stock": 10,
-  "glb_url": "{{r2}}/cap-filipmatlak-oliva.glb",
-  "imagenes": [{ "url": "{{r2}}/cap-filipmatlak-oliva-frente.webp", "alt": "Gorra de prueba de frente" }]
-}
-
-### 12 · Stock negativo → 400
-POST {{host}}/products
-Authorization: Bearer {{adminToken}}
-Content-Type: application/json
-
-{
-  "nombre": "Gorra sin stock",
-  "precio": "19999.50",
-  "stock": -1,
-  "glb_url": "{{r2}}/cap-filipmatlak-oliva.glb",
-  "imagenes": [{ "url": "{{r2}}/cap-filipmatlak-oliva-frente.webp", "alt": "Gorra de prueba de frente" }]
-}
-
-### 13 · Sin imágenes → 400
-# Todo producto tiene al menos una (relación 1..* del modelo de datos).
-POST {{host}}/products
-Authorization: Bearer {{adminToken}}
-Content-Type: application/json
-
-{
-  "nombre": "Gorra sin fotos",
-  "precio": "19999.50",
-  "stock": 10,
-  "glb_url": "{{r2}}/cap-filipmatlak-oliva.glb",
-  "imagenes": []
-}
-
-### 14 · Dos imágenes principales → 400
-POST {{host}}/products
-Authorization: Bearer {{adminToken}}
-Content-Type: application/json
-
-{
-  "nombre": "Gorra con dos portadas",
-  "precio": "19999.50",
-  "stock": 10,
-  "glb_url": "{{r2}}/cap-filipmatlak-oliva.glb",
-  "imagenes": [
-    { "url": "{{r2}}/cap-filipmatlak-oliva-frente.webp", "alt": "De frente", "es_principal": true },
-    { "url": "{{r2}}/cap-filipmatlak-oliva-costado.webp", "alt": "De costado", "es_principal": true }
-  ]
-}
-
-### 15 · Producto por id → 200 + el producto completo
-GET {{host}}/admin/products/{{productId}}
-Authorization: Bearer {{adminToken}}
-
-### 16 · Editar el nombre → 200, el slug sigue siendo "gorra-prueba-nandu"
-# La URL del producto queda estable aunque cambie el nombre.
-PATCH {{host}}/products/{{productId}}
-Authorization: Bearer {{adminToken}}
-Content-Type: application/json
-
-{
-  "nombre": "Gorra Prueba Renombrada",
-  "precio": "17999.00"
-}
-
-### 17 · Editar las imágenes por PATCH → 400
-# La galería tiene sus propios endpoints (/products/:id/images).
-PATCH {{host}}/products/{{productId}}
-Authorization: Bearer {{adminToken}}
-Content-Type: application/json
-
-{
-  "imagenes": []
-}
-
-### 18 · Dar de baja → 204
-# Baja lógica: activo pasa a false (y destacado también), la fila queda.
-DELETE {{host}}/products/{{productId}}
-Authorization: Bearer {{adminToken}}
-
-### 19 · Ficha pública del producto dado de baja → 404
-GET {{host}}/products/gorra-prueba-nandu
-
-### 20 · Listado de admin, solo inactivos → 200, incluye el producto dado de baja
-GET {{host}}/admin/products?activo=false
-Authorization: Bearer {{adminToken}}
-
-### 21 · Reactivar → 200, activo: true, y vuelve al catálogo público
-PATCH {{host}}/products/{{productId}}
-Authorization: Bearer {{adminToken}}
-Content-Type: application/json
-
-{
-  "activo": true
-}
-
-### 22 · Un id que no es uuid → 400
-GET {{host}}/admin/products/abc
-Authorization: Bearer {{adminToken}}
-
-### 23 · Un uuid que no existe → 404
-DELETE {{host}}/products/00000000-0000-4000-8000-000000000000
-Authorization: Bearer {{adminToken}}
+### 21 · El mismo slug en mayúsculas → 404
+# El slug se busca tal cual viaja: los enlaces del front van en minúsculas.
+GET {{host}}/products/CAP-VANARSDALE
