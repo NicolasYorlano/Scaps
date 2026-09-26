@@ -2,7 +2,7 @@ import { Type } from 'class-transformer';
 import { ArrayMaxSize, ArrayMinSize, IsArray, IsInt, IsNotEmpty, IsNotIn, IsOptional, IsString, IsUrl, Matches, Max, MaxLength, Min, ValidateNested} from 'class-validator';
 import { POSITIVE_MONEY_PATTERN } from '../../common/money';
 import { RESERVED_SLUGS, SLUG_PATTERN } from '../slug';
-import { ProductImageDto } from './product-image.dto';
+import { MAX_IMAGES, ProductImageDto } from './product-image.dto';
 
 // Más que cualquier stock real. Sin tope, un número enorme desborda el Int de
 // la columna y Prisma responde 500.
@@ -31,7 +31,7 @@ export class CreateProductDto {
   @IsUrl({ protocols: ['https'], require_protocol: true }, { message: 'El modelo 3D debe ser una URL https válida' })
   glb_url: string;
 
-  @ArrayMaxSize(10, { message: 'El producto no puede tener más de 10 imágenes' })
+  @ArrayMaxSize(MAX_IMAGES, { message: `El producto no puede tener más de ${MAX_IMAGES} imágenes` })
   @IsArray({ message: 'Las imágenes deben ser una lista' })
   @ArrayMinSize(1, { message: 'El producto necesita al menos una imagen' })
   @ValidateNested({ each: true })

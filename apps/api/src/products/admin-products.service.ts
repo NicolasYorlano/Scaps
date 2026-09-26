@@ -1,6 +1,7 @@
 import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import type { Prisma } from '@prisma/client';
 import { paginate, type Paginated } from '../common/pagination';
+import { isPrismaError } from '../prisma/prisma-errors';
 import { PrismaService } from '../prisma/prisma.service';
 import type { AdminListProductsQueryDto } from './dto/admin-list-products-query.dto';
 import type { CreateProductDto } from './dto/create-product.dto';
@@ -16,7 +17,7 @@ export class AdminProductsService {
 
   async findAll(query: AdminListProductsQueryDto): Promise<Paginated<ProductDetailResponse>> {
     const { activo, sort, page, limit } = query;
-    // Sin el filtro público: el admin ve también los inactivos y/o sin imágenes.
+    // Sin el filtro público: el admin ve también los inactivos.
     const where: Prisma.ProductoWhereInput = { ...catalogFilters(query), activo };
 
     const [total, rows] = await Promise.all([
@@ -98,6 +99,35 @@ export class AdminProductsService {
     }
   }
 
+  // Un solo destacado: elegir uno nuevo le saca el flag al anterior en la misma
+  // transacción. No hay operación para vaciarlo a propósito.
+  setFeatured(productId: string): Promise<ProductDetailResponse> {
+    return this.prisma.serializable(async (tx) => {
+      const product = await tx.producto.findUnique({
+        where: { id: productId },
+        select: { activo: true },
+      });
+
+      if (!product) {
+        throw new NotFoundException('Producto no encontrado'); /* 404 */
+      }
+      if (!product.activo) {
+        throw new ConflictException('Solo se puede destacar un producto activo'); /* 409 */
+      }
+
+      await tx.producto.updateMany({
+        where: { destacado: true, id: { not: productId } },
+        data: { destacado: false },
+      });
+      const featured = await tx.producto.update({
+        where: { id: productId },
+        data: { destacado: true },
+        include: DETAIL_INCLUDE,
+      });
+      return toProductDetail(featured);
+    });
+  }
+
   // El primero libre entre base, base-2, base-3… Una sola consulta trae todos
   // los que empiezan igual, incluidos los de productos inactivos.
   private async uniqueSlug(base: string): Promise<string> {
@@ -139,10 +169,6 @@ function withCover(imagenes: ProductImageDto[]) {
   }
 
   return gallery;
-}
-
-function isPrismaError(error: unknown, code: string): boolean {
-  return error instanceof Prisma.PrismaClientKnownRequestError && error.code === code;
 }
 
 // P2025 = el update no encontró la fila.
