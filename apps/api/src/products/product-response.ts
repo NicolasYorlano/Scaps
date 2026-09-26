@@ -1,4 +1,4 @@
-import type { Prisma } from '@prisma/client';
+import type { Prisma, ProductoImagen } from '@prisma/client';
 import { toMoney } from '../common/money';
 
 // Lo que muestra una card: sin glb_url ni galería. De las imágenes, la
@@ -87,12 +87,17 @@ export function toProductDetail(row: ProductDetailRow): ProductDetailResponse {
     activo: row.activo,
     creado_en: row.creado_en,
     actualizado_en: row.actualizado_en,
-    imagenes: row.imagenes.map((imagen) => ({
-      id: imagen.id,
-      url: imagen.url,
-      alt: imagen.alt,
-      orden: imagen.orden,
-      es_principal: imagen.es_principal,
-    })),
+    imagenes: row.imagenes.map(toProductImage),
+  };
+}
+
+// Sin producto_id: la imagen siempre viaja dentro de su producto o en una ruta que ya lo nombra.
+export function toProductImage(row: ProductoImagen): ProductImageResponse {
+  return {
+    id: row.id,
+    url: row.url,
+    alt: row.alt,
+    orden: row.orden,
+    es_principal: row.es_principal,
   };
 }

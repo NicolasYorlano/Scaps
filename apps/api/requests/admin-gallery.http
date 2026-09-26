@@ -1,0 +1,462 @@
+# Galería de imágenes y producto destacado (administración) — llamadas de
+# prueba contra la API local.
+#
+# Cada caso anota al lado la respuesta que se espera. Si alguna deja de
+# coincidir, cambió el comportamiento del endpoint.
+#
+# Requiere la extensión REST Client (humao.rest-client) y la API corriendo
+# sobre una base con el seed:
+#
+#     npm run seed -w @scaps/api
+#     npm run start:dev -w @scaps/api
+#
+# Mandalos en orden, del 1 al final: los ids no se copian a mano, salen de los
+# casos nombrados (`# @name`), y cada caso cuenta con el estado que dejó el
+# anterior. El 2 usa el usuario que crea el caso 1 de auth.http. Si reiniciás
+# VS Code, las respuestas se pierden y hay que empezar de nuevo desde el 1.
+#
+# El destacado se mueve durante las pruebas: el caso 3 guarda el que dejó el
+# seed (Danlyvostok) y los últimos casos lo restauran y dan de baja los
+# productos de prueba. Como la baja es lógica, las filas quedan en la base;
+# para borrarlas, desde apps/api: npx prisma studio, y en cada producto de
+# prueba primero sus filas de ProductoImagen y después la de Producto.
+
+@host = http://localhost:3000/api
+@r2 = https://pub-6128219e47234ffb824474fa3df9636d.r2.dev
+
+@adminToken = {{loginAdmin.response.body.$.token}}
+@userToken = {{loginUser.response.body.$.token}}
+@danlyvostokId = {{fichaDanlyvostok.response.body.$.id}}
+
+@productId = {{crearProducto.response.body.$.id}}
+@frenteId = {{crearProducto.response.body.$.imagenes[0].id}}
+@costadoId = {{crearProducto.response.body.$.imagenes[1].id}}
+@atrasId = {{agregarImagen.response.body.$.id}}
+@arribaId = {{agregarPortada.response.body.$.id}}
+
+@unaImagenProductId = {{crearUnaImagen.response.body.$.id}}
+@unaImagenId = {{crearUnaImagen.response.body.$.imagenes[0].id}}
+@llenoProductId = {{crearLleno.response.body.$.id}}
+
+### 1 · Login del admin del seed → 200 + { user, token }, es_admin: true
+# Pide el ADMIN_EMAIL y el ADMIN_PASSWORD de apps/api/.env: la clave no va
+# escrita acá porque este archivo se commitea.
+# @name loginAdmin
+# @prompt adminEmail ADMIN_EMAIL de apps/api/.env
+# @prompt adminPassword ADMIN_PASSWORD de apps/api/.env
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{adminEmail}}",
+  "password": "{{adminPassword}}"
+}
+
+### 2 · Login del usuario común → 200 + { user, token }, es_admin: false
+# @name loginUser
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "test-auth@scaps.dev",
+  "password": "una-clave-segura"
+}
+
+### 3 · Ficha de Danlyvostok → 200, destacado: true
+# Es el destacado del seed. Su id restaura el destacado al final.
+# @name fichaDanlyvostok
+GET {{host}}/products/cap-danlyvostok
+
+### 4 · Producto de prueba con dos imágenes → 201, la portada es "frente" (orden 0)
+# La galería se devuelve ordenada por `orden`: imagenes[0] es "frente" e
+# imagenes[1] es "costado". Lo usan casi todos los casos que siguen.
+# @name crearProducto
+POST {{host}}/products
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "nombre": "Gorra Prueba Galería",
+  "precio": "19999.50",
+  "stock": 10,
+  "glb_url": "{{r2}}/cap-filipmatlak-oliva.glb",
+  "imagenes": [
+    { "url": "{{r2}}/cap-filipmatlak-oliva-frente.webp", "alt": "Gorra de prueba de frente", "orden": 0 },
+    { "url": "{{r2}}/cap-filipmatlak-oliva-costado.webp", "alt": "Gorra de prueba de costado", "orden": 1 }
+  ]
+}
+
+### 5 · Producto de prueba con una sola imagen → 201
+# Para el caso de borrar la última imagen (29).
+# @name crearUnaImagen
+POST {{host}}/products
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "nombre": "Gorra Prueba Una Imagen",
+  "precio": "19999.50",
+  "stock": 10,
+  "glb_url": "{{r2}}/cap-filipmatlak-oliva.glb",
+  "imagenes": [{ "url": "{{r2}}/cap-filipmatlak-oliva-frente.webp", "alt": "Gorra de prueba de frente" }]
+}
+
+### 6 · Producto de prueba con 10 imágenes, el tope → 201
+# Para el caso de pasarse del tope al agregar (17).
+# @name crearLleno
+POST {{host}}/products
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "nombre": "Gorra Prueba Galería Llena",
+  "precio": "19999.50",
+  "stock": 10,
+  "glb_url": "{{r2}}/cap-filipmatlak-oliva.glb",
+  "imagenes": [
+    { "url": "{{r2}}/cap-filipmatlak-oliva-tres-cuartos.webp", "alt": "Oliva de tres cuartos" },
+    { "url": "{{r2}}/cap-filipmatlak-oliva-frente.webp", "alt": "Oliva de frente" },
+    { "url": "{{r2}}/cap-filipmatlak-oliva-costado.webp", "alt": "Oliva de costado" },
+    { "url": "{{r2}}/cap-filipmatlak-oliva-atras.webp", "alt": "Oliva por detrás" },
+    { "url": "{{r2}}/cap-filipmatlak-oliva-arriba.webp", "alt": "Oliva desde arriba" },
+    { "url": "{{r2}}/cap-filipmatlak-negra-tres-cuartos.webp", "alt": "Negra de tres cuartos" },
+    { "url": "{{r2}}/cap-filipmatlak-negra-frente.webp", "alt": "Negra de frente" },
+    { "url": "{{r2}}/cap-filipmatlak-negra-costado.webp", "alt": "Negra de costado" },
+    { "url": "{{r2}}/cap-filipmatlak-negra-atras.webp", "alt": "Negra por detrás" },
+    { "url": "{{r2}}/cap-filipmatlak-negra-arriba.webp", "alt": "Negra desde arriba" }
+  ]
+}
+
+### 7 · Agregar una imagen sin token → 401
+POST {{host}}/products/{{productId}}/images
+Content-Type: application/json
+
+{}
+
+### 8 · Agregar una imagen con un usuario común → 403
+POST {{host}}/products/{{productId}}/images
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{}
+
+### 9 · Agregar sin orden ni portada → 201, orden: 2, es_principal: false
+# Sin `orden`, va al final de la galería.
+# @name agregarImagen
+POST {{host}}/products/{{productId}}/images
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "url": "{{r2}}/cap-filipmatlak-oliva-atras.webp",
+  "alt": "Gorra de prueba por detrás"
+}
+
+### 10 · Agregar como portada → 201, orden: 3, es_principal: true
+# @name agregarPortada
+POST {{host}}/products/{{productId}}/images
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "url": "{{r2}}/cap-filipmatlak-oliva-arriba.webp",
+  "alt": "Gorra de prueba desde arriba",
+  "es_principal": true
+}
+
+### 11 · Producto por id → 200, 4 imágenes y la única principal es "arriba"
+# "frente" dejó de ser la portada: marcar una nueva desmarca la anterior.
+GET {{host}}/admin/products/{{productId}}
+Authorization: Bearer {{adminToken}}
+
+### 12 · Agregar sin alt → 400
+POST {{host}}/products/{{productId}}/images
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "url": "{{r2}}/cap-filipmatlak-oliva-atras.webp"
+}
+
+### 13 · Agregar con una URL que no es https → 400
+POST {{host}}/products/{{productId}}/images
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "url": "http://example.com/gorra.webp",
+  "alt": "Gorra insegura"
+}
+
+### 14 · Agregar con orden null → 400
+# `orden` puede faltar, pero no venir vacío.
+POST {{host}}/products/{{productId}}/images
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "url": "{{r2}}/cap-filipmatlak-oliva-atras.webp",
+  "alt": "Gorra de prueba por detrás",
+  "orden": null
+}
+
+### 15 · Agregar a un id que no es uuid → 400
+POST {{host}}/products/abc/images
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "url": "{{r2}}/cap-filipmatlak-oliva-atras.webp",
+  "alt": "Gorra de prueba por detrás"
+}
+
+### 16 · Agregar a un uuid que no existe → 404
+POST {{host}}/products/00000000-0000-4000-8000-000000000000/images
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "url": "{{r2}}/cap-filipmatlak-oliva-atras.webp",
+  "alt": "Gorra de prueba por detrás"
+}
+
+### 17 · Agregar una imagen al producto que ya tiene 10 → 409
+POST {{host}}/products/{{llenoProductId}}/images
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "url": "{{r2}}/cap-filipmatlak-oliva-atras.webp",
+  "alt": "Una de más"
+}
+
+### 18 · Editar alt y orden de "costado" → 200, orden: 5
+# Pasa al final de la galería.
+PATCH {{host}}/products/{{productId}}/images/{{costadoId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "alt": "Gorra de prueba de costado, lado izquierdo",
+  "orden": 5
+}
+
+### 19 · Marcar "atrás" como portada → 200, es_principal: true
+PATCH {{host}}/products/{{productId}}/images/{{atrasId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "es_principal": true
+}
+
+### 20 · Producto por id → 200, la única principal es "atrás"
+# "arriba" dejó de ser la portada.
+GET {{host}}/admin/products/{{productId}}
+Authorization: Bearer {{adminToken}}
+
+### 21 · Desmarcar la portada → 409
+# Dejaría el producto sin portada: para cambiarla, se marca otra.
+PATCH {{host}}/products/{{productId}}/images/{{atrasId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "es_principal": false
+}
+
+### 22 · Editar la url → 400
+# Una foto nueva es una imagen nueva: se agrega y se borra la vieja.
+PATCH {{host}}/products/{{productId}}/images/{{frenteId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "url": "{{r2}}/cap-filipmatlak-oliva-tres-cuartos.webp"
+}
+
+### 23 · Borrar el alt con null → 400
+PATCH {{host}}/products/{{productId}}/images/{{frenteId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "alt": null
+}
+
+### 24 · Borrar el orden con null → 400
+PATCH {{host}}/products/{{productId}}/images/{{frenteId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "orden": null
+}
+
+### 25 · Editar una imagen de otro producto → 404
+# La imagen existe, pero no es de este producto.
+PATCH {{host}}/products/{{productId}}/images/{{unaImagenId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "alt": "No debería cambiar"
+}
+
+### 26 · Un id de imagen que no es uuid → 400
+PATCH {{host}}/products/{{productId}}/images/abc
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "alt": "No debería cambiar"
+}
+
+### 27 · Borrar la portada ("atrás") → 204
+DELETE {{host}}/products/{{productId}}/images/{{atrasId}}
+Authorization: Bearer {{adminToken}}
+
+### 28 · Producto por id → 200, 3 imágenes y la portada pasó a "frente"
+# Al irse la portada, la reemplaza la de menor orden (frente, orden 0).
+GET {{host}}/admin/products/{{productId}}
+Authorization: Bearer {{adminToken}}
+
+### 29 · Borrar la única imagen de un producto → 409
+# Un producto no existe sin imagen: para quitarla, se da de baja el producto.
+DELETE {{host}}/products/{{unaImagenProductId}}/images/{{unaImagenId}}
+Authorization: Bearer {{adminToken}}
+
+### 30 · Borrar una imagen que ya no existe → 404
+# Es la que borró el caso 27.
+DELETE {{host}}/products/{{productId}}/images/{{atrasId}}
+Authorization: Bearer {{adminToken}}
+
+### 31 · Elegir el destacado sin token → 401
+PUT {{host}}/products/featured
+Content-Type: application/json
+
+{}
+
+### 32 · Elegir el destacado con un usuario común → 403
+PUT {{host}}/products/featured
+Authorization: Bearer {{userToken}}
+Content-Type: application/json
+
+{}
+
+### 33 · Un product_id que no es uuid → 400
+PUT {{host}}/products/featured
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "product_id": "abc"
+}
+
+### 34 · Sin product_id → 400
+PUT {{host}}/products/featured
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{}
+
+### 35 · Un uuid que no existe → 404
+PUT {{host}}/products/featured
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "product_id": "00000000-0000-4000-8000-000000000000"
+}
+
+### 36 · Destacar el producto de prueba → 200, destacado: true
+PUT {{host}}/products/featured
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "product_id": "{{productId}}"
+}
+
+### 37 · Destacado público → 200, es el producto de prueba
+GET {{host}}/products/featured
+
+### 38 · Ficha de Danlyvostok → 200, destacado: false
+# Hay un solo destacado: elegir uno nuevo reemplaza al anterior.
+GET {{host}}/products/cap-danlyvostok
+
+### 39 · Destacar el mismo otra vez → 200, destacado: true
+PUT {{host}}/products/featured
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "product_id": "{{productId}}"
+}
+
+### 40 · Dar de baja el destacado con DELETE → 204
+DELETE {{host}}/products/{{productId}}
+Authorization: Bearer {{adminToken}}
+
+### 41 · Destacado público → 404
+# La baja le sacó el flag, y el backend no promueve otro: el lugar queda vacío.
+GET {{host}}/products/featured
+
+### 42 · Destacar un producto inactivo → 409
+PUT {{host}}/products/featured
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "product_id": "{{productId}}"
+}
+
+### 43 · Reactivar → 200, activo: true y destacado: false
+# Reactivar no lo vuelve a destacar.
+PATCH {{host}}/products/{{productId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "activo": true
+}
+
+### 44 · Destacarlo de nuevo → 200, destacado: true
+PUT {{host}}/products/featured
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "product_id": "{{productId}}"
+}
+
+### 45 · Dar de baja el destacado con PATCH → 200, activo: false y destacado: false
+# La otra vía de baja: también le saca el flag.
+PATCH {{host}}/products/{{productId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "activo": false
+}
+
+### 46 · Destacado público → 404
+GET {{host}}/products/featured
+
+### 47 · Restaurar el destacado del seed → 200, Danlyvostok con destacado: true
+PUT {{host}}/products/featured
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "product_id": "{{danlyvostokId}}"
+}
+
+### 48 · Dar de baja el producto de una imagen → 204
+# Para que los productos de prueba no queden en el catálogo público.
+DELETE {{host}}/products/{{unaImagenProductId}}
+Authorization: Bearer {{adminToken}}
+
+### 49 · Dar de baja el producto de 10 imágenes → 204
+DELETE {{host}}/products/{{llenoProductId}}
+Authorization: Bearer {{adminToken}}
