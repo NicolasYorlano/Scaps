@@ -1,16 +1,38 @@
-import { lazy, Suspense } from 'react';
+import { Link } from 'react-router';
 
-const Visor3D = lazy(() => import('../components/Visor3D'));
-
-export default function Landing() {
+function Hero() {
   return (
-    <main className="flex flex-1 items-center justify-center bg-slate-950 px-6">
-      <div style={{ width: 500, height: 500 }}>
-        <Suspense fallback={null}>
-          <Visor3D url="https://pub-6128219e47234ffb824474fa3df9636d.r2.dev/cap-vanarsdale.glb" />
-        </Suspense>
+    <section className="relative flex flex-1 flex-col items-center justify-center overflow-hidden px-6 text-center">
+      {/* Imagen de fondo fija (reemplazar src por el asset real del producto) */}
+      <img
+        src="/images/hero-gorra.jpg"
+        alt="Gorra destacada Scaps"
+        className="absolute inset-0 h-full w-full object-cover"
+      />
+      <div className="absolute inset-0 bg-black/50" />
+
+      <div className="relative z-10 flex max-w-xl flex-col items-center gap-4">
+        <h1 className="text-4xl font-bold text-white md:text-6xl">
+          Scaps
+        </h1>
+        <p className="text-base text-gray-200 md:text-lg">
+          Gorras con visor 3D. Elegí, personalizá y mirala desde todos los ángulos.
+        </p>
+        <Link
+          to="/catalogo"
+          className="mt-2 rounded-md bg-white px-6 py-3 text-sm font-semibold text-gray-900 hover:bg-gray-100 md:text-base"
+        >
+          Ver catálogo
+        </Link>
       </div>
-    </main>
+    </section>
   );
 }
 
+export default function Landing() {
+  return (
+    <div className="flex flex-1 flex-col">
+      <Hero />
+    </div>
+  );
+}
