@@ -166,6 +166,37 @@ Para una aplicación en particular:
 
 ---
 
+## Despliegue
+
+### Backend (Render)
+
+La API en producción está en **https://scaps-api-770j.onrender.com**. Para comprobar que responde: [`/api/health`](https://scaps-api-770j.onrender.com/api/health).
+
+Se despliega sola con cada push a `main` que toque `apps/api/**`, `package.json` o `package-lock.json`. El build aplica las migraciones pendientes en `scaps-prod`, así que una migración mergeada llega a producción con el deploy. Contra esa base no se corre nada a mano.
+
+> El plan gratuito apaga el servicio después de 15 minutos sin tráfico, y el primer request después de eso tarda cerca de un minuto. No es un error.
+
+Configuración del servicio, por si hay que recrearlo:
+
+| Campo | Valor |
+|---|---|
+| Root Directory | Vacío (la raíz del repo, no `apps/api`) |
+| Build Command | `npm ci && npm run build -w apps/api && npm exec -w apps/api -- prisma migrate deploy` |
+| Start Command | `node apps/api/dist/main.js` |
+| Build Filters | `apps/api/**`, `package.json` y `package-lock.json` |
+| Health Check Path | `/api/health` |
+
+Variables de entorno:
+
+- `DATABASE_URL`: la cadena directa de `scaps-prod` (sin `-pooler`), con `&connect_timeout=15` al final. Neon suspende la base cuando no se usa, y sin ese margen la API no llega a conectarse al arrancar.
+- `JWT_SECRET`: propio de producción, distinto del de desarrollo.
+- `ADMIN_EMAIL`, `ADMIN_PASSWORD` y `CORS_ORIGIN`.
+- `NODE_VERSION=24.14.1`.
+
+No hay que cargar `NODE_ENV=production`: con esa variable, `npm ci` omite las devDependencies y el build se queda sin Prisma ni Nest CLI. El seed tampoco va en el deploy, porque cada corrida pisa los productos de demo y la clave del admin.
+
+---
+
 ## Estructura
 
 ```
