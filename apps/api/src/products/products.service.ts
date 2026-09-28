@@ -38,11 +38,11 @@ export class ProductsService {
 
   async findBySlug(slug: string): Promise<ProductDetailResponse> {
     const product = await this.prisma.producto.findUnique({
-      where: { slug, ...PUBLIC_WHERE },
+      where: { ...PUBLIC_WHERE, slug },
       include: DETAIL_INCLUDE,
     });
 
-    // Un producto inactivo da el mismo 404 que uno inexistente.
+    // Un producto inactivo o sin imágenes da el mismo 404 que uno inexistente.
     if (!product) {
       throw new NotFoundException('Producto no encontrado'); /* 404 */
     }
