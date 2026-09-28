@@ -246,6 +246,11 @@ Toda la documentación del proyecto está en [`docs/`](docs/):
 
 ## Atribuciones de los modelos 3D
 
-Los modelos usados como productos de demo tienen licencia **CC BY 4.0**, que **obliga a mostrar la atribución de cada autor** allí donde el modelo se use públicamente.
+Los modelos usados como productos de demo tienen licencia **CC BY 4.0**, que **obliga a mostrar la atribución de cada autor** allí donde el modelo se use públicamente. En la app están en la página `/creditos`, enlazada desde el footer.
 
-Las atribuciones **todavía no están declaradas acá** porque el conjunto de modelos no está cerrado. **Deben agregarse antes de salir a producción.** El registro de autores, fuentes y licencias está en [`docs/glb/Creditos_Modelos_3D_Scaps.pdf`](docs/glb/Creditos_Modelos_3D_Scaps.pdf).
+- "Baseball Cap" ([https://skfb.ly/6sEqr](https://skfb.ly/6sEqr)) by Scott VanArsdale is licensed under Creative Commons Attribution ([http://creativecommons.org/licenses/by/4.0/](https://creativecommons.org/licenses/by/4.0/)).
+- "Low Poly Game ready simple cap" ([https://skfb.ly/prEVB](https://skfb.ly/prEVB)) by DanlyVostok is licensed under Creative Commons Attribution ([http://creativecommons.org/licenses/by/4.0/](https://creativecommons.org/licenses/by/4.0/)).
+- "Baseball Cap" ([https://skfb.ly/oEUOq](https://skfb.ly/oEUOq)) by FilipMatlak is licensed under Creative Commons Attribution ([http://creativecommons.org/licenses/by/4.0/](https://creativecommons.org/licenses/by/4.0/)).
+- "Baseball Cap" ([https://skfb.ly/oCGSF](https://skfb.ly/oCGSF)) by FilipMatlak is licensed under Creative Commons Attribution ([http://creativecommons.org/licenses/by/4.0/](https://creativecommons.org/licenses/by/4.0/)).
+
+El registro de autores, fuentes y licencias está en [`docs/glb/Creditos_Modelos_3D_Scaps.pdf`](docs/glb/Creditos_Modelos_3D_Scaps.pdf). Si se suma un modelo, se actualizan el PDF, la página `/creditos` y esta sección.

@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 import SlowServerNotice from './components/SlowServerNotice';
 import RequireAdmin from './components/RequireAdmin';
 import RequireAuth from './components/RequireAuth';
@@ -15,6 +16,7 @@ import Login from './pages/Login';
 import Registro from './pages/Registro';
 import Admin from './pages/Admin';
 import Health from './pages/Health';
+import Creditos from './pages/Creditos';
 import NotFound from './pages/NotFound';
 
 export default function App() {
@@ -67,8 +69,10 @@ export default function App() {
             }
           />
           <Route path="/health" element={<Health />} />
+          <Route path="/creditos" element={<Creditos />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <Footer />
         <SlowServerNotice />
       </div>
     </BrowserRouter>
