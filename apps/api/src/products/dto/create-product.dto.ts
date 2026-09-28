@@ -1,18 +1,13 @@
 import { Type } from 'class-transformer';
 import { ArrayMaxSize, ArrayMinSize, IsArray, IsInt, IsNotEmpty, IsNotIn, IsOptional, IsString, IsUrl, Matches, Max, MaxLength, Min, ValidateNested} from 'class-validator';
+import { POSITIVE_MONEY_PATTERN } from '../../common/money';
 import { RESERVED_SLUGS, SLUG_PATTERN } from '../slug';
-import { ProductImageDto } from './product-image.dto';
-
-// El formato de los montos (ver common/money.ts) con al menos un dígito
-// distinto de 0, que en ese formato equivale a ser mayor que 0.
-const POSITIVE_MONEY_PATTERN = /^(?=.*[1-9])\d{1,8}(\.\d{1,2})?$/;
+import { MAX_IMAGES, ProductImageDto } from './product-image.dto';
 
 // Más que cualquier stock real. Sin tope, un número enorme desborda el Int de
 // la columna y Prisma responde 500.
 const MAX_STOCK = 1_000_000;
 
-// class-validator devuelve los mensajes de abajo hacia arriba y el front
-// muestra el primero: la regla básica (obligatorio, tipo) va al final.
 export class CreateProductDto {
   @MaxLength(100, { message: 'El nombre no puede superar los 100 caracteres' })
   @IsString({ message: 'El nombre debe ser texto' })
@@ -25,9 +20,7 @@ export class CreateProductDto {
   descripcion?: string | null;
 
   // Como string y no como número de JSON, que pasaría por float.
-  @Matches(POSITIVE_MONEY_PATTERN, {
-    message: 'El precio debe ser mayor que 0 y venir como texto, por ejemplo "15999.00"',
-  })
+  @Matches(POSITIVE_MONEY_PATTERN, {message: 'El precio debe ser mayor que 0 y venir como texto, por ejemplo "15999.00"'})
   precio: string;
 
   @Max(MAX_STOCK, { message: `El stock no puede ser mayor que ${MAX_STOCK}` })
@@ -38,7 +31,7 @@ export class CreateProductDto {
   @IsUrl({ protocols: ['https'], require_protocol: true }, { message: 'El modelo 3D debe ser una URL https válida' })
   glb_url: string;
 
-  @ArrayMaxSize(10, { message: 'El producto no puede tener más de 10 imágenes' })
+  @ArrayMaxSize(MAX_IMAGES, { message: `El producto no puede tener más de ${MAX_IMAGES} imágenes` })
   @IsArray({ message: 'Las imágenes deben ser una lista' })
   @ArrayMinSize(1, { message: 'El producto necesita al menos una imagen' })
   @ValidateNested({ each: true })
