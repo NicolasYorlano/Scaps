@@ -5,7 +5,8 @@ import { useApiQuery } from '../hooks/useApi';
 import { formatPrice } from '../lib/format-price';
 import type { ProductDetail } from '../types/product';
 
-const pageClassName = 'flex flex-1 flex-col bg-scaps-canvas px-6 py-8 lg:px-12 lg:py-12';
+const pageClassName =
+  'flex flex-1 flex-col bg-scaps-canvas px-6 py-8 lg:px-12 lg:py-12';
 
 function Breadcrumb({ name }: { name?: string }) {
   return (
@@ -26,16 +27,20 @@ function Breadcrumb({ name }: { name?: string }) {
 function Gallery({ product }: { product: ProductDetail }) {
   const images = [...product.imagenes].sort((a, b) => a.orden - b.orden);
   // La selección recuerda de qué producto es: al cambiar de slug vuelve sola a la principal.
-  const [selected, setSelected] = useState<{ slug: string; id: string } | null>(null);
+  const [selected, setSelected] = useState<{ slug: string; id: string } | null>(
+    null,
+  );
 
   const main = images.find((img) => img.es_principal) ?? images[0];
   const active =
-    (selected?.slug === product.slug && images.find((img) => img.id === selected.id)) || main;
+    (selected?.slug === product.slug &&
+      images.find((img) => img.id === selected.id)) ||
+    main;
 
   if (!active) return null;
 
   return (
-    <div className="flex flex-col gap-3 md:flex-row md:gap-4">
+    <div className="flex min-w-0 flex-col gap-3 md:flex-row md:gap-4">
       <div className="min-w-0 max-w-175 flex-1 md:order-2">
         <ProductImage image={active} aspect="detail" />
       </div>
@@ -50,7 +55,9 @@ function Gallery({ product }: { product: ProductDetail }) {
                   type="button"
                   aria-label={img.alt}
                   aria-current={isActive}
-                  onClick={() => setSelected({ slug: product.slug, id: img.id })}
+                  onClick={() =>
+                    setSelected({ slug: product.slug, id: img.id })
+                  }
                   className={`block w-full rounded-scaps border-2 p-0.5 transition-colors ${
                     isActive
                       ? 'border-scaps-border-primary'
@@ -70,9 +77,12 @@ function Gallery({ product }: { product: ProductDetail }) {
 
 export default function Producto() {
   const { slug = '' } = useParams<{ slug: string }>();
-  const { data: product, error, loading, reload } = useApiQuery<ProductDetail>(
-    `/products/${encodeURIComponent(slug)}`,
-  );
+  const {
+    data: product,
+    error,
+    loading,
+    reload,
+  } = useApiQuery<ProductDetail>(`/products/${encodeURIComponent(slug)}`);
 
   // La SPA no vuelve sola arriba al cambiar de ruta.
   useEffect(() => {
@@ -91,14 +101,18 @@ export default function Producto() {
     return (
       <main className={pageClassName}>
         <Breadcrumb />
-        <p className="mt-8 text-sm text-scaps-text-secondary">Cargando producto…</p>
+        <p className="mt-8 text-sm text-scaps-text-secondary">
+          Cargando producto…
+        </p>
       </main>
     );
   }
 
   if (error?.status === 404) {
     return (
-      <main className={`${pageClassName} items-center justify-center gap-4 text-center`}>
+      <main
+        className={`${pageClassName} items-center justify-center gap-4 text-center`}
+      >
         <h1 className="text-[25px] leading-[1.1] font-medium text-scaps-text">
           Producto no encontrado
         </h1>
@@ -117,7 +131,9 @@ export default function Producto() {
 
   if (error || !product) {
     return (
-      <main className={`${pageClassName} items-center justify-center gap-4 text-center`}>
+      <main
+        className={`${pageClassName} items-center justify-center gap-4 text-center`}
+      >
         <p role="alert" className="text-sm text-scaps-text-secondary">
           {error?.message ?? 'No se pudo cargar el producto.'}
         </p>
@@ -136,14 +152,16 @@ export default function Producto() {
     <main className={pageClassName}>
       <Breadcrumb name={product.nombre} />
 
-      <div className="mt-6 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:gap-12">
+      <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:gap-12">
         <Gallery product={product} />
 
         <section className="flex flex-col gap-4">
           <h1 className="text-[25px] leading-[1.1] font-medium text-scaps-text">
             {product.nombre}
           </h1>
-          <p className="text-xl font-medium text-scaps-text">{formatPrice(product.precio)}</p>
+          <p className="text-xl font-medium text-scaps-text">
+            {formatPrice(product.precio)}
+          </p>
           <p className="text-sm text-scaps-text-secondary">
             {product.stock > 0 ? `Stock: ${product.stock}` : 'Sin stock'}
           </p>
