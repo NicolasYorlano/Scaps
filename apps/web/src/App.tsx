@@ -10,8 +10,6 @@ import Landing from './pages/Landing';
 import Catalogo from './pages/Catalogo';
 import Producto from './pages/Producto';
 import Carrito from './pages/Carrito';
-import Checkout from './pages/Checkout';
-import MisDirecciones from './pages/MisDirecciones';
 import Login from './pages/Login';
 import Registro from './pages/Registro';
 import Admin from './pages/Admin';
@@ -39,22 +37,6 @@ export default function App() {
             element={
               <RequireAuth>
                 <Carrito />
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/checkout"
-            element={
-              <RequireAuth>
-                <Checkout />
-              </RequireAuth>
-            }
-          />
-          <Route
-            path="/mis-direcciones"
-            element={
-              <RequireAuth>
-                <MisDirecciones />
               </RequireAuth>
             }
           />
