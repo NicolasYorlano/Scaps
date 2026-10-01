@@ -61,6 +61,14 @@ async function readBody(res: Response): Promise<unknown> {
 
 /** Traduce el `{ statusCode, message, error }` de NestJS. */
 function errorMessages(body: unknown, status: number): string[] {
+  // Un 5xx trae el texto interno del servidor ("Internal server error"),
+  // no uno para mostrar.
+  if (status >= 500) {
+    return [
+      'Tuvimos un problema en el servidor. Volvé a intentar en un momento.',
+    ];
+  }
+
   if (typeof body === 'object' && body !== null && 'message' in body) {
     const { message } = body;
 
@@ -100,7 +108,7 @@ async function request<T>(method: Method, path: string, body?: unknown): Promise
       res = await fetch(url, { method, headers, body: payload });
     } catch {
       throw new ApiError(0, [
-        'No se pudo conectar con el servidor. Chekea que el backend esté levantado y volvé a intentar.',
+        'No pudimos conectar con el servidor. Revisá tu conexión y volvé a intentar.',
       ]);
     }
 

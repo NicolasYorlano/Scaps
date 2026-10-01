@@ -63,3 +63,21 @@ Cada entrada apunta a dónde se decidió. La fuente de verdad sigue siendo ese d
 **Por qué no ahora:** no está en el contrato de API ni en el alcance comprometido del MVP, y no es un agregado aislado: `Usuario.password` es obligatorio en el esquema y una cuenta de Google no tiene contraseña, así que pide migración. Además hay que decidir qué pasa cuando un email ya registrado con contraseña entra por Google —unir las cuentas exige verificar `email_verified`, o se abre un robo de cuenta— y eso es una decisión de producto, no un detalle de implementación.
 
 **Decidido en:** consulta sobre el alcance de la autenticación, septiembre de 2026.
+
+---
+
+## Sin restablecimiento de contraseña
+
+**Hoy:** quien olvida su contraseña no puede recuperar la cuenta. No hay endpoint, pantalla ni envío de emails, y el login no ofrece *"¿Olvidaste tu contraseña?"*: la única salida es registrarse de nuevo con otro email. La excepción es el admin, porque `npm run seed` vuelve a sincronizar su contraseña con `ADMIN_PASSWORD` (y, de paso, devuelve los productos de demo a sus valores del seed).
+
+**Lo correcto:** restablecimiento por email, en dos pasos. `POST /auth/forgot-password` recibe el email y, si la cuenta existe, envía un enlace con un token aleatorio de un solo uso y vencimiento corto, del que la base guarda solo el hash. `POST /auth/reset-password` recibe ese token y la contraseña nueva, y lo consume. En el frontend, el enlace en el login y dos pantallas: pedir el enlace y elegir la contraseña nueva.
+
+**Por qué no ahora:** no está en el contrato de API ni en el alcance comprometido del MVP, y no es un agregado aislado: exige enviar emails. Eso pide un proveedor de correo transaccional —una dependencia nueva, en contra del principio de stack mínimo del plan— y un dominio propio para que esos correos no terminen en spam, que hoy no hay. Mientras la tienda sea una demo sin checkout ni órdenes, lo único que se pierde con una cuenta es su carrito.
+
+**Tres trampas:**
+
+- `forgot-password` tiene que responder igual, en texto y en tiempo, exista o no el email. Si no, reabre la enumeración de cuentas que el login ya cerró.
+- Depende de la entrada *API sin rate limiting*: un endpoint que envía emails sin tope sirve para inundar una casilla ajena y agotar la cuota del proveedor.
+- Cambiar la contraseña no cierra las sesiones abiertas: el JWT no tiene estado en el servidor, así que un token ya emitido sigue valiendo hasta su vencimiento (2 horas).
+
+**Decidido en:** revisión de UX de las pantallas de login y registro, octubre de 2026.

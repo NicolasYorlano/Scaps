@@ -12,7 +12,7 @@ export default function SlowServerNotice() {
     <div
       role="status"
       aria-live="polite"
-      className="fixed bottom-4 left-1/2 -translate-x-1/2 rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-center text-sm text-amber-200 backdrop-blur"
+      className="fixed bottom-4 left-1/2 -translate-x-1/2 rounded-full border border-scaps-border-input bg-scaps-card-highlight px-4 py-2 text-center text-sm text-scaps-text"
     >
       La conexión está tardando más de lo esperado... Puede que se esté despertando el servidor, esto puede tardar un minuto...
     </div>

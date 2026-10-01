@@ -1,5 +1,8 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router';
+import FormAlert from '../components/FormAlert';
+import ShowPasswordToggle from '../components/ShowPasswordToggle';
+import SubmitButton from '../components/SubmitButton';
 import { api } from '../lib/api';
 import { useApiAction } from '../hooks/useApi';
 import { useSessionStore, type AuthResult } from '../stores/session-store';
@@ -11,6 +14,8 @@ interface RegisterArgs {
   password: string;
 }
 
+const MIN_PASSWORD_LENGTH = 8;
+
 const LABEL_CLASS = 'text-xs font-medium uppercase tracking-[0.06em] text-scaps-text-muted';
 const INPUT_CLASS = `h-11 rounded-scaps border border-scaps-border-input bg-scaps-sunken px-3.5 text-sm text-scaps-text placeholder:text-scaps-text-annotation`;
 
@@ -21,19 +26,31 @@ export default function Registro() {
   const [apellido, setApellido] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [submitAttempted, setSubmitAttempted] = useState(false);
 
   const { run, loading, error } = useApiAction((body: RegisterArgs) =>
     api.post<AuthResult>('/auth/register', body),
   );
 
+  // Derivado y no guardado: el largo se avisa recién al enviar y, desde ahí,
+  // se va solo cuando la contraseña alcanza el mínimo.
+  const passwordTooShort = password.length < MIN_PASSWORD_LENGTH;
+  const passwordError =
+    submitAttempted && passwordTooShort
+      ? `La contraseña debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres.`
+      : null;
+
+  // El 409 es el email duplicado: el único error del que se sabe el campo.
+  const emailTaken = error?.status === 409 ? error : null;
+  const formError = emailTaken ? null : error;
+
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (loading) return; // el botón usa aria-disabled, que no frena el envío
 
-    if (password.length < 8) {
-      setPasswordError('La contraseña debe tener al menos 8 caracteres.');
-      return;
-    }
+    setSubmitAttempted(true);
+    if (passwordTooShort) return;
 
     const result = await run({ nombre, apellido, email, password });
     if (result) {
@@ -91,14 +108,12 @@ export default function Registro() {
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              aria-invalid={error ? true : undefined}
-              className={`h-11 rounded-scaps border ${error ? 'border-scaps-error' : 'border-scaps-border-input'} bg-scaps-sunken px-3.5 text-sm text-scaps-text placeholder:text-scaps-text-annotation`}
+              aria-invalid={emailTaken ? true : undefined}
+              className={`h-11 rounded-scaps border ${emailTaken ? 'border-scaps-error' : 'border-scaps-border-input'} bg-scaps-sunken px-3.5 text-sm text-scaps-text placeholder:text-scaps-text-annotation`}
             />
-            {/* El único error que devuelve el backend en registro es el
-                email duplicado, así que va marcado en este campo. */}
-            {error && (
+            {emailTaken && (
               <p role="alert" className="text-xs font-medium text-scaps-error">
-                {error.messages.join(' ')}
+                {emailTaken.message}
               </p>
             )}
           </div>
@@ -109,7 +124,7 @@ export default function Registro() {
             </label>
             <input
               id="password"
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               required
               autoComplete="new-password"
               placeholder="************"
@@ -123,17 +138,21 @@ export default function Registro() {
                 {passwordError}
               </p>
             ) : (
-              <span className="text-xs text-scaps-text-annotation">Mínimo 8 caracteres</span>
+              <span className="text-xs text-scaps-text-annotation">
+                Mínimo {MIN_PASSWORD_LENGTH} caracteres
+              </span>
             )}
+            <ShowPasswordToggle
+              checked={showPassword}
+              onChange={setShowPassword}
+            />
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className={`h-12 rounded-scaps border border-scaps-border-primary bg-transparent px-6 text-sm font-medium text-scaps-text-on-primary transition-colors hover:bg-scaps-card-highlight disabled:cursor-not-allowed disabled:border-scaps-border disabled:text-scaps-text-annotation disabled:hover:bg-transparent`}
-          >
-            {loading ? 'Creando cuenta…' : 'Registrarme'}
-          </button>
+          {formError && <FormAlert messages={formError.messages} />}
+
+          <SubmitButton loading={loading} loadingLabel="Creando cuenta…">
+            Registrarme
+          </SubmitButton>
 
           <p className="text-center text-sm text-scaps-text-secondary">
             ¿Ya tenés cuenta?{' '}
