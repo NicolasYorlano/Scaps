@@ -9,12 +9,15 @@ export default function SlowServerNotice() {
   if (!isSlow) return null;
 
   return (
+    // inset-x + mx-auto + w-fit y no left-1/2, que lo limita a media pantalla.
+    // pointer-events-none: deja pasar los clics a lo que queda debajo.
     <div
       role="status"
       aria-live="polite"
-      className="fixed bottom-4 left-1/2 -translate-x-1/2 rounded-full border border-scaps-border-input bg-scaps-card-highlight px-4 py-2 text-center text-sm text-scaps-text"
+      className="pointer-events-none fixed inset-x-4 bottom-4 z-50 mx-auto w-fit max-w-xl rounded-scaps border border-scaps-border-input bg-scaps-card-highlight px-4 py-3 text-center text-sm text-scaps-text"
     >
-      La conexión está tardando más de lo esperado... Puede que se esté despertando el servidor, esto puede tardar un minuto...
+      La conexión está tardando más de lo esperado... Puede que se esté
+      despertando el servidor, esto puede tardar un minuto...
     </div>
   );
 }

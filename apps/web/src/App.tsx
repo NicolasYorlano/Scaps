@@ -5,6 +5,7 @@ import Footer from './components/Footer';
 import SlowServerNotice from './components/SlowServerNotice';
 import RequireAdmin from './components/RequireAdmin';
 import RequireAuth from './components/RequireAuth';
+import RequireGuest from './components/RequireGuest';
 import { useSessionStore } from './stores/session-store';
 import Landing from './pages/Landing';
 import Catalogo from './pages/Catalogo';
@@ -40,8 +41,22 @@ export default function App() {
               </RequireAuth>
             }
           />
-          <Route path="/login" element={<Login />} />
-          <Route path="/registro" element={<Registro />} />
+          <Route
+            path="/login"
+            element={
+              <RequireGuest>
+                <Login />
+              </RequireGuest>
+            }
+          />
+          <Route
+            path="/registro"
+            element={
+              <RequireGuest>
+                <Registro />
+              </RequireGuest>
+            }
+          />
           <Route
             path="/admin"
             element={

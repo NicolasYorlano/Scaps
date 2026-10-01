@@ -4,10 +4,11 @@ function Hero() {
   return (
     <section className="relative flex flex-1 flex-col items-center justify-center overflow-hidden px-6 text-center">
       {/* Imagen de fondo fija (reemplazar src por el asset real del producto) */}
+      {/* text-transparent: es un fondo; si no carga, su alt no se pinta sobre el hero. */}
       <img
         src="/images/hero-gorra.jpg"
         alt="Gorra destacada Scaps"
-        className="absolute inset-0 h-full w-full object-cover"
+        className="absolute inset-0 h-full w-full object-cover text-transparent"
       />
       <div className="absolute inset-0 bg-scaps-page/50" />
 

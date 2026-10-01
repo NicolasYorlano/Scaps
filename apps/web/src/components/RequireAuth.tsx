@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { Navigate } from 'react-router';
+import { Navigate, useLocation } from 'react-router';
+import { loginState } from '../lib/login-redirect';
 import { useSessionStore } from '../stores/session-store';
 
 // Bloquea el paso a rutas que exigen estar logueado.
@@ -10,9 +11,13 @@ import { useSessionStore } from '../stores/session-store';
 // realidad sigue logueado — se espera a que 'checking' termine.
 export default function RequireAuth({ children }: { children: ReactNode }) {
   const status = useSessionStore((s) => s.status);
+  const location = useLocation();
 
   if (status === 'checking') return null;
-  if (status === 'anonymous') return <Navigate to="/login" replace />;
+  if (status === 'anonymous') {
+    // Lleva la ruta pedida, para volver a ella después de ingresar.
+    return <Navigate to="/login" replace state={loginState(location)} />;
+  }
 
   return children;
 }

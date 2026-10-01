@@ -1,7 +1,5 @@
-/**
- * Aviso general de un formulario, para lo que no es culpa de ningún campo:
- * sin conexión, una falla del servidor. Por eso no usa el rojo de los campos.
- */
+// Aviso general de un formulario, para lo que no es culpa de ningún campo:
+// sin conexión, una falla del servidor. Por eso no usa el rojo de los campos.
 export default function FormAlert({ messages }: { messages: string[] }) {
   return (
     <div

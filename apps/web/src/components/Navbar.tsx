@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, NavLink } from 'react-router';
+import { Link, NavLink, useLocation } from 'react-router';
 import { useSessionStore } from '../stores/session-store';
 import logoUrl from '../assets/logo.svg';
 
@@ -11,10 +11,13 @@ const navLinkClassName = ({ isActive }: { isActive: boolean }) =>
     ? `border-b border-scaps-border-primary text-sm font-medium text-scaps-text ${touchTarget}`
     : `text-sm font-medium text-scaps-text-secondary transition-colors hover:text-scaps-text ${touchTarget}`;
 
-function NavLinks({ onNavigate }: { onNavigate: () => void }) {
+// showName: en el celular el nombre ya está en la barra y no se repite en el menú.
+function NavLinks({ onNavigate, showName }: { onNavigate: () => void; showName: boolean }) {
   const status = useSessionStore((s) => s.status);
   const user = useSessionStore((s) => s.user);
   const clearSession = useSessionStore((s) => s.clearSession);
+  // Entre /login y /registro viaja la ruta a la que volver (ver login-redirect).
+  const redirectState: unknown = useLocation().state;
 
   return (
     <>
@@ -26,12 +29,14 @@ function NavLinks({ onNavigate }: { onNavigate: () => void }) {
       {status === 'authenticated' && user ? (
         <>
           {/* Sin tope de largo en el registro: se corta con "…" para no romper la barra. */}
-          <li
-            className="max-w-56 truncate text-sm text-scaps-text-secondary"
-            title={user.nombre}
-          >
-            {user.nombre}
-          </li>
+          {showName && (
+            <li
+              className="max-w-56 truncate text-sm text-scaps-text-secondary"
+              title={user.nombre}
+            >
+              {user.nombre}
+            </li>
+          )}
           <li className="relative">
             <button
               type="button"
@@ -48,13 +53,23 @@ function NavLinks({ onNavigate }: { onNavigate: () => void }) {
       ) : status === 'anonymous' ? (
         <>
           <li className="relative">
-            <NavLink to="/login" className={navLinkClassName} onClick={onNavigate}>
+            <NavLink
+              to="/login"
+              state={redirectState}
+              className={navLinkClassName}
+              onClick={onNavigate}
+            >
               Ingresar
             </NavLink>
           </li>
           <li className="relative">
-            <NavLink to="/registro" className={navLinkClassName} onClick={onNavigate}>
-              Registrarse
+            <NavLink
+              to="/registro"
+              state={redirectState}
+              className={navLinkClassName}
+              onClick={onNavigate}
+            >
+              Crear cuenta
             </NavLink>
           </li>
         </>
@@ -65,6 +80,9 @@ function NavLinks({ onNavigate }: { onNavigate: () => void }) {
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const userName = useSessionStore((s) =>
+    s.status === 'authenticated' ? s.user?.nombre : undefined,
+  );
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLUListElement>(null);
 
@@ -89,31 +107,42 @@ export default function Navbar() {
       {/* Fila de 40 px: la barra mide lo mismo en todos los anchos. Los márgenes negativos dan
           44 px de área táctil sin agrandarla y dejan las rayitas del botón sobre el margen. */}
       <div className="flex min-h-10 items-center justify-between gap-4">
-        <Link to="/" onClick={closeMenu} className="-my-2.5 py-2.5">
+        <Link to="/" onClick={closeMenu} className="-my-2.5 shrink-0 py-2.5">
           <img src={logoUrl} alt="Scaps" className="h-6 w-auto max-w-35 md:h-7" />
         </Link>
 
         <ul className="hidden items-center gap-6 md:flex">
-          <NavLinks onNavigate={closeMenu} />
+          <NavLinks onNavigate={closeMenu} showName />
         </ul>
 
-        <button
-          ref={menuButtonRef}
-          type="button"
-          aria-expanded={open}
-          aria-label={open ? 'Cerrar menú' : 'Abrir menú'}
-          onClick={() => setOpen((v) => !v)}
-          className="-my-0.5 -mr-3 flex h-11 w-11 flex-col items-center justify-center gap-1.5 md:hidden"
-        >
-          <span className="h-0.5 w-5 bg-scaps-text" />
-          <span className="h-0.5 w-5 bg-scaps-text" />
-          <span className="h-0.5 w-5 bg-scaps-text" />
-        </button>
+        {/* Con el menú cerrado, el nombre a la vista es la única señal de que hay sesión. */}
+        <div className="flex min-w-0 items-center gap-1 md:hidden">
+          {userName && (
+            <span
+              className="truncate text-sm text-scaps-text-secondary"
+              title={userName}
+            >
+              {userName}
+            </span>
+          )}
+          <button
+            ref={menuButtonRef}
+            type="button"
+            aria-expanded={open}
+            aria-label={open ? 'Cerrar menú' : 'Abrir menú'}
+            onClick={() => setOpen((v) => !v)}
+            className="-my-0.5 -mr-3 flex h-11 w-11 shrink-0 flex-col items-center justify-center gap-1.5"
+          >
+            <span className="h-0.5 w-5 bg-scaps-text" />
+            <span className="h-0.5 w-5 bg-scaps-text" />
+            <span className="h-0.5 w-5 bg-scaps-text" />
+          </button>
+        </div>
       </div>
 
       {open && (
         <ul ref={menuRef} className="mt-4 flex flex-col gap-5 md:hidden">
-          <NavLinks onNavigate={closeMenu} />
+          <NavLinks onNavigate={closeMenu} showName={false} />
         </ul>
       )}
     </nav>
