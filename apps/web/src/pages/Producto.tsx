@@ -73,6 +73,9 @@ function Gallery({ product }: { product: ProductDetail }) {
   const [selected, setSelected] = useState<{ slug: string; id: string } | null>(
     null,
   );
+  // Miniatura bajo el mouse: se ve en grande sin quedar elegida.
+  // Se suelta al salir de la tira y no entre miniaturas, para que no parpadee.
+  const [previewId, setPreviewId] = useState<string | null>(null);
 
   // Con key={slug} en el padre, cada producto arranca en las fotos.
   const [view, setView] = useState<View>('photos');
@@ -93,11 +96,22 @@ function Gallery({ product }: { product: ProductDetail }) {
 
   if (!active) return null;
 
+  const shown = images.find((img) => img.id === previewId) ?? active;
+
   return (
     <div className={galleryClassName}>
       <div className={mainImageClassName}>
-        <div className="relative">
-          <ProductImage image={active} aspect="detail" />
+        <div className="relative rounded-scaps bg-scaps-photo">
+          {/* Todas apiladas: cambiar de foto es un fundido, sin volver a montarla. */}
+          {images.map((img, i) => (
+            <div
+              key={img.id}
+              aria-hidden={img.id !== shown.id}
+              className={`transition-opacity duration-150 motion-reduce:transition-none ${i > 0 ? 'absolute inset-0' : ''} ${img.id === shown.id ? '' : 'pointer-events-none opacity-0'}`}
+            >
+              <ProductImage image={img} aspect="detail" />
+            </div>
+          ))}
 
           {view !== 'photos' && (
             // El visor carga encima de la foto, invisible: la foto sigue a la vista hasta que el modelo está listo.
@@ -157,7 +171,10 @@ function Gallery({ product }: { product: ProductDetail }) {
 
       {images.length > 1 && (
         <div className={thumbRailClassName}>
-          <ul className={thumbListClassName}>
+          <ul
+            className={thumbListClassName}
+            onPointerLeave={() => setPreviewId(null)}
+          >
             {images.map((img) => {
               // En 3D ninguna foto está activa.
               const isActive = view !== '3d' && img.id === active.id;
@@ -167,6 +184,10 @@ function Gallery({ product }: { product: ProductDetail }) {
                     type="button"
                     aria-label={img.alt}
                     aria-current={isActive}
+                    // El dedo no tiene hover: en el celular se elige tocando.
+                    onPointerEnter={(e) => {
+                      if (e.pointerType !== 'touch') setPreviewId(img.id);
+                    }}
                     onClick={() => {
                       setSelected({ slug: product.slug, id: img.id });
                       setView('photos');
