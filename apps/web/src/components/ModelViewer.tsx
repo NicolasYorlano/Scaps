@@ -15,6 +15,14 @@ function Modelo({ url }: ModeloProps) {
   return <primitive object={scene} />;
 }
 
+// Se monta recién cuando el Suspense resuelve: ahí el modelo ya está en la escena.
+function Ready({ onReady }: { onReady?: () => void }) {
+  useEffect(() => {
+    onReady?.();
+  }, [onReady]);
+  return null;
+}
+
 function Loader() {
   const { progress } = useProgress();
   // Gris de anotación: se lee sobre el blanco de la ficha y sobre el fondo oscuro de la landing.
@@ -61,9 +69,11 @@ interface ModelViewerProps {
   className?: string;
   /** Se llama si el .glb no puede cargarse, para que cada pantalla decida qué mostrar en su lugar */
   onError?: (error: Error) => void;
+  /** Se llama cuando el modelo ya se ve. Pasarla estable (useCallback): si cambia, se vuelve a llamar. */
+  onReady?: () => void;
 }
 
-export default function ModelViewer({url, className, onError}: ModelViewerProps) {
+export default function ModelViewer({url, className, onError, onReady}: ModelViewerProps) {
   const [entered, setEntered] = useState(false);
 
   useEffect(() => {
@@ -83,7 +93,14 @@ export default function ModelViewer({url, className, onError}: ModelViewerProps)
       }}
     >
       {/* Afuera del Canvas: R3F relanza hacia el árbol de React cualquier error de la escena. */}
-      <ErrorBoundary key={url} onError={onError}>
+      <ErrorBoundary
+        key={url}
+        onError={(error) => {
+          // El fallo queda cacheado: sin esto, reintentar falla al instante sin volver a pedir el .glb.
+          useGLTF.clear(url);
+          onError?.(error);
+        }}
+      >
         {/* offsetSize: mide sin el scale() de la entrada; si no, el canvas queda al 96 % hasta el primer scroll. */}
         <Canvas
           resize={{ offsetSize: true }}
@@ -100,6 +117,7 @@ export default function ModelViewer({url, className, onError}: ModelViewerProps)
                 <Modelo url={url} />
               </Center>
             </Bounds>
+            <Ready onReady={onReady} />
           </Suspense>
           <OrbitControls makeDefault enableZoom={false} enablePan={false} />
         </Canvas>
