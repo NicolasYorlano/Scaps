@@ -18,8 +18,9 @@ const VIEW_BUTTON_LABEL: Record<View, string> = {
 };
 
 // Arriba a la derecha: esa esquina está libre en todas las fotos y se ve sin scrollear en cualquier pantalla.
+// Anillo de foco oscuro: el claro del resto de la app no se ve sobre la foto blanca.
 const viewButtonClassName =
-  'absolute top-3 right-3 flex h-10 items-center gap-2 rounded-scaps border border-scaps-border-primary bg-scaps-canvas px-4 text-sm font-medium text-scaps-text-on-primary transition-colors hover:bg-scaps-card-highlight';
+  'absolute top-3 right-3 flex h-10 items-center gap-2 rounded-scaps border border-scaps-border-primary bg-scaps-canvas px-4 text-sm font-medium text-scaps-text-on-primary transition-colors hover:bg-scaps-card-highlight focus-visible:outline-scaps-page';
 
 // Avisos encima de la foto o del visor: no ocupan lugar, así nada salta cuando aparecen.
 const overlayNoteClassName =

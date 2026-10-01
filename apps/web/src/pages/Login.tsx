@@ -1,119 +1,114 @@
-import { useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { useEffect, useState, type FormEvent } from 'react';
+import { Link, useLocation } from 'react-router';
 import FormAlert from '../components/FormAlert';
 import ShowPasswordToggle from '../components/ShowPasswordToggle';
 import SubmitButton from '../components/SubmitButton';
+import TextField from '../components/TextField';
 import { api } from '../lib/api';
+import { emailError, focusField } from '../lib/forms';
 import { useApiAction } from '../hooks/useApi';
 import { useSessionStore, type AuthResult } from '../stores/session-store';
 
+// En el orden de la pantalla: el foco va al primer campo con error.
+const FIELDS = ['email', 'password'] as const;
+
 export default function Login() {
-  const navigate = useNavigate();
+  // La ruta a la que volver, si la hay (ver login-redirect); también viaja a /registro.
+  const redirectState: unknown = useLocation().state;
   const setSession = useSessionStore((s) => s.setSession);
-  const status = useSessionStore((s) => s.status);
-  const user = useSessionStore((s) => s.user);
-  const clearSession = useSessionStore((s) => s.clearSession);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+  // Lo último que se envió: el 401 habla de ese par y de ningún otro.
+  const [sent, setSent] = useState({ email: '', password: '' });
 
   const { run, loading, error } = useApiAction((email: string, password: string) =>
     api.post<AuthResult>('/auth/login', { email, password }),
   );
 
-  // Solo el 401 habla de los campos; una falla de red o del servidor, no.
-  const credentialsError = error?.status === 401 ? error : null;
-  const formError = credentialsError ? null : error;
+  useEffect(() => {
+    document.title = 'Ingresar | Scaps';
+    return () => {
+      document.title = 'Scaps';
+    };
+  }, []);
+
+  // Derivados: se muestran recién al enviar y se van solos al corregir el campo.
+  const errors = {
+    email: emailError(email),
+    password: password === '' ? 'Ingresá tu contraseña' : null,
+  };
+  const shown = submitAttempted ? errors : null;
+
+  const credentialsError =
+    error?.status === 401 && sent.email === email && sent.password === password
+      ? error
+      : null;
+  const formError = error && error.status !== 401 ? error : null;
+
+  // El mensaje del 401 está debajo de la contraseña: el foco va ahí.
+  useEffect(() => {
+    if (error?.status === 401) focusField('password');
+  }, [error]);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (loading) return; // el botón usa aria-disabled, que no frena el envío
-    const result = await run(email, password);
-    if (result) {
-      setSession(result);
-      void navigate('/');
-    }
-  }
 
-  if (status === 'authenticated' && user) {
-    return (
-      <main className="flex flex-1 items-center justify-center bg-scaps-canvas px-6 py-12 lg:px-12">
-        <div className="w-full max-w-110 rounded-scaps border border-scaps-border bg-scaps-card p-6 text-center sm:p-8">
-          <h1 className="text-[25px] leading-[1.1] font-medium text-scaps-text">
-            Ya iniciaste sesión
-          </h1>
-          <p className="mt-2 text-sm text-scaps-text-secondary">
-            Estás conectado como {user.email}.
-          </p>
-          <button
-            type="button"
-            onClick={() => clearSession()}
-            className="mt-6 h-12 w-full rounded-scaps border border-scaps-border-primary bg-transparent px-6 text-sm font-medium text-scaps-text-on-primary transition-colors hover:bg-scaps-card-highlight"
-          >
-            Cerrar sesión
-          </button>
-        </div>
-      </main>
-    );
+    setSubmitAttempted(true);
+    const firstInvalid = FIELDS.find((field) => errors[field]);
+    if (firstInvalid) {
+      focusField(firstInvalid);
+      return;
+    }
+
+    setSent({ email, password });
+    const result = await run(email, password);
+    // Con la sesión iniciada, RequireGuest saca de esta pantalla.
+    if (result) setSession(result);
   }
 
   return (
     <main className="flex flex-1 items-center justify-center bg-scaps-canvas px-6 py-12 lg:px-12">
       <div className="w-full max-w-110 rounded-scaps border border-scaps-border bg-scaps-card p-6 sm:p-8">
         <h1 className="text-[25px] leading-[1.1] font-medium text-scaps-text">
-          Inicio de sesión
+          Ingresar
         </h1>
 
-        <form className="mt-6 flex flex-col gap-4" onSubmit={(e) => void handleSubmit(e)}>
-          <div className="flex flex-col gap-1.5">
-            <label
-              htmlFor="email"
-              className="text-xs font-medium uppercase tracking-[0.06em] text-scaps-text-muted"
-            >
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              required
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              aria-invalid={credentialsError ? true : undefined}
-              className={`h-11 rounded-scaps border ${credentialsError ? 'border-scaps-error' : 'border-scaps-border-input'} bg-scaps-sunken px-3.5 text-sm text-scaps-text placeholder:text-scaps-text-annotation`}
-            />
-          </div>
+        {/* noValidate: los avisos los da el formulario, no el globo del navegador. */}
+        <form noValidate className="mt-6 flex flex-col gap-4" onSubmit={(e) => void handleSubmit(e)}>
+          <TextField
+            id="email"
+            label="Email"
+            type="email"
+            required
+            // "username" y no "email": el navegador lo empareja con la contraseña guardada.
+            autoComplete="username"
+            value={email}
+            onChange={setEmail}
+            error={shown?.email}
+            invalid={credentialsError !== null}
+          />
 
-          <div className="flex flex-col gap-1.5">
-            <label
-              htmlFor="password"
-              className="text-xs font-medium uppercase tracking-[0.06em] text-scaps-text-muted"
-            >
-              Contraseña
-            </label>
-            <input
-              id="password"
-              type={showPassword ? 'text' : 'password'}
-              required
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              aria-invalid={credentialsError ? true : undefined}
-              className={`h-11 rounded-scaps border ${credentialsError ? 'border-scaps-error' : 'border-scaps-border-input'} bg-scaps-sunken px-3.5 text-sm text-scaps-text`}
-            />
-            {/* Login no indica cuál de los dos campos falló a propósito —
-                el backend usa el mismo mensaje para email inexistente y
-                contraseña incorrecta (ver docs/deuda-tecnica.md). */}
-            {credentialsError && (
-              <p role="alert" className="text-xs font-medium text-scaps-error">
-                {credentialsError.message}
-              </p>
-            )}
+          {/* Login no indica cuál de los dos campos falló a propósito —
+              el backend usa el mismo mensaje para email inexistente y
+              contraseña incorrecta (ver docs/deuda-tecnica.md). */}
+          <TextField
+            id="password"
+            label="Contraseña"
+            type={showPassword ? 'text' : 'password'}
+            required
+            autoComplete="current-password"
+            value={password}
+            onChange={setPassword}
+            error={shown?.password ?? credentialsError?.message}
+          >
             <ShowPasswordToggle
               checked={showPassword}
               onChange={setShowPassword}
             />
-          </div>
+          </TextField>
 
           {formError && <FormAlert messages={formError.messages} />}
 
@@ -125,7 +120,8 @@ export default function Login() {
             ¿No tenés cuenta?{' '}
             <Link
               to="/registro"
-              className={`text-scaps-text underline-offset-4 hover:underline`}
+              state={redirectState}
+              className="text-scaps-text underline underline-offset-4 hover:text-scaps-text-secondary"
             >
               Crear cuenta
             </Link>

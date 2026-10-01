@@ -38,15 +38,15 @@ Confirmá que arrancaron bien:
 ### 3.1 Registro exitoso
 1. Ir a `http://localhost:5173/registro`.
 2. Completar Nombre, Apellido, Email (uno que no hayas usado antes) y Contraseña (8+ caracteres).
-3. Click en "Registrarme".
-4. **Esperado**: redirige a la landing (`/`) con la sesión ya iniciada.
+3. Click en "Crear cuenta".
+4. **Esperado**: redirige a la landing (`/`) con la sesión ya iniciada: la barra muestra tu nombre (en el celular, al lado del botón del menú).
 
 ### 3.2 Cerrar sesión y volver a entrar
 1. Con la sesión iniciada del paso 3.1, ir a `http://localhost:5173/login`.
-2. **Esperado**: en vez del formulario, aparece "Ya iniciaste sesión" con tu email y un botón "Cerrar sesión" (el Navbar no tiene logout todavía, así que este botón vive en la propia pantalla de login).
-3. Click en "Cerrar sesión".
-4. **Esperado**: aparece el formulario de login normal.
-5. Ingresar el mismo email y contraseña del paso 3.1 y enviar.
+2. **Esperado**: no aparece el formulario; redirige a la landing, porque ya hay sesión. Con `/registro` pasa lo mismo.
+3. Click en "Cerrar sesión", en la barra (en el celular, dentro del menú).
+4. **Esperado**: la barra vuelve a mostrar "Ingresar" y "Crear cuenta".
+5. Ir a `/login`, ingresar el mismo email y contraseña del paso 3.1 y enviar.
 6. **Esperado**: redirige a `/` con la sesión iniciada otra vez.
 
 ### 3.3 Contraseña incorrecta
@@ -61,10 +61,22 @@ Confirmá que arrancaron bien:
 
 ### 3.5 Validación de cliente (sin llegar a pedir nada al backend)
 1. En `/registro` o `/login`, intentar enviar el formulario con campos vacíos.
-2. **Esperado**: el navegador bloquea el envío (campos obligatorios).
-3. En `/registro`, poner una contraseña de menos de 8 caracteres.
-4. **Esperado**: aparece un mensaje de error en el mismo estilo que los de arriba, sin llegar a golpear el backend.
+2. **Esperado**: cada campo vacío queda en rojo con su mensaje debajo ("Ingresá tu email") y el foco va al primero. No aparece el globo del navegador.
+3. En `/registro`, poner una contraseña de menos de 8 caracteres y enviar.
+4. **Esperado**: el mensaje aparece debajo del campo y se va solo al llegar a 8 caracteres, sin llegar a golpear el backend.
 
 ### 3.6 Doble envío
 1. En cualquiera de las dos pantallas, completar el formulario y hacer click en el botón de submit.
 2. **Esperado**: mientras el request está en curso, el botón muestra "Ingresando…" o "Creando cuenta…" con un indicador de carga, y un segundo click o un Enter no mandan otro request.
+
+### 3.7 Volver a la pantalla pedida
+1. Sin sesión, ir a `http://localhost:5173/carrito`.
+2. **Esperado**: redirige a `/login`.
+3. Ingresar con una cuenta válida (o crear una desde "Crear cuenta").
+4. **Esperado**: vuelve a `/carrito`, no a la landing, y el botón Atrás no regresa al formulario.
+
+### 3.8 Sin conexión con el backend
+1. Cortar el backend (Ctrl+C en su terminal) y, en `/login` o `/registro`, enviar el formulario completo.
+2. **Esperado**: arriba del botón aparece un aviso gris ("No pudimos conectar con el servidor. Revisá tu conexión y volvé a intentar.") y ningún campo queda en rojo.
+3. Levantar el backend de nuevo y reenviar.
+4. **Esperado**: el aviso desaparece y el envío sigue su curso normal.

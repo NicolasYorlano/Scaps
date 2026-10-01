@@ -20,9 +20,10 @@ export default function ProductImage({ image, aspect }: Props) {
   const loaded = loadedUrl === image.url;
 
   // span y no div: puede ir dentro de un <button> (miniaturas de la ficha).
+  // Texto oscuro: si la foto no carga, su alt se lee sobre el blanco.
   return (
     <span
-      className={`block w-full overflow-hidden rounded-scaps bg-scaps-photo ${ASPECT_CLASS[aspect]}`}
+      className={`block w-full overflow-hidden rounded-scaps bg-scaps-photo text-scaps-page ${ASPECT_CLASS[aspect]}`}
     >
       <img
         key={image.url}

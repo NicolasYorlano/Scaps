@@ -26,7 +26,8 @@
 
   /* Bordes */
   --color-scaps-border: #333333; /* borde de contenedor y card */
-  --color-scaps-border-input: #4d4d4d; /* borde de input y botón secundario */
+  /* No más oscuro: el borde de un campo necesita 3:1 contra la card. */
+  --color-scaps-border-input: #666666; /* borde de input y botón secundario */
   --color-scaps-border-row: #262626; /* separador de filas dentro de una card */
   --color-scaps-border-primary: #8a8a8a; /* borde de acción primaria y elemento activo */
 
@@ -35,5 +36,18 @@
 
   /* Excepción a "sin colores de sistema", a pedido explícito: marca el
      campo con el dato inválido — el resto del sistema sigue monocromo. */
-  --color-scaps-error: #dc2626;
+  --color-scaps-error: #ef4444; /* no más oscuro: como texto de 12 px necesita 4,5:1 */
+}
+
+@layer base {
+  /* Lo que pinta el navegador (autocompletado, scroll, página sin JS) sale oscuro. */
+  :root {
+    color-scheme: dark;
+  }
+
+  /* Anillo de foco de toda la app. Va separado para no tapar el borde rojo de un error. */
+  :focus-visible {
+    outline: 2px solid var(--color-scaps-text);
+    outline-offset: 2px;
+  }
 }
