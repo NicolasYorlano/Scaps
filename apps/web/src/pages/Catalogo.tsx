@@ -58,9 +58,7 @@ function Grid({ products, total }: { products: ProductCard[]; total: number }) {
 }
 
 export default function Catalogo() {
-  const { data, error, loading, reload } = useApiQuery<Paginated<ProductCard>>(
-    `/products?limit=${PAGE_SIZE}`,
-  );
+  const { data, error, loading, reload } = useApiQuery<Paginated<ProductCard>>(`/products?limit=${PAGE_SIZE}`);
 
   useEffect(() => {
     document.title = 'Catálogo | Scaps';

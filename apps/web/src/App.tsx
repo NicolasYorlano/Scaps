@@ -26,7 +26,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <div className="flex min-h-screen flex-col bg-slate-950">
+      <div className="flex min-h-screen flex-col bg-scaps-canvas">
         <Navbar />
         <Routes>
           <Route path="/" element={<Landing />} />

@@ -1,5 +1,8 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router';
+import FormAlert from '../components/FormAlert';
+import ShowPasswordToggle from '../components/ShowPasswordToggle';
+import SubmitButton from '../components/SubmitButton';
 import { api } from '../lib/api';
 import { useApiAction } from '../hooks/useApi';
 import { useSessionStore, type AuthResult } from '../stores/session-store';
@@ -18,8 +21,13 @@ export default function Login() {
     api.post<AuthResult>('/auth/login', { email, password }),
   );
 
+  // Solo el 401 habla de los campos; una falla de red o del servidor, no.
+  const credentialsError = error?.status === 401 ? error : null;
+  const formError = credentialsError ? null : error;
+
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (loading) return; // el botón usa aria-disabled, que no frena el envío
     const result = await run(email, password);
     if (result) {
       setSession(result);
@@ -71,8 +79,8 @@ export default function Login() {
               autoComplete="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              aria-invalid={error ? true : undefined}
-              className={`h-11 rounded-scaps border ${error ? 'border-scaps-error' : 'border-scaps-border-input'} bg-scaps-sunken px-3.5 text-sm text-scaps-text placeholder:text-scaps-text-annotation`}
+              aria-invalid={credentialsError ? true : undefined}
+              className={`h-11 rounded-scaps border ${credentialsError ? 'border-scaps-error' : 'border-scaps-border-input'} bg-scaps-sunken px-3.5 text-sm text-scaps-text placeholder:text-scaps-text-annotation`}
             />
           </div>
 
@@ -90,45 +98,28 @@ export default function Login() {
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              aria-invalid={error ? true : undefined}
-              className={`h-11 rounded-scaps border ${error ? 'border-scaps-error' : 'border-scaps-border-input'} bg-scaps-sunken px-3.5 text-sm text-scaps-text`}
+              aria-invalid={credentialsError ? true : undefined}
+              className={`h-11 rounded-scaps border ${credentialsError ? 'border-scaps-error' : 'border-scaps-border-input'} bg-scaps-sunken px-3.5 text-sm text-scaps-text`}
             />
             {/* Login no indica cuál de los dos campos falló a propósito —
                 el backend usa el mismo mensaje para email inexistente y
                 contraseña incorrecta (ver docs/deuda-tecnica.md). */}
-            {error && (
+            {credentialsError && (
               <p role="alert" className="text-xs font-medium text-scaps-error">
-                {error.messages.join(' ')}
+                {credentialsError.message}
               </p>
             )}
-            <div className="mt-1 flex items-center gap-2 text-xs text-scaps-text-muted">
-              <span className="relative inline-flex h-4 w-4 shrink-0">
-                <input
-                  type="checkbox"
-                  checked={showPassword}
-                  onChange={(e) => setShowPassword(e.target.checked)}
-                  aria-label="Mostrar contraseña"
-                  className="peer absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                />
-                <span className="pointer-events-none absolute inset-0 rounded-[3px] border border-scaps-border-input bg-scaps-sunken transition-colors peer-checked:border-scaps-border-primary" />
-                <svg
-                  viewBox="0 0 12 12"
-                  className="pointer-events-none absolute inset-0 m-auto hidden h-2.5 w-2.5 fill-none stroke-scaps-text-on-primary stroke-2 peer-checked:block"
-                >
-                  <path d="M2 6l2.5 2.5L10 3" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </span>
-              <span>Mostrar contraseña</span>
-            </div>
+            <ShowPasswordToggle
+              checked={showPassword}
+              onChange={setShowPassword}
+            />
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className={`h-12 rounded-scaps border border-scaps-border-primary bg-transparent px-6 text-sm font-medium text-scaps-text-on-primary transition-colors hover:bg-scaps-card-highlight disabled:cursor-not-allowed disabled:border-scaps-border disabled:text-scaps-text-annotation disabled:hover:bg-transparent`}
-          >
-            {loading ? 'Ingresando…' : 'Ingresar'}
-          </button>
+          {formError && <FormAlert messages={formError.messages} />}
+
+          <SubmitButton loading={loading} loadingLabel="Ingresando…">
+            Ingresar
+          </SubmitButton>
 
           <p className="text-center text-sm text-scaps-text-secondary">
             ¿No tenés cuenta?{' '}

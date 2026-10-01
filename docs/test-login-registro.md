@@ -67,4 +67,4 @@ Confirmá que arrancaron bien:
 
 ### 3.6 Doble envío
 1. En cualquiera de las dos pantallas, completar el formulario y hacer click en el botón de submit.
-2. **Esperado**: el botón se deshabilita mientras el request está en curso (no se puede hacer doble click y mandar dos requests).
+2. **Esperado**: mientras el request está en curso, el botón muestra "Ingresando…" o "Creando cuenta…" con un indicador de carga, y un segundo click o un Enter no mandan otro request.
