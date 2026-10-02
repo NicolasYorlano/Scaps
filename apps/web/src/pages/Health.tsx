@@ -11,7 +11,7 @@ export default function Health() {
 
   return (
     <main className="flex flex-1 flex-col items-center justify-center gap-4 bg-scaps-canvas px-6 text-center">
-      <h1 className="font-display text-heading text-scaps-text">
+      <h1 className="text-3xl font-semibold text-scaps-text">
         Estado de la API
       </h1>
       <p className="font-mono text-xs text-scaps-text-muted">
