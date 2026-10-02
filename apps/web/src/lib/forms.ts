@@ -1,4 +1,4 @@
-// Lo que comparten los formularios de ingreso y de registro.
+// Lo que comparten los formularios.
 
 // Más estricto que type="email", que acepta "juan@mail": el backend no.
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
