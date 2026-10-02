@@ -2,9 +2,31 @@
 
 /* Guía visual Scaps (docs/wireframes/Guía visual Scaps e-commerce.pdf) —
    sistema oscuro monocromo, sin color de acento ni colores de sistema (nada de rojo/verde):
-   la jerarquía se hace con fondos "de profundo a elevado", con el peso del
-   texto (Inter, solo 400/500) y con línea, nunca con relleno saturado. */
+   la jerarquía se hace con fondos "de profundo a elevado", con la tipografía
+   y con línea, nunca con relleno saturado. */
 @theme {
+  /* Tipografía (dirección B2 · Pasarela): Bodoni para la marca, los títulos y los
+     nombres de producto; Jost, geométrica, para todo lo que se opera.
+     Sobre fondo oscuro los trazos finos de Bodoni se pierden: no bajar del peso 500. */
+  --font-sans: 'Jost Variable', Futura, system-ui, sans-serif;
+  --font-display: 'Bodoni Moda Variable', Didot, Georgia, serif;
+
+  --text-display: clamp(3.125rem, 8.4vw, 6.5rem); /* hero */
+  --text-display--line-height: 0.95;
+  --text-display--letter-spacing: -0.02em;
+  --text-display--font-weight: 500;
+  --text-title: clamp(2.5rem, 5vw, 3.5rem); /* título de página · nombre en la ficha */
+  --text-title--line-height: 1;
+  --text-title--letter-spacing: -0.015em;
+  --text-title--font-weight: 500;
+  --text-heading: 2rem; /* títulos de formularios y secciones */
+  --text-heading--line-height: 1.05;
+  --text-heading--letter-spacing: -0.01em;
+  --text-heading--font-weight: 500;
+  --text-card: clamp(1.0625rem, 1.7vw, 1.25rem); /* nombre en card */
+  --text-card--line-height: 1.15;
+  --text-card--font-weight: 600;
+
   /* Fondos, de más profundo a más elevado */
   --color-scaps-page: #090909; /* Página */
   --color-scaps-sunken: #0d0d0d; /* Campo hundido · sidebar admin */

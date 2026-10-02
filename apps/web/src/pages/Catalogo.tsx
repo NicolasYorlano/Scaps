@@ -69,7 +69,7 @@ export default function Catalogo() {
 
   return (
     <main className="flex flex-1 flex-col bg-scaps-canvas px-6 py-8 lg:px-12 lg:py-12">
-      <h1 className="text-[25px] leading-[1.1] font-medium text-scaps-text">
+      <h1 className="font-display text-title text-scaps-text">
         Catálogo
       </h1>
       {/* min-h-5: reserva el renglón del total para que la grilla no salte al cargar. */}
