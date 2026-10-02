@@ -52,7 +52,7 @@ export default function Creditos() {
   return (
     <main className="flex-1 bg-scaps-canvas px-6 py-12 lg:px-12">
       <div className="mx-auto max-w-3xl">
-        <h1 className="text-[25px] leading-[1.1] font-medium text-scaps-text">
+        <h1 className="font-display text-heading text-scaps-text">
           Créditos de los modelos 3D
         </h1>
         <p className="mt-3 text-sm text-scaps-text-secondary">
