@@ -13,7 +13,7 @@ function Hero() {
       <div className="absolute inset-0 bg-scaps-page/50" />
 
       <div className="relative z-10 flex max-w-xl flex-col items-center gap-4">
-        <h1 className="font-display text-display text-scaps-text">
+        <h1 className="text-4xl font-bold text-scaps-text md:text-6xl">
           Scaps
         </h1>
         <p className="text-base text-scaps-text-secondary md:text-lg">

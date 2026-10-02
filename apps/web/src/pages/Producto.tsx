@@ -240,10 +240,7 @@ function ProductSkeleton() {
 
         {/* Cada barra, con su margen, mide lo que el renglón de texto que reemplaza. */}
         <div className="flex flex-col gap-4">
-          {/* text-title + h-lh: mide un renglón del título, sea cual sea el tamaño de pantalla. */}
-          <div className="flex h-lh items-center text-title">
-            <div className="h-[0.55em] w-2/3 rounded-full bg-scaps-placeholder" />
-          </div>
+          <div className="my-1 h-5 w-2/3 rounded-full bg-scaps-placeholder" />
           <div className="my-1.5 h-4 w-24 rounded-full bg-scaps-placeholder" />
           <div className="flex flex-col gap-2.5 py-1.5">
             <div className="h-3 rounded-full bg-scaps-placeholder" />
@@ -283,7 +280,7 @@ export default function Producto() {
       <main
         className={`${pageClassName} items-center justify-center gap-4 text-center`}
       >
-        <h1 className="font-display text-heading text-scaps-text">
+        <h1 className="text-[25px] leading-[1.1] font-medium text-scaps-text">
           Producto no encontrado
         </h1>
         <p className="text-sm text-scaps-text-secondary">
@@ -328,7 +325,7 @@ export default function Producto() {
             <Gallery key={product.slug} product={product} />
 
             <section className="flex flex-col gap-4">
-              <h1 className="font-display text-title text-balance text-scaps-text">
+              <h1 className="text-[25px] leading-[1.1] font-medium text-scaps-text">
                 {product.nombre}
               </h1>
               <p className="text-xl font-medium text-scaps-text">
