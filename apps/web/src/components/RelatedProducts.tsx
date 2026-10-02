@@ -21,7 +21,7 @@ export default function RelatedProducts({currentSlug}: {currentSlug: string}) {
 
   return (
     <section className="mt-16 lg:mt-24">
-      <h2 className="text-lg font-medium text-scaps-text">
+      <h2 className="font-display text-heading text-scaps-text">
         También te puede interesar
       </h2>
       {loading ? (

@@ -85,7 +85,7 @@ export default function Registro() {
   return (
     <main className="flex flex-1 items-center justify-center bg-scaps-canvas px-6 py-12 lg:px-12">
       <div className="w-full max-w-110 rounded-scaps border border-scaps-border bg-scaps-card p-6 sm:p-8">
-        <h1 className="text-[25px] leading-[1.1] font-medium text-scaps-text">Crear cuenta</h1>
+        <h1 className="font-display text-heading text-scaps-text">Crear cuenta</h1>
 
         {/* noValidate: los avisos los da el formulario, no el globo del navegador. */}
         <form noValidate className="mt-6 flex flex-col gap-4" onSubmit={(e) => void handleSubmit(e)}>
