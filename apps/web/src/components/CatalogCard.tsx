@@ -35,7 +35,7 @@ export default function CatalogCard({ product, titleAs: Title = 'h2' }: Props) {
       </div>
 
       <div className="flex flex-1 flex-col p-3">
-        <Title className="line-clamp-2 text-sm font-medium wrap-break-word text-scaps-text">
+        <Title className="line-clamp-2 font-display text-card wrap-break-word text-scaps-text">
           {product.nombre}
         </Title>
         <p className="mt-1 text-sm text-scaps-text-muted tabular-nums md:mb-3">
@@ -56,8 +56,13 @@ export function CatalogCardSkeleton() {
     <div className={cardClassName}>
       <div className="aspect-square bg-scaps-placeholder" />
       <div className="flex flex-1 flex-col p-3">
-        <div className="my-1 h-3 w-3/4 rounded-full bg-scaps-placeholder" />
-        <div className="my-1 h-3 w-1/2 rounded-full bg-scaps-placeholder md:hidden" />
+        {/* text-card + h-lh: cada barra mide un renglón del nombre. */}
+        <div className="flex h-lh items-center text-card">
+          <div className="h-[0.6em] w-3/4 rounded-full bg-scaps-placeholder" />
+        </div>
+        <div className="flex h-lh items-center text-card md:hidden">
+          <div className="h-[0.6em] w-1/2 rounded-full bg-scaps-placeholder" />
+        </div>
         <div className="mt-2 mb-1 h-3 w-1/3 rounded-full bg-scaps-placeholder md:mb-4" />
         <div className="mt-auto hidden h-10 rounded-scaps bg-scaps-placeholder md:block" />
       </div>
