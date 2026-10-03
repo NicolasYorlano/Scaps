@@ -3,8 +3,8 @@ import { Link } from 'react-router';
 // mt-auto lo baja al fondo aunque la página no ocupe el alto (un guard que devuelve null).
 export default function Footer() {
   return (
-    <footer className="mt-auto border-t border-scaps-border bg-scaps-nav">
-      <div className="flex flex-col gap-3 px-6 py-6 md:flex-row md:items-center md:justify-between lg:px-12">
+    <footer className="mt-auto border-t border-scaps-border bg-scaps-nav px-6 py-6 lg:px-12">
+      <div className="mx-auto flex max-w-page flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="flex flex-col gap-1">
           <p className="text-sm font-medium text-scaps-text">
             Scaps · © {new Date().getFullYear()}

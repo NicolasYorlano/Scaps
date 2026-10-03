@@ -1,8 +1,9 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router';
+import { Link, useLocation, useParams } from 'react-router';
 import ProductImage from '../components/ProductImage';
 import RelatedProducts from '../components/RelatedProducts';
 import { useApiQuery } from '../hooks/useApi';
+import { catalogPath } from '../lib/catalog-return';
 import { formatPrice } from '../lib/format-price';
 import type { ProductDetail } from '../types/product';
 
@@ -52,9 +53,12 @@ const thumbClassName = 'w-16 shrink-0 xl:w-full';
 const SKELETON_THUMBS = 5;
 
 function Breadcrumb({ name }: { name?: string }) {
+  // Vuelve al catálogo con la búsqueda desde la que se abrió la ficha.
+  const catalog = catalogPath(useLocation().state);
+
   return (
     <nav aria-label="Migas de pan" className="text-sm text-scaps-text-muted">
-      <Link to="/catalogo" className="hover:text-scaps-text hover:underline">
+      <Link to={catalog} className="hover:text-scaps-text hover:underline">
         Catálogo
       </Link>
       {name && (
@@ -258,6 +262,7 @@ function ProductSkeleton() {
 
 export default function Producto() {
   const { slug = '' } = useParams<{ slug: string }>();
+  const catalog = catalogPath(useLocation().state);
   const {
     data: product,
     error,
@@ -290,7 +295,7 @@ export default function Producto() {
           El producto que buscás no existe o ya no está disponible.
         </p>
         <Link
-          to="/catalogo"
+          to={catalog}
           className="text-sm font-medium text-scaps-text underline underline-offset-4 hover:text-scaps-text-secondary"
         >
           Volver al catálogo

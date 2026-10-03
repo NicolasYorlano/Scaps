@@ -13,3 +13,8 @@ export function emailError(email: string): string | null {
 export function focusField(id: string): void {
   document.getElementById(id)?.focus();
 }
+
+/** Con pantalla táctil, un campo con foco deja abierto el teclado, que tapa media pantalla. */
+export function isTouchScreen(): boolean {
+  return window.matchMedia('(pointer: coarse)').matches;
+}
