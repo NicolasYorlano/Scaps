@@ -1,3 +1,4 @@
+import { useLocation } from 'react-router';
 import CatalogCard, { CatalogCardSkeleton } from './CatalogCard';
 import { useApiQuery } from '../hooks/useApi';
 import type { Paginated } from '../types/pagination';
@@ -13,6 +14,8 @@ export default function RelatedProducts({currentSlug}: {currentSlug: string}) {
   const { data, loading } = useApiQuery<Paginated<ProductCard>>(
     `/products?limit=${MAX_RELATED + 1}`,
   );
+  // De una ficha a otra, la miga sigue volviendo a la misma búsqueda del catálogo.
+  const linkState: unknown = useLocation().state;
   const products = (data?.data ?? [])
     .filter((product) => product.slug !== currentSlug)
     .slice(0, MAX_RELATED);
@@ -39,7 +42,7 @@ export default function RelatedProducts({currentSlug}: {currentSlug: string}) {
         <ul className={gridClassName}>
           {products.map((product) => (
             <li key={product.id} className="flex">
-              <CatalogCard product={product} titleAs="h3" />
+              <CatalogCard product={product} titleAs="h3" linkState={linkState} />
             </li>
           ))}
         </ul>

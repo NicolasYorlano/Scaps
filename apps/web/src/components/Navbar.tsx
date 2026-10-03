@@ -106,7 +106,7 @@ export default function Navbar() {
     <nav className="border-b border-scaps-border bg-scaps-nav px-6 py-4 lg:px-12">
       {/* Fila de 40 px: la barra mide lo mismo en todos los anchos. Los márgenes negativos dan
           44 px de área táctil sin agrandarla y dejan las rayitas del botón sobre el margen. */}
-      <div className="flex min-h-10 items-center justify-between gap-4">
+      <div className="mx-auto flex min-h-10 max-w-page items-center justify-between gap-4">
         <Link to="/" onClick={closeMenu} className="-my-2.5 shrink-0 py-2.5">
           <img src={logoUrl} alt="Scaps" className="h-6 w-auto max-w-35 md:h-7" />
         </Link>

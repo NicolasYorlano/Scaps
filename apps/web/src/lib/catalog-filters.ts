@@ -39,6 +39,11 @@ export function cleanPrice(input: string): string {
     .slice(0, PRICE_MAX_DIGITS);
 }
 
+/** "23000" → "23.000": como se ven los precios en las cards. */
+export function formatThousands(digits: string): string {
+  return digits.replace(/\B(?=(\d{3})+$)/g, '.');
+}
+
 export function isRangeInvalid(priceMin: string, priceMax: string): boolean {
   return priceMin !== '' && priceMax !== '' && Number(priceMin) > Number(priceMax);
 }
