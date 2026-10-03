@@ -56,6 +56,10 @@
   /* Radio único del sistema (pill 99px para badges, no usado todavía) */
   --radius-scaps: 8px;
 
+  /* Ancho máximo del contenido (max-w-page): 1600 px de pantalla menos el padding lateral.
+     En monitores anchos el contenido queda centrado; los fondos siguen de borde a borde. */
+  --container-page: 94rem;
+
   /* Excepción a "sin colores de sistema", a pedido explícito: marca el
      campo con el dato inválido — el resto del sistema sigue monocromo. */
   --color-scaps-error: #ef4444; /* no más oscuro: como texto de 12 px necesita 4,5:1 */
@@ -65,6 +69,12 @@
   /* Lo que pinta el navegador (autocompletado, scroll, página sin JS) sale oscuro. */
   :root {
     color-scheme: dark;
+  }
+
+  /* Una pantalla cuyo alto cambia sola (el catálogo al filtrar) deja la barra de scroll
+     siempre a la vista: si aparece y desaparece, el contenido centrado se corre unos píxeles. */
+  html:has([data-stable-scrollbar]) {
+    overflow-y: scroll;
   }
 
   /* Anillo de foco de toda la app. Va separado para no tapar el borde rojo de un error. */

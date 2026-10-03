@@ -33,6 +33,7 @@ export default function TextField({ id, label, onChange, error, invalid = false,
         {label}
       </label>
       {/* name = id por defecto: es lo que leen los gestores de contraseñas. */}
+      {/* 16 px en el celular: con menos, iOS acerca la página al enfocar el campo. */}
       <input
         name={id}
         {...input}
@@ -40,7 +41,7 @@ export default function TextField({ id, label, onChange, error, invalid = false,
         onChange={(e) => onChange(e.target.value)}
         aria-invalid={marked ? true : undefined}
         aria-describedby={error || hint ? messageId : undefined}
-        className={`h-11 rounded-scaps border ${marked ? 'border-scaps-error' : 'border-scaps-border-input'} bg-scaps-sunken px-3.5 text-sm text-scaps-text`}
+        className={`h-11 rounded-scaps border ${marked ? 'border-scaps-error' : 'border-scaps-border-input'} bg-scaps-sunken px-3.5 text-base text-scaps-text md:text-sm`}
       />
       {error ? (
         <p

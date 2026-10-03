@@ -24,6 +24,21 @@ type Result<T> = {
   error: ApiError | null;
 };
 
+// Última respuesta buena de las rutas que la piden con `keep`: al volver a la
+// pantalla se ve al instante, mientras se pide de nuevo. Solo para datos
+// públicos: dura lo que la pestaña y no distingue sesiones.
+const KEPT_MAX = 20;
+const kept = new Map<string, unknown>();
+
+function keepResponse(path: string, data: unknown) {
+  kept.delete(path); // vuelve a entrar al final: la más vieja sale primero
+  kept.set(path, data);
+  const oldest = kept.keys().next().value;
+  if (kept.size > KEPT_MAX && oldest !== undefined) kept.delete(oldest);
+}
+
+type QueryOptions = { keep?: boolean };
+
 /**
  * Para LEER al entrar a una pantalla. Solo GET: adentro llama a api.get().
  *
@@ -37,7 +52,7 @@ type Result<T> = {
  * request para siempre), y `loading` es derivado en vez de un useState, así
  * cambiar de ruta no muestra por un instante los datos de la anterior.
  */
-export function useApiQuery<T>(path: string) {
+export function useApiQuery<T>(path: string, { keep = false }: QueryOptions = {}) {
   const [attempt, setAttempt] = useState(0);
   const [result, setResult] = useState<Result<T> | null>(null);
 
@@ -54,6 +69,7 @@ export function useApiQuery<T>(path: string) {
     async function load() {
       try {
         const data = await api.get<T>(path);
+        if (keep) keepResponse(path, data);
         if (active) setResult({ key, data, error: null });
       } catch (e) {
         if (active) setResult({ key, data: null, error: toApiError(e) });
@@ -65,15 +81,20 @@ export function useApiQuery<T>(path: string) {
     return () => {
       active = false;
     };
-  }, [path, key]);
+  }, [path, key, keep]);
 
   const current = result?.key === key ? result : null;
+  const remembered = keep ? ((kept.get(path) as T | undefined) ?? null) : null;
+  const data = current?.data ?? remembered;
   const reload = useCallback(() => setAttempt((n) => n + 1), []);
 
   return {
-    data: current?.data ?? null,
-    error: current?.error ?? null,
-    loading: current === null,
+    data,
+    // Con algo guardado para mostrar, un fallo al volver a pedirlo no tapa la pantalla.
+    error: data === null ? (current?.error ?? null) : null,
+    loading: current === null && data === null,
+    /** Lo último que llegó, aunque sea de otra ruta: sirve para no vaciar la pantalla mientras carga la nueva. */
+    previousData: result?.data ?? null,
     reload,
   };
 }
