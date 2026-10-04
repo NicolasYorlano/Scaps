@@ -71,9 +71,11 @@ interface ModelViewerProps {
   onError?: (error: Error) => void;
   /** Se llama cuando el modelo ya se ve. Pasarla estable (useCallback): si cambia, se vuelve a llamar. */
   onReady?: () => void;
+  /** Aire alrededor del modelo al encuadrarlo: 1 lo deja justo, más grande lo achica. Por defecto 1.2, el de drei. */
+  margin?: number;
 }
 
-export default function ModelViewer({url, className, onError, onReady}: ModelViewerProps) {
+export default function ModelViewer({url, className, onError, onReady, margin = 1.2}: ModelViewerProps) {
   const [entered, setEntered] = useState(false);
 
   useEffect(() => {
@@ -106,12 +108,23 @@ export default function ModelViewer({url, className, onError, onReady}: ModelVie
           resize={{ offsetSize: true }}
           camera={{ position: [0.39, 0.13, 0.5], fov: 55 }}
         >
-          <ambientLight intensity={0.7} />
-          <directionalLight position={[0, 30, 0]} intensity={1} />
-          <pointLight position={[1, -1.5, 0]} intensity={0.5} />
+          {/* Luces declaradas acá y no con <Environment>/<Stage>, que bajan su iluminación de un CDN.
+              Solo direccionales y de relleno: no dependen de la escala, y los modelos vienen de autores distintos y miden distinto. */}
+          {/* Relleno: cielo claro arriba, suelo gris claro abajo; ninguna cara queda negra. */}
+          <hemisphereLight args={['#ffffff', '#b5b5b5', 1.2]} />
+          {/* Principal: de frente, arriba y a la derecha, del lado de la cámara. */}
+          <directionalLight position={[3, 5, 4]} intensity={2} />
+          {/* Relleno lateral: aclara el lado izquierdo, que la principal deja en sombra. */}
+          <directionalLight position={[-4, 2, 3]} intensity={0.8} />
+          {/* Contorno desde atrás, en diagonal desde los dos lados: dibuja un borde claro en la silueta,
+              así una gorra negra se separa del fondo oscuro de la landing. */}
+          <directionalLight position={[-4, 3, -4]} intensity={2} />
+          <directionalLight position={[4, 3, -4]} intensity={2} />
+          {/* Desde abajo y adelante: al rotar la gorra para verla por debajo, el interior y la visera no quedan en negro. */}
+          <directionalLight position={[0, -5, 2]} intensity={1.2} />
           <Suspense fallback={<Loader />}>
             {/* Encuadre sin animar: animado, la cámara arranca adentro de los modelos grandes. No 0: drei divide por maxDuration. */}
-            <Bounds fit clip observe maxDuration={0.001}>
+            <Bounds fit clip observe margin={margin} maxDuration={0.001}>
               {/* Misma caja que mide Bounds: con la precisa, la cámara de los modelos grandes arranca desde otro ángulo. */}
               <Center precise={false}>
                 <Modelo url={url} />
