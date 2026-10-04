@@ -1,17 +1,51 @@
-import {Component, Suspense, useEffect, useState, type ReactNode} from 'react';
-import { Canvas } from '@react-three/fiber';
-import {Bounds, Center, Html, OrbitControls, useGLTF, useProgress} from '@react-three/drei';
+import {Suspense, useEffect, useRef, useState, type ComponentRef, type KeyboardEvent} from 'react';
+import { Canvas, useLoader } from '@react-three/fiber';
+import {Bounds, Center, Html, OrbitControls, useProgress} from '@react-three/drei';
+import { WebGLRenderer } from 'three';
+import { DRACOLoader, GLTFLoader } from 'three-stdlib';
+import ErrorBoundary from './ErrorBoundary';
 
 // Servimos el decoder de Draco nosotros mismos (apps/web/public/draco) en vez
-// de dejar que drei lo baje del CDN de Google por defecto.
-useGLTF.setDecoderPath('/draco/');
+// de dejar que se baje del CDN de Google por defecto.
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath('/draco/');
+// Se pide ya: baja mientras llega el modelo, no después.
+dracoLoader.preload();
+
+// Avance en bytes de cada descarga, por URL: sobrevive a que el visor se desmonte a mitad de carga.
+// useProgress de drei no sirve para esto: cuenta archivos, y con un solo .glb marca 0 hasta el final.
+const downloaded = new Map<string, number>();
+const downloadListeners = new Map<string, (percent: number) => void>();
+
+function trackDownload(url: string) {
+  return (event: ProgressEvent) => {
+    // Sin Content-Length no hay total contra el que medir.
+    if (!event.lengthComputable) return;
+    const percent = Math.round((event.loaded / event.total) * 100);
+    downloaded.set(url, percent);
+    downloadListeners.get(url)?.(percent);
+  };
+}
+
+// Un toque de flecha rota 15°.
+const KEY_STEP = Math.PI / 12;
+// Sin llegar a los polos: ahí la cámara se da vuelta.
+const POLAR_MARGIN = 0.1;
 
 interface ModeloProps {
   url: string;
 }
 
 function Modelo({ url }: ModeloProps) {
-  const { scene } = useGLTF(url);
+  // useLoader y no useGLTF de drei, que no deja pasar el avance de la descarga.
+  const { scene } = useLoader(
+    GLTFLoader,
+    url,
+    (loader) => {
+      loader.setDRACOLoader(dracoLoader);
+    },
+    trackDownload(url),
+  );
   return <primitive object={scene} />;
 }
 
@@ -36,60 +70,71 @@ function Loader() {
   );
 }
 
-interface ErrorBoundaryProps {
-  onError?: (error: Error) => void;
-  children: ReactNode;
-}
-
-interface ErrorBoundaryState {
-  hasError: boolean;
-}
-
-class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  state: ErrorBoundaryState = { hasError: false };
-
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error: Error) {
-    this.props.onError?.(error);
-  }
-
-  render() {
-    if (this.state.hasError) return null;
-    return this.props.children;
-  }
-}
-
 interface ModelViewerProps {
   /** URL del archivo .glb a mostrar */
   url: string;
   /** El Canvas ocupa 100% de ancho/alto: el contenedor donde se use ModelViewer necesita una altura definida, o el canvas mide cero y no se ve nada (sin error en consola). */
   className?: string;
+  /** Cómo lo nombra un lector de pantalla, por ejemplo "Modelo 3D de Gorra Trucker". */
+  label?: string;
+  /** Avance de la descarga del .glb, de 0 a 100. Pasarla estable. Sin tamaño informado por el servidor, no se llama. */
+  onProgress?: (percent: number) => void;
   /** Se llama si el .glb no puede cargarse, para que cada pantalla decida qué mostrar en su lugar */
   onError?: (error: Error) => void;
   /** Se llama cuando el modelo ya se ve. Pasarla estable (useCallback): si cambia, se vuelve a llamar. */
   onReady?: () => void;
 }
 
-export default function ModelViewer({url, className, onError, onReady}: ModelViewerProps) {
+export default function ModelViewer({url, className, label = 'Modelo 3D', onProgress, onError, onReady}: ModelViewerProps) {
   const [entered, setEntered] = useState(false);
+  const controlsRef = useRef<ComponentRef<typeof OrbitControls>>(null);
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   useEffect(() => {
     const id = requestAnimationFrame(() => setEntered(true));
     return () => cancelAnimationFrame(id);
   }, []);
 
+  useEffect(() => {
+    if (!onProgress) return;
+    // Una descarga que ya venía en curso: se arranca con lo que lleva.
+    const known = downloaded.get(url);
+    if (known !== undefined) onProgress(known);
+
+    downloadListeners.set(url, onProgress);
+    return () => {
+      if (downloadListeners.get(url) === onProgress) downloadListeners.delete(url);
+    };
+  }, [url, onProgress]);
+
+  function handleKeyDown(event: KeyboardEvent) {
+    const controls = controlsRef.current;
+    if (!controls) return;
+
+    // Mismo sentido que arrastrar hacia ese lado.
+    if (event.key === 'ArrowLeft') controls.setAzimuthalAngle(controls.getAzimuthalAngle() + KEY_STEP);
+    else if (event.key === 'ArrowRight') controls.setAzimuthalAngle(controls.getAzimuthalAngle() - KEY_STEP);
+    else if (event.key === 'ArrowUp') controls.setPolarAngle(Math.min(Math.PI - POLAR_MARGIN, controls.getPolarAngle() + KEY_STEP));
+    else if (event.key === 'ArrowDown') controls.setPolarAngle(Math.max(POLAR_MARGIN, controls.getPolarAngle() - KEY_STEP));
+    else return;
+
+    // Con el foco en el visor, las flechas rotan el modelo en vez de mover la página.
+    event.preventDefault();
+  }
+
   return (
     <div
+      role="img"
+      aria-label={`${label}. Usá las flechas para rotarlo.`}
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
       className={className}
       style={{
         width: '100%',
         height: '100%',
         opacity: entered ? 1 : 0,
         transform: entered ? 'scale(1)' : 'scale(0.96)',
-        transition: 'opacity 400ms ease-out, transform 400ms ease-out',
+        transition: reducedMotion ? 'none' : 'opacity 400ms ease-out, transform 400ms ease-out',
       }}
     >
       {/* Afuera del Canvas: R3F relanza hacia el árbol de React cualquier error de la escena. */}
@@ -97,12 +142,23 @@ export default function ModelViewer({url, className, onError, onReady}: ModelVie
         key={url}
         onError={(error) => {
           // El fallo queda cacheado: sin esto, reintentar falla al instante sin volver a pedir el .glb.
-          useGLTF.clear(url);
+          useLoader.clear(GLTFLoader, url);
+          downloaded.delete(url);
           onError?.(error);
         }}
       >
         {/* offsetSize: mide sin el scale() de la entrada; si no, el canvas queda al 96 % hasta el primer scroll. */}
         <Canvas
+          frameloop="demand"
+          // Si el navegador no entrega WebGL, R3F pierde el error en una promesa: acá se avisa.
+          gl={(defaults) => {
+            try {
+              return new WebGLRenderer(defaults);
+            } catch (error) {
+              onError?.(error as Error);
+              throw error;
+            }
+          }}
           resize={{ offsetSize: true }}
           camera={{ position: [0.39, 0.13, 0.5], fov: 55 }}
         >
@@ -119,7 +175,7 @@ export default function ModelViewer({url, className, onError, onReady}: ModelVie
             </Bounds>
             <Ready onReady={onReady} />
           </Suspense>
-          <OrbitControls makeDefault enableZoom={false} enablePan={false} />
+          <OrbitControls ref={controlsRef} makeDefault enableZoom={false} enablePan={false} />
         </Canvas>
       </ErrorBoundary>
     </div>

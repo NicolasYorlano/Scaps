@@ -77,6 +77,11 @@
     overflow-y: scroll;
   }
 
+  /* Con un diálogo modal abierto (la foto ampliada), la página de atrás no scrollea. */
+  html:has(dialog[open]) {
+    overflow: hidden;
+  }
+
   /* Anillo de foco de toda la app. Va separado para no tapar el borde rojo de un error. */
   :focus-visible {
     outline: 2px solid var(--color-scaps-text);

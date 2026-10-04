@@ -10,8 +10,8 @@ export function emailError(email: string): string | null {
   return null;
 }
 
-export function focusField(id: string): void {
-  document.getElementById(id)?.focus();
+export function focusField(id: string, options?: FocusOptions): void {
+  document.getElementById(id)?.focus(options);
 }
 
 /** Con pantalla táctil, un campo con foco deja abierto el teclado, que tapa media pantalla. */
