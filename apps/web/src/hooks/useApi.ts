@@ -72,7 +72,10 @@ export function useApiQuery<T>(path: string, { keep = false }: QueryOptions = {}
         if (keep) keepResponse(path, data);
         if (active) setResult({ key, data, error: null });
       } catch (e) {
-        if (active) setResult({ key, data: null, error: toApiError(e) });
+        const error = toApiError(e);
+        // Lo guardado ya no existe en el servidor: se olvida, para que el 404 se vea.
+        if (keep && error.status === 404) kept.delete(path);
+        if (active) setResult({ key, data: null, error });
       }
     }
 

@@ -5,18 +5,23 @@ import type { Paginated } from '../types/pagination';
 import type { ProductCard } from '../types/product';
 
 const MAX_RELATED = 4;
+// De dónde se eligen: los más recientes que tienen stock.
+const CANDIDATES = 24;
 
-const gridClassName = 'mt-6 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-6';
+// Entre md y lg entran tres por fila: el cuarto se oculta para no dejar una fila con una sola card.
+const gridClassName =
+  'mt-6 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-6 md:max-lg:[&>li:nth-child(n+4)]:hidden! lg:grid-cols-4';
 
 /** Otros productos, al pie de la ficha. Si no hay ninguno o el pedido falla, no se muestra. */
 export default function RelatedProducts({currentSlug}: {currentSlug: string}) {
-  // Uno de más: el de la ficha se saca de la lista.
-  const { data, loading } = useApiQuery<Paginated<ProductCard>>(
-    `/products?limit=${MAX_RELATED + 1}`,
-  );
+  // keep: de una ficha a otra la lista es la misma y se ve al instante.
+  const { data, loading } = useApiQuery<Paginated<ProductCard>>(`/products?limit=${CANDIDATES}&en_stock=true`, { keep: true });
   // De una ficha a otra, la miga sigue volviendo a la misma búsqueda del catálogo.
   const linkState: unknown = useLocation().state;
-  const products = (data?.data ?? [])
+  const candidates = data?.data ?? [];
+  // Los que siguen al de la ficha, dando la vuelta: cada ficha recomienda otros.
+  const next = candidates.findIndex((product) => product.slug === currentSlug) + 1;
+  const products = [...candidates.slice(next), ...candidates.slice(0, next)]
     .filter((product) => product.slug !== currentSlug)
     .slice(0, MAX_RELATED);
 

@@ -39,9 +39,9 @@ const PRODUCTOS: ProductoSeed[] = [
     slug: 'cap-danlyvostok',
     nombre: 'Gorra Danlyvostok',
     descripcion:
-      'Gorra de corte clásico con visor curvo, pensada para uso diario. ' +
-      'Modelo 3D liviano (baja cantidad de triángulos), ideal para ver el visor ' +
-      'girando sin esfuerzo en cualquier dispositivo.',
+      'Gorra de seis paneles en gabardina de algodón lavada, de copa baja y sin ' +
+      'estructura: se amolda a la cabeza desde el primer uso. Visera curva, ' +
+      'ojales bordados y cierre trasero ajustable. Talle único.',
     precio: '24999.00',
     stock: 40,
     destacado: true,
@@ -58,8 +58,9 @@ const PRODUCTOS: ProductoSeed[] = [
     slug: 'cap-filipmatlak-negra',
     nombre: 'Gorra Filipmatlak Negra',
     descripcion:
-      'Versión negra del modelo Filipmatlak, con panel frontal estructurado ' +
-      'y cierre trasero ajustable. Terminación mate.',
+      'Gorra negra de seis paneles con frente estructurado y bordado en ' +
+      'contraste. Visera curva, terminación mate y cierre trasero ajustable. ' +
+      'Talle único.',
     precio: '22499.00',
     stock: 35,
     destacado: false,
@@ -76,8 +77,9 @@ const PRODUCTOS: ProductoSeed[] = [
     slug: 'cap-filipmatlak-oliva',
     nombre: 'Gorra Filipmatlak Oliva',
     descripcion:
-      'Mismo corte que la Filipmatlak Negra, en verde oliva. Buena opción ' +
-      'para combinar con ropa de tonos neutros.',
+      'El mismo corte que la Filipmatlak Negra, en verde oliva claro con ' +
+      'efecto lavado: cada gorra sale con un desgaste distinto. Bordado ' +
+      'frontal en rojo, visera curva y cierre trasero ajustable. Talle único.',
     precio: '22499.00',
     stock: 35,
     destacado: false,
@@ -94,8 +96,9 @@ const PRODUCTOS: ProductoSeed[] = [
     slug: 'cap-vanarsdale',
     nombre: 'Gorra Vanarsdale',
     descripcion:
-      'Modelo de copa más alta, con curvatura de visor más pronunciada. ' +
-      'Pensado para quienes buscan un perfil más marcado que el corte clásico.',
+      'Gorra de copa alta en sarga gris, con frente firme y visera de curva ' +
+      'marcada. Ojales de ventilación y cierre trasero ajustable. Para quien ' +
+      'busca un perfil más alto que el de la gorra clásica. Talle único.',
     precio: '26999.00',
     stock: 25,
     destacado: false,
