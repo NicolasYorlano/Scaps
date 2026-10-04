@@ -85,7 +85,7 @@ const backLinkClassName =
 // Las fotos de un producto del seed.
 const SKELETON_THUMBS = 5;
 
-// Arrastre mínimo, en px, para dar el modelo por rotado: un toque o un scroll no cuentan.
+// Arrastre mínimo, en px, para dar el modelo por rotado: un toque no cuenta.
 const DRAG_THRESHOLD = 8;
 
 /** Si a la tira le queda algo por scrollear: a lo ancho cuando va en fila, a lo alto en columna. */
@@ -174,7 +174,7 @@ function Gallery({ product }: { product: ProductDetail }) {
   const [rotated, setRotated] = useState(false);
   const [viewerFocused, setViewerFocused] = useState(false);
   const viewButtonRef = useRef<HTMLButtonElement>(null);
-  const dragStartX = useRef<number | null>(null);
+  const dragStart = useRef<{ x: number; y: number } | null>(null);
 
   // Estable (useCallback): ModelViewer la vuelve a llamar si cambia.
   const handleModelReady = useCallback(() => {
@@ -292,28 +292,28 @@ function Gallery({ product }: { product: ProductDetail }) {
             <div
               inert={view === 'loading'}
               onPointerDown={(e) => {
-                dragStartX.current = e.clientX;
+                dragStart.current = { x: e.clientX, y: e.clientY };
               }}
               onPointerMove={(e) => {
+                const from = dragStart.current;
                 if (
-                  dragStartX.current !== null &&
-                  Math.abs(e.clientX - dragStartX.current) > DRAG_THRESHOLD
+                  from &&
+                  Math.hypot(e.clientX - from.x, e.clientY - from.y) > DRAG_THRESHOLD
                 ) {
                   setRotated(true);
                 }
               }}
               onPointerUp={() => {
-                dragStartX.current = null;
+                dragStart.current = null;
               }}
               onPointerCancel={() => {
-                dragStartX.current = null;
+                dragStart.current = null;
               }}
               onFocus={(e) =>
                 setViewerFocused(e.target.matches(':focus-visible'))
               }
               onBlur={() => setViewerFocused(false)}
-              // **: y no solo el canvas: el touch-action: none de OrbitControls va en el div de R3F.
-              className={`absolute inset-0 cursor-grab overflow-hidden rounded-scaps bg-scaps-photo transition-opacity duration-300 active:cursor-grabbing motion-reduce:transition-none **:touch-pan-y! **:touch-pinch-zoom! ${view === 'loading' ? 'pointer-events-none opacity-0' : ''}`}
+              className={`absolute inset-0 cursor-grab overflow-hidden rounded-scaps bg-scaps-photo transition-opacity duration-300 active:cursor-grabbing motion-reduce:transition-none [&_canvas]:touch-pan-y! ${view === 'loading' ? 'pointer-events-none opacity-0' : ''}`}
             >
               <ErrorBoundary
                 onError={() => {
