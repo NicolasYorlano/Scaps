@@ -1,5 +1,6 @@
 import { Link } from 'react-router';
 import ProductImage from './ProductImage';
+import SoldOutBadge from './SoldOutBadge';
 import { formatPrice } from '../lib/format-price';
 import type { ProductCard } from '../types/product';
 
@@ -45,9 +46,7 @@ export default function CatalogCard({ product, titleAs: Title = 'h2', priority =
         </p>
         {/* Después del precio para que se lea al final; se dibuja sobre la foto. */}
         {soldOut && (
-          <span className="absolute top-2 left-2 rounded-full border border-scaps-border-input bg-scaps-canvas px-2 py-0.5 text-[11px] font-medium tracking-wider text-scaps-text-secondary uppercase md:top-3 md:left-3">
-            Sin stock
-          </span>
+          <SoldOutBadge className="absolute top-2 left-2 md:top-3 md:left-3" />
         )}
         {/* span y no botón: la card entera ya es el enlace. */}
         <span

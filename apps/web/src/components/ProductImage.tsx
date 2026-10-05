@@ -59,7 +59,6 @@ export default function ProductImage({ image, aspect, decorative = false, priori
           alt={decorative ? '' : image.alt}
           loading={priority ? 'eager' : 'lazy'}
           fetchPriority={priority ? 'high' : undefined}
-          decoding="async"
           onLoad={() => {
             loadedUrls.add(image.url);
             setLoadedUrl(image.url);

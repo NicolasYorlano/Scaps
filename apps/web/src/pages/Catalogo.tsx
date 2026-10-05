@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useSearchParams } from 'react-router';
 import CatalogCard, { CatalogCardSkeleton } from '../components/CatalogCard';
 import CatalogToolbar from '../components/CatalogToolbar';
+import CubeIcon from '../components/CubeIcon';
 import { useApiQuery } from '../hooks/useApi';
 import {countPanelFilters, hasActiveFilters, parseCatalogFilters, toApiPath, toSearchParams, withoutFilters, type CatalogFilters} from '../lib/catalog-filters';
 import { catalogState } from '../lib/catalog-return';
@@ -146,13 +147,7 @@ export default function Catalogo() {
                 <>
                   {' · '}
                   <span className="font-medium whitespace-nowrap text-scaps-text">
-                    <svg
-                      aria-hidden="true"
-                      viewBox="0 0 16 16"
-                      className="mr-1 inline-block h-3.5 w-3.5 align-[-2px] fill-none stroke-current stroke-[1.25]"
-                    >
-                      <path d="M8 1.5l5.5 3.25v6.5L8 14.5l-5.5-3.25v-6.5L8 1.5zM2.5 4.75L8 8l5.5-3.25M8 8v6.5" strokeLinejoin="round" />
-                    </svg>
+                    <CubeIcon className="mr-1 inline-block h-3.5 w-3.5 align-[-2px]" />
                     {total === 1 ? 'Miralo en 3D' : 'Elegí uno y miralo en 3D'}
                   </span>
                 </>
