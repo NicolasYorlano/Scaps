@@ -87,7 +87,6 @@ interface ModelViewerProps {
   margin?: number;
 }
 
-export default function ModelViewer({url, className, onError, onReady, margin = 1.2}: ModelViewerProps) {
 export default function ModelViewer({url, className, label = 'Modelo 3D', onProgress, onError, onReady}: ModelViewerProps) {
   const [entered, setEntered] = useState(false);
   const controlsRef = useRef<ComponentRef<typeof OrbitControls>>(null);
