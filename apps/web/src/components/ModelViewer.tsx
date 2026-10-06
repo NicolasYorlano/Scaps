@@ -87,7 +87,7 @@ interface ModelViewerProps {
   margin?: number;
 }
 
-export default function ModelViewer({url, className, label = 'Modelo 3D', onProgress, onError, onReady}: ModelViewerProps) {
+export default function ModelViewer({url, className, label = 'Modelo 3D', onProgress, onError, onReady, margin = 1.2}: ModelViewerProps) {
   const [entered, setEntered] = useState(false);
   const controlsRef = useRef<ComponentRef<typeof OrbitControls>>(null);
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
