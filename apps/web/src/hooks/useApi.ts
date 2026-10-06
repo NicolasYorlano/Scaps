@@ -12,7 +12,7 @@ import { api, ApiError } from '../lib/api';
 //   useApiQuery  → al abrir la pantalla (leer)
 //   useApiAction → cuando el usuario hace algo (mutaciones)
 
-function toApiError(error: unknown): ApiError {
+export function toApiError(error: unknown): ApiError {
   if (error instanceof ApiError) return error;
   return new ApiError(0, ['Ocurrió un error inesperado.']);
 }
