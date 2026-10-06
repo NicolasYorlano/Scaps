@@ -60,6 +60,51 @@
      En monitores anchos el contenido queda centrado; los fondos siguen de borde a borde. */
   --container-page: 94rem;
 
+  /* Foco detrás de la gorra de la landing: un gris claro en el centro que se apaga hacia el fondo.
+     Una gorra negra se recorta contra él como en una foto de estudio. */
+  --color-scaps-spotlight: #4a4a4a;
+
+  /* Flechas debajo de la gorra de la landing: cada 5 s aparecen, se deslizan hacia afuera (cada una hacia donde apunta) y se van. */
+  --animate-arrow-left: arrow-left 5s ease-in-out infinite;
+  --animate-arrow-right: arrow-right 5s ease-in-out infinite;
+  @keyframes arrow-left {
+    0%,
+    100% {
+      opacity: 0;
+      transform: translateX(0);
+    }
+    15% {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    50% {
+      opacity: 1;
+      transform: translateX(-8px);
+    }
+    65% {
+      opacity: 0;
+      transform: translateX(-8px);
+    }
+  }
+  @keyframes arrow-right {
+    0%,
+    100% {
+      opacity: 0;
+      transform: translateX(0);
+    }
+    15% {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    50% {
+      opacity: 1;
+      transform: translateX(8px);
+    }
+    65% {
+      opacity: 0;
+      transform: translateX(8px);
+    }
+  }
   /* Excepción a "sin colores de sistema", a pedido explícito: marca el
      campo con el dato inválido — el resto del sistema sigue monocromo. */
   --color-scaps-error: #ef4444; /* no más oscuro: como texto de 12 px necesita 4,5:1 */
