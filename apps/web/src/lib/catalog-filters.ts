@@ -80,9 +80,11 @@ export function toSearchParams(filters: CatalogFilters): URLSearchParams {
   return params;
 }
 
-export function toApiPath(filters: CatalogFilters, limit: number): string {
+export function toApiPath(filters: CatalogFilters, limit: number, page = 1): string {
   const params = toSearchParams(filters);
   params.set('limit', String(limit));
+  // La primera página va sin `page`: su ruta es la que recuerda `keep`.
+  if (page > 1) params.set('page', String(page));
   return `/products?${params.toString()}`;
 }
 
