@@ -92,12 +92,15 @@ export default function PhotoLightbox({images, currentId, onChange, onClose}: Pr
 
           {/* En el celular va todo en columna: cerrar, la foto a todo el ancho y las flechas. */}
           <figure className="relative flex justify-center max-md:basis-full md:col-start-2 md:row-start-1">
-            <img
-              src={current.url}
-              alt={current.alt}
-              {...swipe.handlers}
-              className="aspect-square w-[min(100%,calc(100dvh-15rem))] touch-pan-y rounded-scaps bg-scaps-photo object-contain md:w-[min(calc(100vw-13rem),calc(100dvh-4rem),75rem)]"
-            />
+            {/* El fondo va en un envoltorio: la foto se multiplica contra él, como en ProductImage. */}
+            <div className="aspect-square w-[min(100%,calc(100dvh-15rem))] overflow-hidden rounded-scaps bg-scaps-photo md:w-[min(calc(100vw-13rem),calc(100dvh-4rem),75rem)]">
+              <img
+                src={current.url}
+                alt={current.alt}
+                {...swipe.handlers}
+                className="h-full w-full touch-pan-y object-contain mix-blend-multiply"
+              />
+            </div>
             {images.length > 1 && (
               <figcaption
                 aria-hidden="true"

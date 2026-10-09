@@ -7,6 +7,7 @@ import ProductImage from '../components/ProductImage';
 import RelatedProducts from '../components/RelatedProducts';
 import SoldOutBadge from '../components/SoldOutBadge';
 import { useApiQuery } from '../hooks/useApi';
+import { useRotateHint } from '../hooks/useRotateHint';
 import { useSwipe } from '../hooks/useSwipe';
 import { catalogPath } from '../lib/catalog-return';
 import { focusField } from '../lib/forms';
@@ -84,9 +85,6 @@ const backLinkClassName =
 
 // Las fotos de un producto del seed.
 const SKELETON_THUMBS = 5;
-
-// Arrastre mínimo, en px, para dar el modelo por rotado: un toque o un scroll no cuentan.
-const DRAG_THRESHOLD = 8;
 
 /** Si a la tira le queda algo por scrollear: a lo ancho cuando va en fila, a lo alto en columna. */
 function hasMoreToScroll(list: HTMLElement): boolean {
@@ -171,10 +169,8 @@ function Gallery({ product }: { product: ProductDetail }) {
   // Un lazy nuevo tras cada fallo: el anterior se queda con el error y ni intenta pedir el archivo otra vez.
   const [Viewer, setViewer] = useState(() => lazy(loadViewer));
   // La ayuda se va con el primer arrastre.
-  const [rotated, setRotated] = useState(false);
-  const [viewerFocused, setViewerFocused] = useState(false);
+  const hint = useRotateHint();
   const viewButtonRef = useRef<HTMLButtonElement>(null);
-  const dragStartX = useRef<number | null>(null);
 
   // Estable (useCallback): ModelViewer la vuelve a llamar si cambia.
   const handleModelReady = useCallback(() => {
@@ -288,32 +284,11 @@ function Gallery({ product }: { product: ProductDetail }) {
 
           {view !== 'photos' && (
             // El visor carga encima de la foto, invisible: la foto sigue a la vista hasta que el modelo está listo.
-            // touch-pan-y: el scroll vertical del dedo sigue moviendo la ficha en vez de quedar atrapado en el visor.
+            // El dedo sobre el visor rota la gorra, como en la landing.
             <div
               inert={view === 'loading'}
-              onPointerDown={(e) => {
-                dragStartX.current = e.clientX;
-              }}
-              onPointerMove={(e) => {
-                if (
-                  dragStartX.current !== null &&
-                  Math.abs(e.clientX - dragStartX.current) > DRAG_THRESHOLD
-                ) {
-                  setRotated(true);
-                }
-              }}
-              onPointerUp={() => {
-                dragStartX.current = null;
-              }}
-              onPointerCancel={() => {
-                dragStartX.current = null;
-              }}
-              onFocus={(e) =>
-                setViewerFocused(e.target.matches(':focus-visible'))
-              }
-              onBlur={() => setViewerFocused(false)}
-              // **: y no solo el canvas: el touch-action: none de OrbitControls va en el div de R3F.
-              className={`absolute inset-0 cursor-grab overflow-hidden rounded-scaps bg-scaps-photo transition-opacity duration-300 active:cursor-grabbing motion-reduce:transition-none **:touch-pan-y! **:touch-pinch-zoom! ${view === 'loading' ? 'pointer-events-none opacity-0' : ''}`}
+              {...hint.handlers}
+              className={`absolute inset-0 cursor-grab overflow-hidden rounded-scaps bg-scaps-photo transition-opacity duration-300 active:cursor-grabbing motion-reduce:transition-none ${view === 'loading' ? 'pointer-events-none opacity-0' : ''}`}
             >
               <ErrorBoundary
                 onError={() => {
@@ -323,10 +298,11 @@ function Gallery({ product }: { product: ProductDetail }) {
               >
                 <Suspense fallback={null}>
                   {/* Anillo de foco hacia adentro: el contenedor recorta lo que sobresale. */}
+                  {/* mix-blend-multiply: el 3D toma el fondo de la caja igual que la foto. */}
                   <Viewer
                     url={product.glb_url}
                     label={`Modelo 3D de ${product.nombre}`}
-                    className="rounded-scaps focus-visible:-outline-offset-2 focus-visible:outline-scaps-page"
+                    className="rounded-scaps mix-blend-multiply focus-visible:-outline-offset-2 focus-visible:outline-scaps-page"
                     onProgress={setProgress}
                     onReady={handleModelReady}
                     onError={() => fail('model')}
@@ -351,9 +327,9 @@ function Gallery({ product }: { product: ProductDetail }) {
           {view === '3d' && (
             <p
               aria-hidden="true"
-              className={`${overlayNoteClassName} transition-opacity duration-300 ${rotated && !viewerFocused ? 'opacity-0' : ''}`}
+              className={`${overlayNoteClassName} transition-opacity duration-300 ${hint.rotated && !hint.viewerFocused ? 'opacity-0' : ''}`}
             >
-              {viewerFocused
+              {hint.viewerFocused
                 ? 'Usá las flechas para rotar'
                 : 'Arrastrá para rotar'}
             </p>
@@ -460,7 +436,7 @@ function ProductSkeleton() {
         <div className={galleryClassName}>
           <div className={mainImageClassName}>
             {/* Misma proporción que el aspect "detail" de ProductImage. */}
-            <div className="aspect-square rounded-scaps bg-scaps-placeholder md:aspect-700/520" />
+            <div className="aspect-square max-h-[calc(100svh-4rem)] rounded-scaps bg-scaps-placeholder md:aspect-700/520" />
           </div>
           <div className={thumbRailClassName}>
             <ul className={`${thumbListClassName} overflow-hidden!`}>
