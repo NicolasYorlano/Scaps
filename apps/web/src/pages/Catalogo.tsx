@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router';
 import CatalogCard, { CatalogCardSkeleton } from '../components/CatalogCard';
 import CatalogToolbar from '../components/CatalogToolbar';
@@ -72,6 +72,12 @@ function useLoadMore(filters: CatalogFilters, firstPath: string) {
     setState(current);
   }
 
+  // La sesión que está en pantalla: un pedido que vuelve la compara con la suya.
+  const liveSession = useRef(current.session);
+  useLayoutEffect(() => {
+    liveSession.current = current.session;
+  }, [current.session]);
+
   async function loadMore(page: number): Promise<Meta | null> {
     const { session } = current;
     if (inFlight.current === session) return null;
@@ -85,7 +91,8 @@ function useLoadMore(filters: CatalogFilters, firstPath: string) {
           ? { ...prev, items: [...prev.items, ...next.data], meta: next.meta, loading: false }
           : prev,
       );
-      return next.meta;
+      // Si la búsqueda cambió, la tanda se descartó: no hay nada que informar.
+      return liveSession.current === session ? next.meta : null;
     } catch (e) {
       const error = toApiError(e);
       setState((prev) => (prev.session === session ? { ...prev, loading: false, error } : prev));
