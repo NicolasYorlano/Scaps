@@ -4,7 +4,8 @@ import type { GalleryImage } from '../types/product';
 // Clases escritas enteras: Tailwind no genera las que se arman en runtime.
 const ASPECT_CLASS = {
   square: 'aspect-square', // card del catálogo
-  detail: 'aspect-square md:aspect-[700/520]', // imagen grande de la ficha: cuadrada en el celular, como las fotos
+  // max-h: con el teléfono apaisado, la imagen entra entera en la pantalla.
+  detail: 'aspect-square max-h-[calc(100svh-4rem)] md:aspect-[700/520]', // imagen grande de la ficha: cuadrada en el celular, como las fotos
 } as const;
 
 // Fotos que ya cargaron en esta pestaña: al volver a una pantalla no repiten el fundido.
@@ -20,7 +21,7 @@ type Props = {
   priority?: boolean;
 };
 
-/** Foto entera sobre un área del mismo blanco. El ancho lo pone el contenedor. */
+/** Foto entera sobre el fondo de las fotos, que toma por mix-blend-multiply. El ancho lo pone el contenedor. */
 export default function ProductImage({ image, aspect, decorative = false, priority = false }: Props) {
   // Guarda la url y no un booleano: al cambiar de foto, la nueva vuelve a aparecer suave.
   const [loadedUrl, setLoadedUrl] = useState<string | null>(null);
@@ -64,7 +65,7 @@ export default function ProductImage({ image, aspect, decorative = false, priori
             setLoadedUrl(image.url);
           }}
           onError={() => setFailedUrl(image.url)}
-          className={`h-full w-full object-contain transition-opacity duration-300 motion-reduce:transition-none ${loaded ? '' : 'opacity-0'}`}
+          className={`h-full w-full object-contain mix-blend-multiply transition-opacity duration-300 motion-reduce:transition-none ${loaded ? '' : 'opacity-0'}`}
         />
       )}
     </span>

@@ -32,9 +32,6 @@
   --color-scaps-card-highlight: #202020; /* Card destacado · header de tabla · resumen */
   --color-scaps-placeholder: #242424; /* Placeholder de imagen */
 
-  /* Fondo de las fotos de producto: igual al de las imágenes de R2; si no, se ve el borde */
-  --color-scaps-photo: #ffffff;
-
   /* Texto */
   --color-scaps-text: #f5f5f5; /* primario */
   --color-scaps-text-secondary: #c2c2c2; /* secundario */
@@ -104,6 +101,13 @@
   /* Excepción a "sin colores de sistema", a pedido explícito: marca el
      campo con el dato inválido — el resto del sistema sigue monocromo. */
   --color-scaps-error: #ef4444; /* no más oscuro: como texto de 12 px necesita 4,5:1 */
+}
+
+/* Fondo de las fotos de producto: un foco, casi blanco detrás de la gorra y gris claro hacia las esquinas.
+   Las fotos traen fondo blanco: con mix-blend-multiply toman este, sin regenerarlas. */
+@utility bg-scaps-photo {
+  background-color: #e3e3e3;
+  background-image: radial-gradient(ellipse 72% 72% at 50% 47%, #f0f0f0, #e6e6e6 48%, #cdcdcd);
 }
 
 /* Pantalla baja (menos de 760 px de alto): si además es apaisada, la landing pone el texto al costado de la gorra. */

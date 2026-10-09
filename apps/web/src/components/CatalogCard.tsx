@@ -28,7 +28,7 @@ export default function CatalogCard({ product, titleAs: Title = 'h2', priority =
       state={linkState}
       className={`group relative ${cardClassName} transition-colors hover:border-scaps-border-input focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-scaps-text`}
     >
-      {/* El fondo blanco tapa las esquinas de abajo, que ProductImage redondea. */}
+      {/* El mismo fondo tapa las esquinas de abajo, que ProductImage redondea. */}
       <div
         className={`bg-scaps-photo [&_img]:transition-[scale,opacity] [&_img]:duration-500 [&_img]:ease-out motion-safe:group-hover:[&_img]:scale-105 ${soldOut ? '[&_img]:opacity-70' : ''}`}
       >

@@ -23,6 +23,9 @@ const HERO_IMAGE = {
   alt: 'Gorra Scaps vista de tres cuartos',
 } satisfies Pick<GalleryImage, 'url' | 'alt'>;
 
+// La pose de la vidriera: más baja que la de las fotos, a la altura desde la que se ve el plato.
+const STAGE_ANGLE = { azimuth: 38, elevation: 11.6 };
+
 // Los tres lugares de atrás. Cada uno tiene su gorra; si esa es la destacada, lo ocupa la Danlyvostok.
 // Son renders del visor con el modelo girado para mirar al centro desde ese lugar.
 // El max() las arrima cuando el renglón es angosto. --edge: cuánto puede pasar del renglón la de la derecha.
@@ -93,7 +96,7 @@ function PlateNote({ children, long = false, waiting = false }: { children: Reac
   );
 }
 
-/** Una foto entera, centrada en el visor: el área blanca de la foto queda como una vitrina. */
+/** Una foto entera, centrada en el visor: el área clara de la foto queda como una vitrina. */
 function StillImage({ image }: { image: Pick<GalleryImage, 'url' | 'alt'> }) {
   return (
     // El cuadrado más grande que entra, centrado: cqw y cqh miden el renglón de la gorra.
@@ -249,7 +252,7 @@ function Stage({ product, loading }: StageProps) {
           )}
 
           {product !== null && (
-            // Carga invisible, como en la ficha: así no se ve el indicador interno del visor, que no avanza.
+            // Carga invisible, como en la ficha: el avance se lee en el borde del plato.
             // El dedo sobre el visor rota la gorra; la página se scrollea desde afuera.
             // Canvas más grande que la escena, compensado con el margin: uno justo corta la gorra en el aire al girarla.
             <div
@@ -266,7 +269,8 @@ function Stage({ product, loading }: StageProps) {
                     url={product.glb_url}
                     label={`Modelo 3D de ${product.nombre}`}
                     className="outline-none"
-                    margin={1.43}
+                    angle={STAGE_ANGLE}
+                    margin={1.29}
                     onProgress={setProgress}
                     onReady={handleReady}
                     onError={handleFailed}
