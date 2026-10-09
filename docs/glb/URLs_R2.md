@@ -13,6 +13,8 @@ La URL de cada archivo es la base + `/` + el nombre.
 
 `cap-danlyvostok` y `cap-vanarsdale` traían materiales *specular-glossiness*, que three no soporta (se ven blancos, sin textura). Se pasaron a metal/rough con `gltf-transform metalrough` antes de `draco`. Si se vuelven a comprimir desde `originales/`, repetir ese paso.
 
+`cap-filipmatlak-negra` miraba hacia +X y las otras tres hacia +Z, así que en el visor abría de costado. Al comprimido se le sumó un nodo raíz (`Scaps_orientation`) con −90° sobre Y; no cambia la geometría ni las texturas. Si se vuelve a comprimir desde `originales/`, repetir ese paso.
+
 ## Imágenes de producto
 
 1200 × 1200, `.webp`. En cada producto, la primera es la portada (`es_principal`) y el orden de la lista es el de la galería.

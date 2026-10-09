@@ -8,6 +8,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <!-- Igual que color-scheme en index.css, pero vale antes de que cargue el CSS. -->
     <meta name="color-scheme" content="dark" />
+    <!-- La conexión con la API se abre mientras baja el JS: la primera llamada no espera el DNS ni el TLS. -->
+    <link rel="preconnect" href="%VITE_API_URL%" crossorigin />
     <title>Scaps</title>
   </head>
   <body>

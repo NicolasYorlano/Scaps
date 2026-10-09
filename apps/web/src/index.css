@@ -11,10 +11,6 @@
   --font-sans: 'Jost Variable', Futura, system-ui, sans-serif;
   --font-display: 'Bodoni Moda Variable', Didot, Georgia, serif;
 
-  --text-display: clamp(3.125rem, 8.4vw, 6.5rem); /* hero */
-  --text-display--line-height: 0.95;
-  --text-display--letter-spacing: -0.02em;
-  --text-display--font-weight: 500;
   --text-title: clamp(2.5rem, 5vw, 3.5rem); /* título de página · nombre en la ficha */
   --text-title--line-height: 1;
   --text-title--letter-spacing: -0.015em;
@@ -108,6 +104,13 @@
   /* Excepción a "sin colores de sistema", a pedido explícito: marca el
      campo con el dato inválido — el resto del sistema sigue monocromo. */
   --color-scaps-error: #ef4444; /* no más oscuro: como texto de 12 px necesita 4,5:1 */
+}
+
+/* Pantalla baja (menos de 760 px de alto): si además es apaisada, la landing pone el texto al costado de la gorra. */
+@custom-variant short {
+  @media (max-height: 47.49rem) {
+    @slot;
+  }
 }
 
 @layer base {

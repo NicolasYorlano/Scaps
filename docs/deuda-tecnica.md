@@ -81,3 +81,17 @@ Cada entrada apunta a dónde se decidió. La fuente de verdad sigue siendo ese d
 - Cambiar la contraseña no cierra las sesiones abiertas: el JWT no tiene estado en el servidor, así que un token ya emitido sigue valiendo hasta su vencimiento (2 horas).
 
 **Decidido en:** revisión de UX de las pantallas de login y registro, octubre de 2026.
+
+---
+
+## Gorras de fondo de la landing
+
+**Hoy:** las tres gorras que acompañan a la destacada son imágenes fijas (`fondo-*.webp`), de los cuatro productos del seed y elegidas por slug. Un producto nuevo no aparece atrás hasta que alguien suma su imagen. Mientras carga el 3D no se muestra ninguna imagen de la destacada: el plato espera con un spinner.
+
+**Lo correcto:** que salgan del catálogo: una imagen por producto, generada al subir el `.glb`. Con esa misma imagen se podría mostrar la destacada desde el primer instante, en lugar del spinner.
+
+**Por qué no ahora:** pide un campo nuevo en el modelo de datos y en el contrato de API, y generar la imagen al cargar un producto, que es parte del dashboard.
+
+**Una trampa:** cada lugar de atrás mira al centro desde un ángulo distinto, así que una sola imagen por producto no alcanza para los tres. Hoy la Danlyvostok tiene una por lugar.
+
+**Decidido en:** revisión de UX de la landing, octubre de 2026.
