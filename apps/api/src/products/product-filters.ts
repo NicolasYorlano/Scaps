@@ -2,6 +2,13 @@ import { BadRequestException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import type { ListProductsQueryDto, ProductSort } from './dto/list-products-query.dto';
 
+// Lo que ve el público. Un producto sin imágenes se oculta: no tendría
+// imagen_principal y rompería el catálogo.
+export const PUBLIC_WHERE = {
+  activo: true,
+  imagenes: { some: {} },
+} satisfies Prisma.ProductoWhereInput;
+
 // El id desempata: sin él, dos productos con el mismo precio pueden cambiar de
 // página entre un request y otro.
 export const ORDER_BY = {

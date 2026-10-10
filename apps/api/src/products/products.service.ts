@@ -3,15 +3,8 @@ import type { Prisma } from '@prisma/client';
 import { paginate, type Paginated } from '../common/pagination';
 import { PrismaService } from '../prisma/prisma.service';
 import type { ListProductsQueryDto } from './dto/list-products-query.dto';
-import { catalogFilters, ORDER_BY } from './product-filters';
+import { catalogFilters, ORDER_BY, PUBLIC_WHERE } from './product-filters';
 import {CARD_SELECT, DETAIL_INCLUDE, toProductCard, toProductDetail, type ProductCardResponse, type ProductDetailResponse} from './product-response';
-
-// Lo que ve el público. Un producto sin imágenes se oculta: no tendría
-// imagen_principal y rompería el catálogo.
-const PUBLIC_WHERE = {
-  activo: true,
-  imagenes: { some: {} },
-} satisfies Prisma.ProductoWhereInput;
 
 @Injectable()
 export class ProductsService {
