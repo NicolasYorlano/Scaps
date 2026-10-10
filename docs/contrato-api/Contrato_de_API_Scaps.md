@@ -444,6 +444,12 @@ Objeto **Carrito**:
 }
 ```
 
+**Notas**
+- `items` viene ordenado por el nombre del producto: cambiar una cantidad no mueve la línea de lugar. Vacío es `items: []` con `total: "0.00"`.
+- `imagen_principal` es la misma portada que en la card del catálogo.
+- Los ítems de un producto dado de baja no aparecen ni cuentan en el `total`. La fila no se borra: si el producto se reactiva, la línea vuelve con su cantidad.
+- `actualizado_en` es la última vez que cambió un ítem (ver modelo de datos). Leer el carrito no lo mueve.
+
 ### `GET /cart` · Autenticado
 Devuelve mi carrito (lo crea vacío si no existe). Response `200` — objeto **Carrito**.
 
@@ -455,7 +461,11 @@ Agrega un producto. Si ya está en el carrito, **suma** a la cantidad existente 
 { "producto_id": "…", "cantidad": 1 }
 ```
 **Response** `200` — el **Carrito** actualizado.
-**Notas:** `cantidad ≥ 1`. Valida contra `stock` disponible → `409` si se pasa.
+
+**Notas**
+- `cantidad` es un entero `≥ 1`; si no, `400`. Un `0` no quita el ítem: para eso está el `DELETE`.
+- `400` si `producto_id` no es un uuid; `404` si el producto no existe o está dado de baja.
+- Valida contra el `stock` disponible: `409` si la cantidad resultante —la que había más la nueva— lo supera. El mensaje nombra el producto y no dice cuántas unidades quedan.
 
 ### `PATCH /cart/items/:id` · Autenticado
 Setea la cantidad de un ítem (no suma, reemplaza).
@@ -466,8 +476,16 @@ Setea la cantidad de un ítem (no suma, reemplaza).
 ```
 **Response** `200` — el **Carrito** actualizado. `409` si supera el stock.
 
+**Notas**
+- `cantidad` con la misma regla que en el `POST`. `400` si el `id` no es un uuid.
+- `404` si el ítem no existe, no es de este carrito o su producto está dado de baja. No es `403`: no se le confirma a nadie que ese `id` existe.
+
 ### `DELETE /cart/items/:id` · Autenticado
 Quita el ítem. Response `200` — el **Carrito** actualizado.
+
+**Notas**
+- `400` si el `id` no es un uuid; `404` si el ítem no existe o no es de este carrito.
+- Un ítem oculto por la baja de su producto sí se puede quitar.
 
 ---
 
