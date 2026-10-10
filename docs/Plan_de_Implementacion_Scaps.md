@@ -124,21 +124,15 @@ Para un equipo chico alcanza con **npm workspaces** (viene con Node, sin nada nu
 | **6** | 7–20 sep | Endurecimiento de producción | Seguridad (auth, validación de entradas), performance (carga del 3D e imágenes), accesibilidad básica, documentación, carga de productos de demo. |
 | **Contingencia + salida** | 21 sep – 8 oct | Margen + producción | Buffer para ajustes finales, UAT, despliegue a producción, monitoreo y preparación de la demo. **Entrega: 8/10.** |
 
-**Puntos a tener presentes:**
-
-- **Sprint 0 — el POC del visor es de bajo riesgo.** Cargar y rotar un modelo con R3F + drei es territorio conocido; valida el visor sin sobresaltos.
-- **Sprint 3 — el carrito cierra el recorrido del MVP.** Sin checkout no hay órdenes ni descuento automático de stock: el stock se muestra y lo edita el administrador desde el dashboard, pero no se mueve solo.
-- **El MVP funcional queda listo el 23/8.** Las casi siete semanas siguientes se dedican a estabilización, endurecimiento, QA y contingencia.
-
 ---
 
 ## 7. Alcance del MVP
 
 **Incluido (salida del 8 de octubre):**
 
-- Landing con visor 3D del producto destacado (rotar) y CTA al catálogo.
+- Landing con visor 3D del producto destacado (rotar) y CTA al catálogo y a la ficha del producto destacado.
 - Catálogo en cards con búsqueda, filtros y ordenamiento.
-- Ficha de producto con galería de imágenes y opción **Ver en 3D**.
+- Ficha de producto con galería de imágenes y opción **Ver en 3D** (el visor es en la misma ficha, no vuelve a la landing).
 - Autenticación con roles (administrador / usuario).
 - Carrito: agregar y quitar productos, cambiar cantidades y ver el total.
 - Dashboard administrativo: CRUD de productos, gestión de la galería de imágenes y selección del producto destacado.
@@ -167,26 +161,9 @@ Para que el modelo funcione —y no derive en que las tareas fáciles se eligen 
 - **Coordinador rotativo (logística, no jefatura).** Cada sprint, una persona distinta mantiene el tablero al día, corre una sincronización breve (15 min, puede ser asíncrona por Discord) y hace visibles los bloqueos y las tareas críticas sin tomar. No decide sobre los demás; solo se asegura de que el trabajo se vea y fluya. Rota para que el peso sea parejo.
 - **Revisión por Pull Request** (ya prevista en la metodología). Acá cumple dos funciones extra: sostiene la calidad ante niveles dispares y hace que al menos dos personas toquen cada parte, evitando que el conocimiento quede en una sola cabeza.
 
-Una nota para un equipo chico y con disponibilidad despareja:
-
-- **Si te trabás, avisá temprano.** Regla simple: si una tarea está frenada más de un día, se marca como bloqueada en el tablero y se pide ayuda en la sincronización. Una tarea crítica trabada en silencio es el mayor riesgo de este modelo.
-
 ---
 
-## 9. Gestión de riesgos
-
-| Riesgo | Impacto | Mitigación |
-|---|---|---|
-| Disponibilidad de modelos 3D | Bajo | Resuelto: se usan modelos de un banco libre (CC0 y/o CC BY 4.0). Sin dependencia de modelar ni de conseguir gorras reales. Los modelos CC BY exigen atribución en la app y el README, registrada en `docs/glb/Creditos_Modelos_3D_Scaps.pdf`. |
-| Sostener el nivel de producción bajo presión de tiempo | Medio | Revisión por Pull Request desde el inicio; sprint propio de endurecimiento y QA. |
-| Parciales en la etapa final | Bajo-medio | La ventana de contingencia (fines de septiembre – octubre) absorbe la carga académica. |
-| Crecimiento del alcance | Medio | MVP cerrado; lo nuevo va a la segunda etapa. |
-
-**Sin dependencias externas bloqueantes:** con los modelos resueltos (banco libre) y el backend definido (NestJS), el equipo puede arrancar el Sprint 0 de inmediato.
-
----
-
-## 10. Nivel de producción
+## 9. Nivel de producción
 
 Para que el entregable sea de producción y no un prototipo, lo construido debe cumplir:
 
@@ -195,11 +172,11 @@ Para que el entregable sea de producción y no un prototipo, lo construido debe 
 - **Pruebas:** cobertura de los caminos críticos (login, catálogo, carrito).
 - **Calidad de código:** revisión por Pull Request, linter y formateo automáticos (ESLint + Prettier).
 - **Experiencia:** diseño responsive, HTTPS/SSL, performance del visor 3D y de las imágenes del catálogo.
-- **Documentación:** README, guía de instalación y contrato de la API.
+- **Documentación:** README, contrato de la API y todo lo que se encuentra en (`docs`).
 
 ---
 
-## 11. Primeros pasos (Sprint 0)
+## 10. Primeros pasos (Sprint 0)
 
 El Sprint 0 es preparación: dejar el repo, el tooling y los acuerdos de diseño listos para construir. Incluye conseguir los modelos 3D, inicializar el monorepo, diseñar el modelo de datos y el contrato de la API, los wireframes y un POC del visor. **El detalle de cada tarea —con su criterio de "hecho" y sus dependencias— está en el backlog del Sprint 0** (`docs/sprints/Sprint-0-Scaps.pdf`), que es la fuente de verdad para el tablero.
 
