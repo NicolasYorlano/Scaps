@@ -1,0 +1,485 @@
+# Carrito — llamadas de prueba contra la API local.
+#
+# Cada caso anota al lado la respuesta que se espera. Si alguna deja de
+# coincidir, cambió el comportamiento del endpoint.
+#
+# Requiere la extensión REST Client (humao.rest-client) y la API corriendo
+# sobre una base con el seed:
+#
+#     npm run seed -w @scaps/api
+#     npm run start:dev -w @scaps/api
+#
+# Mandalos en orden, del 1 al final: los tokens y los ids no se copian a mano,
+# salen de los casos nombrados (`# @name`), y cada caso cuenta con el estado
+# que dejó el anterior. Si reiniciás VS Code, las respuestas se pierden y hay
+# que empezar de nuevo desde el 1.
+#
+# Usa dos usuarios propios, que registran los casos 2 y 3, y dos productos del
+# seed: Vanarsdale y Filipmatlak Oliva. Los casos de admin les cambian el
+# stock, el precio y el estado, y más adelante los restauran: al terminar, los
+# productos quedan como estaban y los dos carritos vacíos, así que el archivo
+# se puede volver a correr. Si cortás la corrida a la mitad, seguí hasta el
+# final; si ya perdiste las respuestas, los productos vuelven con el seed.
+#
+# Para borrar uno de estos usuarios, desde apps/api: npx prisma studio, y
+# primero sus filas de ItemCarrito, después la de Carrito y al final la de
+# Usuario.
+
+@host = http://localhost:3000/api
+@password = una-clave-segura
+
+@adminToken = {{loginAdmin.response.body.$.token}}
+@tokenA = {{loginA.response.body.$.token}}
+@tokenB = {{loginB.response.body.$.token}}
+@vanarsdaleId = {{fichaVanarsdale.response.body.$.id}}
+@olivaId = {{fichaOliva.response.body.$.id}}
+
+# Las líneas van por nombre de producto: al agregar la Oliva, queda primera.
+@vanarsdaleItemId = {{agregarVanarsdale.response.body.$.items[0].id}}
+@olivaItemId = {{agregarOliva.response.body.$.items[0].id}}
+
+### 1 · Login del admin del seed → 200 + { user, token }, es_admin: true
+# Pide el ADMIN_EMAIL y el ADMIN_PASSWORD de apps/api/.env: la clave no se
+# escribe acá. Lo usan los casos que dan de baja o editan un producto.
+# @name loginAdmin
+# @prompt adminEmail ADMIN_EMAIL de apps/api/.env
+# @prompt adminPassword ADMIN_PASSWORD de apps/api/.env
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{adminEmail}}",
+  "password": "{{adminPassword}}"
+}
+
+### 2 · Registro del usuario A → 201, o 409 si ya existe
+# Usuarios propios de este archivo: los totales que anota cada caso no
+# dependen de lo que tenga en el carrito otro usuario de prueba.
+POST {{host}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "test-cart-a@scaps.dev",
+  "password": "{{password}}",
+  "nombre": "Test",
+  "apellido": "Carrito A"
+}
+
+### 3 · Registro del usuario B → 201, o 409 si ya existe
+POST {{host}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "test-cart-b@scaps.dev",
+  "password": "{{password}}",
+  "nombre": "Test",
+  "apellido": "Carrito B"
+}
+
+### 4 · Login del usuario A → 200 + { user, token }
+# @name loginA
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "test-cart-a@scaps.dev",
+  "password": "{{password}}"
+}
+
+### 5 · Login del usuario B → 200 + { user, token }
+# @name loginB
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "test-cart-b@scaps.dev",
+  "password": "{{password}}"
+}
+
+### 6 · Ficha de Vanarsdale → 200, precio "26999.00" y stock 25
+# De acá sale el id que se manda al agregar.
+# @name fichaVanarsdale
+GET {{host}}/products/cap-vanarsdale
+
+### 7 · Ficha de Filipmatlak Oliva → 200, precio "22499.00"
+# @name fichaOliva
+GET {{host}}/products/cap-filipmatlak-oliva
+
+### 8 · Mi carrito, sin token → 401
+GET {{host}}/cart
+
+### 9 · Agregar sin token → 401
+# El guard corre antes de validar el cuerpo, así que el body vacío no importa.
+POST {{host}}/cart/items
+Content-Type: application/json
+
+{}
+
+### 10 · Mi carrito → 200, vacío: items [] y total "0.00"
+# Nunca 404: si el usuario todavía no tiene carrito, se crea en este pedido.
+GET {{host}}/cart
+Authorization: Bearer {{tokenA}}
+
+### 11 · Mi carrito otra vez → 200, el mismo id y el mismo actualizado_en
+# Leer no cuenta como actividad: actualizado_en solo cambia con los ítems.
+GET {{host}}/cart
+Authorization: Bearer {{tokenA}}
+
+### 12 · Agregar 2 Vanarsdale → 200, una línea con subtotal y total "53998.00"
+# 200 y no 201: devuelve el carrito entero, con la forma del GET. El precio no
+# se manda: sale del producto en cada respuesta.
+# @name agregarVanarsdale
+POST {{host}}/cart/items
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "producto_id": "{{vanarsdaleId}}",
+  "cantidad": 2
+}
+
+### 13 · Agregar 1 Vanarsdale más → 200, la misma línea con cantidad 3 y total "80997.00"
+# Suma a lo que había: no aparece una segunda línea del mismo producto.
+POST {{host}}/cart/items
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "producto_id": "{{vanarsdaleId}}",
+  "cantidad": 1
+}
+
+### 14 · Agregar 1 Filipmatlak Oliva → 200, dos líneas y total "103496.00"
+# Queda primera aunque se agregó después: las líneas van por nombre de producto.
+# @name agregarOliva
+POST {{host}}/cart/items
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "producto_id": "{{olivaId}}",
+  "cantidad": 1
+}
+
+### 15 · Cantidad 0 → 400
+# Un 0 no quita el ítem: para eso está el DELETE.
+POST {{host}}/cart/items
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "producto_id": "{{vanarsdaleId}}",
+  "cantidad": 0
+}
+
+### 16 · Cantidad con decimales → 400
+POST {{host}}/cart/items
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "producto_id": "{{vanarsdaleId}}",
+  "cantidad": 1.5
+}
+
+### 17 · Cantidad como texto → 400
+POST {{host}}/cart/items
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "producto_id": "{{vanarsdaleId}}",
+  "cantidad": "2"
+}
+
+### 18 · Sin cantidad → 400
+POST {{host}}/cart/items
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "producto_id": "{{vanarsdaleId}}"
+}
+
+### 19 · Un producto_id que no es uuid → 400
+POST {{host}}/cart/items
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "producto_id": "abc",
+  "cantidad": 1
+}
+
+### 20 · Un campo de más → 400
+# forbidNonWhitelisted: el precio no lo decide quien agrega.
+POST {{host}}/cart/items
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "producto_id": "{{vanarsdaleId}}",
+  "cantidad": 1,
+  "precio": "1.00"
+}
+
+### 21 · Un producto que no existe → 404
+POST {{host}}/cart/items
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "producto_id": "00000000-0000-4000-8000-000000000000",
+  "cantidad": 1
+}
+
+### 22 · Agregar 23 Vanarsdale → 409
+# Ya hay 3 y el stock es 25: cuenta el total de la línea, no lo que se agrega.
+# El mensaje nombra el producto y no dice cuántas unidades quedan.
+POST {{host}}/cart/items
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "producto_id": "{{vanarsdaleId}}",
+  "cantidad": 23
+}
+
+### 23 · Agregar 22 Vanarsdale → 200, cantidad 25 y total "697474.00"
+# Justo el stock: todavía entra.
+POST {{host}}/cart/items
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "producto_id": "{{vanarsdaleId}}",
+  "cantidad": 22
+}
+
+### 24 · Cambiar la Vanarsdale a 5 → 200, cantidad 5 y total "157494.00"
+# Reemplaza, no suma: no queda en 30. Y la línea sigue segunda.
+PATCH {{host}}/cart/items/{{vanarsdaleItemId}}
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "cantidad": 5
+}
+
+### 25 · Cambiar la Oliva a 2 → 200, cantidad 2 y total "179993.00"
+# Sigue primera: cambiar una cantidad no mueve la línea de lugar.
+PATCH {{host}}/cart/items/{{olivaItemId}}
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "cantidad": 2
+}
+
+### 26 · Cambiar la Vanarsdale a 26 → 409
+PATCH {{host}}/cart/items/{{vanarsdaleItemId}}
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "cantidad": 26
+}
+
+### 27 · Cambiar a 0 → 400
+PATCH {{host}}/cart/items/{{vanarsdaleItemId}}
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "cantidad": 0
+}
+
+### 28 · Cambiar con un id que no es uuid → 400
+PATCH {{host}}/cart/items/abc
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "cantidad": 1
+}
+
+### 29 · Cambiar un ítem que no existe → 404
+PATCH {{host}}/cart/items/00000000-0000-4000-8000-000000000000
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "cantidad": 1
+}
+
+### 30 · Carrito del usuario B → 200, vacío
+# Cada usuario ve solo el suyo.
+GET {{host}}/cart
+Authorization: Bearer {{tokenB}}
+
+### 31 · B cambia un ítem de A → 404
+# 404 y no 403: no se le confirma a nadie que ese id existe.
+PATCH {{host}}/cart/items/{{vanarsdaleItemId}}
+Authorization: Bearer {{tokenB}}
+Content-Type: application/json
+
+{
+  "cantidad": 1
+}
+
+### 32 · B quita un ítem de A → 404
+DELETE {{host}}/cart/items/{{vanarsdaleItemId}}
+Authorization: Bearer {{tokenB}}
+
+### 33 · Carrito de A → 200, intacto: Oliva 2, Vanarsdale 5 y total "179993.00"
+GET {{host}}/cart
+Authorization: Bearer {{tokenA}}
+
+### 34 · Dar de baja la Filipmatlak Oliva → 204
+DELETE {{host}}/products/{{olivaId}}
+Authorization: Bearer {{adminToken}}
+
+### 35 · Carrito de A → 200, solo la Vanarsdale y total "134995.00"
+# La línea del producto dado de baja no aparece ni cuenta en el total.
+GET {{host}}/cart
+Authorization: Bearer {{tokenA}}
+
+### 36 · Cambiar la línea del producto dado de baja → 404
+PATCH {{host}}/cart/items/{{olivaItemId}}
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "cantidad": 1
+}
+
+### 37 · Agregar un producto dado de baja → 404
+# El mismo 404 que un producto que no existe.
+POST {{host}}/cart/items
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "producto_id": "{{olivaId}}",
+  "cantidad": 1
+}
+
+### 38 · Reactivar la Oliva → 200, activo: true
+PATCH {{host}}/products/{{olivaId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "activo": true
+}
+
+### 39 · Carrito de A → 200, la Oliva volvió con cantidad 2 y total "179993.00"
+# La baja oculta la línea, no la borra.
+GET {{host}}/cart
+Authorization: Bearer {{tokenA}}
+
+### 40 · Dar de baja la Oliva otra vez → 204
+DELETE {{host}}/products/{{olivaId}}
+Authorization: Bearer {{adminToken}}
+
+### 41 · Quitar la línea del producto dado de baja → 200, solo la Vanarsdale
+# No se le puede cambiar la cantidad (caso 36), pero quitarla sí.
+DELETE {{host}}/cart/items/{{olivaItemId}}
+Authorization: Bearer {{tokenA}}
+
+### 42 · Reactivar la Oliva → 200, activo: true
+# El producto queda como lo dejó el seed.
+PATCH {{host}}/products/{{olivaId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "activo": true
+}
+
+### 43 · Carrito de A → 200, solo la Vanarsdale y total "134995.00"
+# Esta vez la Oliva no vuelve: el caso 41 la quitó.
+GET {{host}}/cart
+Authorization: Bearer {{tokenA}}
+
+### 44 · Bajar el stock de Vanarsdale a 3 → 200
+PATCH {{host}}/products/{{vanarsdaleId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "stock": 3
+}
+
+### 45 · Carrito de A → 200, la línea sigue con cantidad 5 y el producto dice stock 3
+# La API no corrige la cantidad sola: el frontend avisa y el usuario la ajusta.
+GET {{host}}/cart
+Authorization: Bearer {{tokenA}}
+
+### 46 · Cambiar la Vanarsdale a 4 → 409
+# Sigue pasándose del stock.
+PATCH {{host}}/cart/items/{{vanarsdaleItemId}}
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "cantidad": 4
+}
+
+### 47 · Cambiar la Vanarsdale a 3 → 200, cantidad 3 y total "80997.00"
+PATCH {{host}}/cart/items/{{vanarsdaleItemId}}
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "cantidad": 3
+}
+
+### 48 · Restaurar el stock de Vanarsdale → 200, stock 25
+PATCH {{host}}/products/{{vanarsdaleId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "stock": 25
+}
+
+### 49 · Ponerle centavos al precio de Vanarsdale → 200, precio "26999.90"
+PATCH {{host}}/products/{{vanarsdaleId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "precio": "26999.90"
+}
+
+### 50 · Carrito de A → 200, subtotal y total "80999.70"
+# 3 × 26999.90. Los montos salen siempre con dos decimales, también cuando
+# terminan en cero.
+GET {{host}}/cart
+Authorization: Bearer {{tokenA}}
+
+### 51 · Restaurar el precio de Vanarsdale → 200, precio "26999.00"
+PATCH {{host}}/products/{{vanarsdaleId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "precio": "26999.00"
+}
+
+### 52 · Quitar la Vanarsdale → 200, vacío: items [] y total "0.00"
+# 200 con el carrito, no el 204 de las bajas de productos.
+DELETE {{host}}/cart/items/{{vanarsdaleItemId}}
+Authorization: Bearer {{tokenA}}
+
+### 53 · Quitar el mismo ítem otra vez → 404
+DELETE {{host}}/cart/items/{{vanarsdaleItemId}}
+Authorization: Bearer {{tokenA}}
+
+### 54 · Quitar con un id que no es uuid → 400
+DELETE {{host}}/cart/items/abc
+Authorization: Bearer {{tokenA}}
+
+### 55 · Quitar sin token → 401
+DELETE {{host}}/cart/items/{{vanarsdaleItemId}}
