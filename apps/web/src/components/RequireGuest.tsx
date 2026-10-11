@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router';
-import { returnPath } from '../lib/login-redirect';
+import { returnPath, returnState } from '../lib/login-redirect';
 import { useSessionStore } from '../stores/session-store';
 
 // El inverso de RequireAuth, para /login y /registro: quien ya tiene sesión
@@ -11,7 +11,13 @@ export default function RequireGuest({ children }: { children: ReactNode }) {
   const location = useLocation();
 
   if (status === 'authenticated') {
-    return <Navigate to={returnPath(location.state)} replace />;
+    return (
+      <Navigate
+        to={returnPath(location.state)}
+        state={returnState(location.state)}
+        replace
+      />
+    );
   }
 
   return children;
