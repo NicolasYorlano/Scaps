@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router';
+import { useCartUnitCount } from '../stores/cart-store';
 import { useSessionStore } from '../stores/session-store';
+import CartIcon from './CartIcon';
 import logoUrl from '../assets/logo.svg';
 
 // Área táctil de 44 px de alto sin mover el texto: el ::after se estira sobre el <li>.
@@ -78,11 +80,50 @@ function NavLinks({ onNavigate, showName }: { onNavigate: () => void; showName: 
   );
 }
 
+// Va solo con sesión. Sin texto: el número va en el aria-label, porque el
+// globito solo no lo anuncia un lector de pantalla.
+function CartLink({ onNavigate, className = '' }: { onNavigate: () => void; className?: string }) {
+  const units = useCartUnitCount();
+
+  return (
+    <NavLink
+      to="/carrito"
+      aria-label={`Carrito, ${units} ${units === 1 ? 'unidad' : 'unidades'}`}
+      onClick={onNavigate}
+      // 44 px de área táctil con un ícono de 20; el margen negativo no agranda la barra.
+      className={({ isActive }) =>
+        `relative -my-0.5 flex h-11 w-11 shrink-0 items-center justify-center transition-colors ${
+          isActive ? 'text-scaps-text' : 'text-scaps-text-secondary hover:text-scaps-text'
+        } ${className}`
+      }
+    >
+      {({ isActive }) => (
+        <>
+          <CartIcon className="h-5 w-5" />
+          {/* Sección activa: la misma raya que subraya a los demás enlaces. */}
+          {isActive && (
+            <span className="absolute inset-x-3 bottom-2 border-b border-scaps-border-primary" />
+          )}
+          {units > 0 && (
+            <span
+              aria-hidden="true"
+              className="absolute top-1.5 left-6 h-4.5 min-w-4.5 rounded-full bg-scaps-text px-1 text-center text-[0.6875rem] leading-4.5 font-medium text-scaps-page"
+            >
+              {units > 99 ? '99+' : units}
+            </span>
+          )}
+        </>
+      )}
+    </NavLink>
+  );
+}
+
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const userName = useSessionStore((s) =>
     s.status === 'authenticated' ? s.user?.nombre : undefined,
   );
+  const hasSession = userName !== undefined;
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLUListElement>(null);
 
@@ -113,6 +154,13 @@ export default function Navbar() {
 
         <ul className="hidden items-center gap-6 md:flex">
           <NavLinks onNavigate={closeMenu} showName />
+          {/* Al final, después de Cerrar sesión. El margen negativo deja el ícono a ras del
+              borde, como las rayitas del menú en el celular. */}
+          {hasSession && (
+            <li>
+              <CartLink onNavigate={closeMenu} className="-mx-3" />
+            </li>
+          )}
         </ul>
 
         {/* Con el menú cerrado, el nombre a la vista es la única señal de que hay sesión. */}
@@ -125,6 +173,8 @@ export default function Navbar() {
               {userName}
             </span>
           )}
+          {/* En la barra y no en el menú: el número se ve sin abrir nada. */}
+          {hasSession && <CartLink onNavigate={closeMenu} />}
           <button
             ref={menuButtonRef}
             type="button"
