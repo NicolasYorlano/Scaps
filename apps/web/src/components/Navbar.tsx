@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router';
-import { useCartUnitCount } from '../stores/cart-store';
+import { useCartStatus, useCartUnitCount } from '../stores/cart-store';
 import { useSessionStore } from '../stores/session-store';
 import CartIcon from './CartIcon';
 import logoUrl from '../assets/logo.svg';
@@ -84,27 +84,34 @@ function NavLinks({ onNavigate, showName }: { onNavigate: () => void; showName: 
 // globito solo no lo anuncia un lector de pantalla.
 function CartLink({ onNavigate, className = '' }: { onNavigate: () => void; className?: string }) {
   const units = useCartUnitCount();
+  // Hasta que el carrito carga, o si la carga falló, no se sabe cuántas hay: no se afirma un 0.
+  const loaded = useCartStatus() === 'ready';
+  const hasBadge = units > 0;
 
   return (
     <NavLink
       to="/carrito"
-      aria-label={`Carrito, ${units} ${units === 1 ? 'unidad' : 'unidades'}`}
+      aria-label={loaded ? `Carrito, ${units} ${units === 1 ? 'unidad' : 'unidades'}` : 'Carrito'}
       onClick={onNavigate}
       // 44 px de área táctil con un ícono de 20; el margen negativo no agranda la barra.
+      // Con globito, la caja se corre 5 px: el anillo de foco queda centrado en el ícono con su globito.
       className={({ isActive }) =>
-        `relative -my-0.5 flex h-11 w-11 shrink-0 items-center justify-center transition-colors ${
+        `relative -my-0.5 block h-11 w-11 shrink-0 transition-colors ${hasBadge ? 'translate-x-1.25' : ''} ${
           isActive ? 'text-scaps-text' : 'text-scaps-text-secondary hover:text-scaps-text'
         } ${className}`
       }
     >
       {({ isActive }) => (
-        <>
+        // El contenido vuelve esos 5 px: en pantalla solo se mueve la caja.
+        <span
+          className={`absolute inset-0 flex items-center justify-center ${hasBadge ? '-translate-x-1.25' : ''}`}
+        >
           <CartIcon className="h-5 w-5" />
           {/* Sección activa: la misma raya que subraya a los demás enlaces. */}
           {isActive && (
             <span className="absolute inset-x-3 bottom-2 border-b border-scaps-border-primary" />
           )}
-          {units > 0 && (
+          {hasBadge && (
             <span
               aria-hidden="true"
               className="absolute top-1.5 left-6 h-4.5 min-w-4.5 rounded-full bg-scaps-text px-1 text-center text-[0.6875rem] leading-4.5 font-medium text-scaps-page"
@@ -112,7 +119,7 @@ function CartLink({ onNavigate, className = '' }: { onNavigate: () => void; clas
               {units > 99 ? '99+' : units}
             </span>
           )}
-        </>
+        </span>
       )}
     </NavLink>
   );
@@ -164,7 +171,7 @@ export default function Navbar() {
         </ul>
 
         {/* Con el menú cerrado, el nombre a la vista es la única señal de que hay sesión. */}
-        <div className="flex min-w-0 items-center gap-1 md:hidden">
+        <div className="flex min-w-0 items-center gap-2 md:hidden">
           {userName && (
             <span
               className="truncate text-sm text-scaps-text-secondary"

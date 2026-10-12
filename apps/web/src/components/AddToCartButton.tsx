@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { toApiError } from '../hooks/useApi';
 import { useLoginRedirect } from '../hooks/useLoginRedirect';
+import { toApiError } from '../lib/api';
 import { getAvailableToAdd } from '../lib/cart';
-import { useCartStore } from '../stores/cart-store';
+import { useCartStatus, useCartStore } from '../stores/cart-store';
 import { useSessionStore } from '../stores/session-store';
 import type { ProductCard } from '../types/product';
 
@@ -25,7 +25,7 @@ const unavailableClassName = 'cursor-not-allowed border-scaps-border text-scaps-
 /** Agregar al carrito desde la card del catálogo: suma una unidad por clic, sin salir de la grilla. */
 export default function AddToCartButton({ product }: { product: ProductCard }) {
   const sessionStatus = useSessionStore((s) => s.status);
-  const cartStatus = useCartStore((s) => s.status);
+  const cartStatus = useCartStatus();
   const cart = useCartStore((s) => s.cart);
   const goToLogin = useLoginRedirect();
 
@@ -43,8 +43,7 @@ export default function AddToCartButton({ product }: { product: ProductCard }) {
   // Con sesión, el tope sale del carrito: hasta que cargue no se sabe. También mientras se
   // verifica la sesión. Si la carga del carrito falló, el botón sigue andando: el backend
   // valida el stock igual y su respuesta deja el carrito cargado.
-  const waiting =
-    sessionStatus === 'checking' || (!isGuest && (cartStatus === 'idle' || cartStatus === 'loading'));
+  const waiting = sessionStatus === 'checking' || (!isGuest && cartStatus === 'loading');
   const allInCart = !isGuest && !soldOut && cartStatus === 'ready' && getAvailableToAdd(product, cart) <= 0;
   const unavailable = soldOut || waiting || allInCart;
   const locked = adding || feedback !== null;

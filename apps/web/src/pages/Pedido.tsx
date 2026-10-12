@@ -4,7 +4,7 @@ import ProductImage from '../components/ProductImage';
 import { isCheckoutReady } from '../lib/cart';
 import { formatPrice } from '../lib/format-price';
 import { focusField } from '../lib/forms';
-import { useCartStore } from '../stores/cart-store';
+import { useCartStatus, useCartStore } from '../stores/cart-store';
 import type { Cart } from '../types/cart';
 
 // Cierre del recorrido del MVP. No hay orden en la base (el checkout real llega después), así que
@@ -126,15 +126,15 @@ function OrderSkeleton() {
 /** /pedido: el cierre del recorrido. Protegida como el carrito, y solo con un carrito válido. */
 export default function Pedido() {
   const cart = useCartStore((s) => s.cart);
-  const status = useCartStore((s) => s.status);
+  const status = useCartStatus();
   const loadError = useCartStore((s) => s.error);
   // El foco va al título una sola vez, al llegar: no cada vez que cambia el carrito.
   const focused = useRef(false);
 
   // Al recargar, el primer instante el store todavía está vacío: hay que esperar a que cargue
-  // antes de decidir, o la recarga redirigiría siempre. 'idle': la sesión recién se confirmó.
-  const loading = cart === null && (status === 'loading' || status === 'idle');
-  const failed = cart === null && status === 'error';
+  // antes de decidir, o la recarga redirigiría siempre.
+  const loading = status === 'loading';
+  const failed = status === 'error';
   const ready = cart !== null && isCheckoutReady(cart);
 
   useEffect(() => {
