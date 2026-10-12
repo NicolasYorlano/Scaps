@@ -35,8 +35,8 @@ type SessionStore = {
   /** Logout: no hay endpoint en el servidor (JWT sin estado), así que cerrar
    * sesión es solo borrar el token del cliente. */
   clearSession: () => void;
-  /** Llamar una vez al arrancar la app. Si hay token guardado, confirma con
-   * el servidor que sigue vivo antes de dar la sesión por buena. */
+  /** Al arrancar la app y cuando otra pestaña cambia el token: si hay uno guardado,
+   * confirma con el servidor que sigue vivo antes de dar la sesión por buena. */
   hydrate: () => Promise<void>;
 };
 
@@ -58,9 +58,13 @@ export const useSessionStore = create<SessionStore>((set) => ({
     const token = getToken();
 
     if (token === null) {
-      set({ status: 'anonymous' });
+      // Con un usuario en memoria, es otra pestaña que cerró la sesión.
+      set({ user: null, status: 'anonymous' });
       return;
     }
+
+    // El usuario que había puede no ser el de este token: otra pestaña cambió de cuenta.
+    set({ user: null, status: 'checking' });
 
     try {
       const user = await api.get<SessionUser>('/auth/me');

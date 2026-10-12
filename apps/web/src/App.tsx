@@ -7,6 +7,7 @@ import RequireAdmin from './components/RequireAdmin';
 import RequireAuth from './components/RequireAuth';
 import RequireGuest from './components/RequireGuest';
 import { focusField } from './lib/forms';
+import { onTokenChange } from './lib/token';
 import { useSessionStore } from './stores/session-store';
 import Landing from './pages/Landing';
 import Catalogo from './pages/Catalogo';
@@ -25,6 +26,8 @@ export default function App() {
   // contra /auth/me que sigue vivo antes de dar la sesión por buena.
   useEffect(() => {
     void useSessionStore.getState().hydrate();
+    // Si otra pestaña ingresa o cierra sesión, esta la sigue.
+    return onTokenChange(() => void useSessionStore.getState().hydrate());
   }, []);
 
   return (
