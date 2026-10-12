@@ -3,10 +3,10 @@ import { Link } from 'react-router';
 import QuantitySelector from './QuantitySelector';
 import LowStockBadge from './LowStockBadge';
 import SoldOutBadge from './SoldOutBadge';
-import { toApiError } from '../hooks/useApi';
 import { useLoginRedirect } from '../hooks/useLoginRedirect';
+import { toApiError } from '../lib/api';
 import { getAvailableToAdd } from '../lib/cart';
-import { useCartStore } from '../stores/cart-store';
+import { useCartStatus, useCartStore } from '../stores/cart-store';
 import { useSessionStore } from '../stores/session-store';
 import type { ProductDetail } from '../types/product';
 
@@ -29,7 +29,7 @@ const linkClassName =
 /** Selector de cantidad y Agregar al carrito, debajo de la descripción de la ficha. El stock nunca se muestra. */
 export default function PurchaseBlock({ product, onStale }: Props) {
   const sessionStatus = useSessionStore((s) => s.status);
-  const cartStatus = useCartStore((s) => s.status);
+  const cartStatus = useCartStatus();
   const cart = useCartStore((s) => s.cart);
   const goToLogin = useLoginRedirect();
 
