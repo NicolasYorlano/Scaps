@@ -26,6 +26,12 @@ export class ApiError extends Error {
   }
 }
 
+/** Lo que cae en un catch puede no ser un ApiError: así siempre hay uno para mostrar. */
+export function toApiError(error: unknown): ApiError {
+  if (error instanceof ApiError) return error;
+  return new ApiError(0, ['Ocurrió un error inesperado.']);
+}
+
 type Method = 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';
 
 function baseUrl(): string {

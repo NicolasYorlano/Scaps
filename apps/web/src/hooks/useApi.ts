@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { api, ApiError } from '../lib/api';
+import { api, toApiError, type ApiError } from '../lib/api';
 
 // lib/api.ts sabe hablar con el backend, pero no sabe nada de React: devuelve
 // una promesa y listo. La pantalla necesita otra cosa — saber si la llamada
@@ -11,11 +11,6 @@ import { api, ApiError } from '../lib/api';
 //
 //   useApiQuery  → al abrir la pantalla (leer)
 //   useApiAction → cuando el usuario hace algo (mutaciones)
-
-export function toApiError(error: unknown): ApiError {
-  if (error instanceof ApiError) return error;
-  return new ApiError(0, ['Ocurrió un error inesperado.']);
-}
 
 type Result<T> = {
   /** A qué llamada pertenece este resultado. */
