@@ -157,7 +157,7 @@ function Grid({ products, total, busy, filtered, linkState, hasMore, loadingMore
         {products.map((product, i) => (
           // flex: estira la card al alto de la fila.
           <li key={product.id} className="flex">
-            <CatalogCard product={product} priority={i < PRIORITY_COUNT} linkState={linkState} />
+            <CatalogCard product={product} action="add" priority={i < PRIORITY_COUNT} linkState={linkState} />
           </li>
         ))}
       </ul>
