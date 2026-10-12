@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { api, ApiError } from '../lib/api';
+import { api, ApiError, toApiError } from '../lib/api';
 import type { Cart } from '../types/cart';
 import { useSessionStore } from './session-store';
 
@@ -7,8 +7,8 @@ import { useSessionStore } from './session-store';
 // carrito completo, así que cada acción reemplaza el estado con la respuesta:
 // acá no se recalcula nada.
 //
-// No lo llama ninguna pantalla para cargar o vaciar: se suscribe al store de
-// sesión (abajo de todo). Las pantallas solo leen y llaman a las mutaciones.
+// Carga y se vacía solo, suscripto al store de sesión (abajo de todo). Las
+// pantallas leen, mutan y llaman a load() para reintentar o ponerse al día.
 
 type CartStatus =
   | 'idle' // sin sesión, o todavía no se pidió
@@ -37,13 +37,8 @@ type CartStore = {
 // reset() cambia de sesión: lo que esté viajando de la anterior se descarta,
 // así el carrito del usuario que cerró sesión no le aparece al siguiente.
 let session = 0;
-// Cada pedido lleva un número y solo se aplica una respuesta más nueva que la
-// última aplicada: una vieja que llega tarde no pisa el carrito.
-let lastStarted = 0;
-let lastApplied = 0;
-// Las mutaciones van de a una. Dos juntas sobre el mismo carrito chocan en el
-// backend (transacciones serializables) y una termina en 409 "Otro cambio se
-// hizo al mismo tiempo": pasa con dos clics rápidos o con dos líneas a la vez.
+// Los pedidos van de a uno, la carga incluida: cada respuesta trae el carrito
+// entero, y dos que se cruzan pueden llegar en otro orden que el del servidor.
 let queue: Promise<unknown> = Promise.resolve();
 
 function enqueue<T>(task: () => Promise<T>): Promise<T> {
@@ -52,23 +47,14 @@ function enqueue<T>(task: () => Promise<T>): Promise<T> {
   return result;
 }
 
-function toApiError(error: unknown): ApiError {
-  return error instanceof ApiError
-    ? error
-    : new ApiError(0, ['Ocurrió un error inesperado.']);
-}
-
 export const useCartStore = create<CartStore>((set, get) => {
   /** Corre un pedido que devuelve el carrito y aplica la respuesta. Devuelve el error, o null. */
   async function run(request: () => Promise<Cart>): Promise<ApiError | null> {
     const ownSession = session;
-    const seq = ++lastStarted;
 
     try {
       const cart = await request();
-      if (ownSession !== session || seq <= lastApplied) return null;
-      lastApplied = seq;
-      set({ cart, status: 'ready', error: null });
+      if (ownSession === session) set({ cart, status: 'ready', error: null });
       return null;
     } catch (error) {
       const apiError = toApiError(error);
@@ -85,7 +71,10 @@ export const useCartStore = create<CartStore>((set, get) => {
 
     return enqueue(async () => {
       // Cerró sesión mientras esperaba su turno: ya no se manda.
-      if (ownSession !== session) return;
+      // Rechaza, para que quien la pidió no la dé por hecha.
+      if (ownSession !== session) {
+        throw new ApiError(401, ['Tu sesión se cerró. Ingresá de nuevo.']);
+      }
       const error = await run(request);
       // El 409 o el 404 los muestra la pantalla, con el mensaje del backend.
       if (error) throw error;
@@ -97,15 +86,20 @@ export const useCartStore = create<CartStore>((set, get) => {
     status: 'idle',
     error: null,
 
-    load: async () => {
+    load: () => {
+      // Solo con sesión: sin ella, GET /cart da 401.
+      if (useSessionStore.getState().status !== 'authenticated') return Promise.resolve();
       const ownSession = session;
       if (get().cart === null) set({ status: 'loading', error: null });
 
-      const error = await run(() => api.get<Cart>('/cart'));
-      // Cerró sesión (o venció) mientras tanto: el carrito ya quedó vacío.
-      if (error === null || ownSession !== session) return;
-      // Si ya había un carrito, queda a la vista: el error no lo borra.
-      set((s) => ({ error, status: s.cart === null ? 'error' : s.status }));
+      return enqueue(async () => {
+        if (ownSession !== session) return;
+        const error = await run(() => api.get<Cart>('/cart'));
+        // Cerró sesión (o venció) mientras tanto: el carrito ya quedó vacío.
+        if (error === null || ownSession !== session) return;
+        // Si ya había un carrito, queda a la vista: el error no lo borra.
+        set((s) => ({ error, status: s.cart === null ? 'error' : s.status }));
+      });
     },
 
     addItem: (productId, quantity) =>
@@ -118,13 +112,15 @@ export const useCartStore = create<CartStore>((set, get) => {
 
     reset: () => {
       session++;
+      // La sesión nueva no espera a los pedidos de la anterior.
+      queue = Promise.resolve();
       set({ cart: null, status: 'idle', error: null });
     },
   };
 });
 
 /** Unidades, no líneas: dos gorras iguales más una distinta son 3. */
-export function countUnits(cart: Cart | null): number {
+function countUnits(cart: Cart | null): number {
   return cart?.items.reduce((units, item) => units + item.cantidad, 0) ?? 0;
 }
 
@@ -133,14 +129,24 @@ export function useCartUnitCount(): number {
   return useCartStore((s) => countUnits(s.cart));
 }
 
+/** Para las pantallas: `idle` cuenta como cargando, porque con sesión no llega a dibujarse. */
+export function useCartStatus(): Exclude<CartStatus, 'idle'> {
+  return useCartStore((s) => (s.status === 'idle' ? 'loading' : s.status));
+}
+
 // Cuando aparece un usuario, carga; cuando se va, se vacía. Cubre el arranque
 // (hydrate() pone el usuario recién después de que /auth/me confirma el token),
 // el login, el registro, el cierre de sesión y el 401 sin tocarlos uno por uno.
 // Va a nivel módulo y no en un efecto, así StrictMode no lo duplica.
-useSessionStore.subscribe((current, previous) => {
+const unsubscribe = useSessionStore.subscribe((current, previous) => {
   if (current.user?.id === previous.user?.id) return;
 
   const cartStore = useCartStore.getState();
   cartStore.reset();
   if (current.status === 'authenticated' && current.user) void cartStore.load();
 });
+
+// En desarrollo, al guardar este archivo el módulo se evalúa de nuevo con la
+// sesión ya iniciada: la copia vieja suelta su suscripción y la nueva carga.
+import.meta.hot?.dispose(unsubscribe);
+if (useSessionStore.getState().status === 'authenticated') void useCartStore.getState().load();
