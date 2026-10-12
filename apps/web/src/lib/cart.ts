@@ -1,4 +1,4 @@
-import type { Cart } from '../types/cart';
+import type { Cart, CartItem } from '../types/cart';
 
 /**
  * Unidades de un producto que todavía se pueden agregar: el stock menos las que
@@ -12,4 +12,15 @@ import type { Cart } from '../types/cart';
 export function getAvailableToAdd(product: { id: string; stock: number }, cart: Cart | null): number {
   const inCart = cart?.items.find((item) => item.producto.id === product.id)?.cantidad ?? 0;
   return product.stock - inCart;
+}
+
+/**
+ * La línea pide más unidades de las que hay: el admin bajó el stock después de
+ * que se agregó. También con el stock en 0 (la línea queda en Sin stock).
+ *
+ * La usan la pantalla del carrito, para avisar en la línea, y Finalizar compra,
+ * que no deja seguir mientras alguna se pase.
+ */
+export function exceedsStock(item: CartItem): boolean {
+  return item.cantidad > item.producto.stock;
 }
