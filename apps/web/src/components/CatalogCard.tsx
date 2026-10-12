@@ -1,4 +1,5 @@
 import { Link } from 'react-router';
+import AddToCartButton from './AddToCartButton';
 import ProductImage from './ProductImage';
 import SoldOutBadge from './SoldOutBadge';
 import { formatPrice } from '../lib/format-price';
@@ -10,6 +11,8 @@ const cardClassName =
 
 type Props = {
   product: ProductCard;
+  /** El botón de abajo: Agregar al carrito en el catálogo; Ver detalles en "También te puede interesar". */
+  action?: 'add' | 'details';
   /** Nivel del título, según dónde va la card (h2 en el catálogo). */
   titleAs?: 'h2' | 'h3';
   /** Primeras cards del catálogo: la foto se pide enseguida. */
@@ -19,14 +22,15 @@ type Props = {
 };
 
 /** Card de producto: la usan el catálogo y los relacionados de la ficha. */
-export default function CatalogCard({ product, titleAs: Title = 'h2', priority = false, linkState }: Props) {
+export default function CatalogCard({ product, action = 'details', titleAs: Title = 'h2', priority = false, linkState }: Props) {
   const soldOut = product.stock <= 0;
 
+  // Un botón no puede ir adentro de un enlace: el enlace es el nombre, y su ::after se estira
+  // sobre toda la card (relative) para que se pueda tocar en cualquier parte, como antes.
+  // El anillo de foco lo dibuja la card cuando el enlace tiene el foco: así rodea todo.
   return (
-    <Link
-      to={`/producto/${product.slug}`}
-      state={linkState}
-      className={`group relative ${cardClassName} transition-colors hover:border-scaps-border-input focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-scaps-text`}
+    <div
+      className={`group relative ${cardClassName} transition-colors hover:border-scaps-border-input has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-scaps-text`}
     >
       {/* El mismo fondo tapa las esquinas de abajo, que ProductImage redondea. */}
       <div
@@ -38,25 +42,36 @@ export default function CatalogCard({ product, titleAs: Title = 'h2', priority =
       <div className="flex flex-1 flex-col p-3">
         {/* Tres renglones en el celular: con dos, nombres distintos quedaban cortados igual. */}
         <Title className="line-clamp-3 font-display text-card wrap-break-word text-scaps-text md:line-clamp-2">
-          {product.nombre}
+          {/* outline-none: el anillo lo dibuja la card. */}
+          <Link
+            to={`/producto/${product.slug}`}
+            state={linkState}
+            className="outline-none after:absolute after:inset-0 after:rounded-scaps"
+          >
+            {product.nombre}
+          </Link>
         </Title>
         {/* mt-auto: el precio queda a la misma altura en toda la fila. */}
         <p className="mt-auto pt-1 text-sm font-medium text-scaps-text tabular-nums md:mb-3 md:text-base">
           {formatPrice(product.precio)}
         </p>
-        {/* Después del precio para que se lea al final; se dibuja sobre la foto. */}
+        {/* Después del precio para que se lea al final; se dibuja sobre la foto y deja pasar el clic al enlace. */}
         {soldOut && (
-          <SoldOutBadge className="absolute top-2 left-2 md:top-3 md:left-3" />
+          <SoldOutBadge className="pointer-events-none absolute top-2 left-2 md:top-3 md:left-3" />
         )}
-        {/* span y no botón: la card entera ya es el enlace. */}
-        <span
-          aria-hidden="true"
-          className="hidden h-10 items-center justify-center rounded-scaps border border-scaps-border-input text-sm font-medium text-scaps-text-secondary transition-colors group-hover:border-scaps-border-primary group-hover:bg-scaps-card-highlight group-hover:text-scaps-text-on-primary md:flex"
-        >
-          Ver detalles
-        </span>
+        {action === 'add' ? (
+          <AddToCartButton product={product} />
+        ) : (
+          // span y no botón: queda debajo del enlace estirado y abre la ficha como el resto de la card.
+          <span
+            aria-hidden="true"
+            className="hidden h-10 items-center justify-center rounded-scaps border border-scaps-border-input text-sm font-medium text-scaps-text-secondary transition-colors group-hover:border-scaps-border-primary group-hover:bg-scaps-card-highlight group-hover:text-scaps-text-on-primary md:flex"
+          >
+            Ver detalles
+          </span>
+        )}
       </div>
-    </Link>
+    </div>
   );
 }
 
