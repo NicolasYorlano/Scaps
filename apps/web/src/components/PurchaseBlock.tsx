@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { Link } from 'react-router';
 import QuantitySelector from './QuantitySelector';
+import LowStockBadge from './LowStockBadge';
 import SoldOutBadge from './SoldOutBadge';
 import { toApiError } from '../hooks/useApi';
 import { useLoginRedirect } from '../hooks/useLoginRedirect';
@@ -103,7 +104,9 @@ export default function PurchaseBlock({ product, onStale }: Props) {
 
   return (
     <section aria-label="Comprar" className="flex flex-col gap-3 border-t border-scaps-border pt-6">
+      {/* Junto al bloque de compra; con 0 va el de Sin stock y LowStockBadge no se dibuja. */}
       {soldOut && <SoldOutBadge className="self-start" />}
+      <LowStockBadge stock={product.stock} className="self-start" />
 
       {/* En una fila en cualquier ancho; el botón se estira hasta el borde. */}
       <div className="flex items-start gap-3">

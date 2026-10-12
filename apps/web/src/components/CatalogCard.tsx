@@ -1,5 +1,6 @@
 import { Link } from 'react-router';
 import AddToCartButton from './AddToCartButton';
+import LowStockBadge from './LowStockBadge';
 import ProductImage from './ProductImage';
 import SoldOutBadge from './SoldOutBadge';
 import { formatPrice } from '../lib/format-price';
@@ -56,9 +57,15 @@ export default function CatalogCard({ product, action = 'details', titleAs: Titl
           {formatPrice(product.precio)}
         </p>
         {/* Después del precio para que se lea al final; se dibuja sobre la foto y deja pasar el clic al enlace. */}
+        {/* Los dos carteles en el mismo lugar y nunca juntos (con 0, LowStockBadge no se dibuja).
+            Sobre la foto: no suman alto, así las cards de una fila siguen parejas. */}
         {soldOut && (
           <SoldOutBadge className="pointer-events-none absolute top-2 left-2 md:top-3 md:left-3" />
         )}
+        <LowStockBadge
+          stock={product.stock}
+          className="pointer-events-none absolute top-2 left-2 md:top-3 md:left-3"
+        />
         {action === 'add' ? (
           <AddToCartButton product={product} />
         ) : (
