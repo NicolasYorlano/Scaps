@@ -24,3 +24,12 @@ export function getAvailableToAdd(product: { id: string; stock: number }, cart: 
 export function exceedsStock(item: CartItem): boolean {
   return item.cantidad > item.producto.stock;
 }
+
+/**
+ * El carrito se puede cerrar: tiene algo y ninguna línea se pasa del stock.
+ * Con esto Finalizar compra se habilita, y /pedido decide si se muestra o
+ * manda de vuelta al carrito.
+ */
+export function isCheckoutReady(cart: Cart): boolean {
+  return cart.items.length > 0 && !cart.items.some(exceedsStock);
+}

@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import CartIcon from '../components/CartIcon';
 import FormAlert from '../components/FormAlert';
 import ProductImage from '../components/ProductImage';
 import QuantitySelector from '../components/QuantitySelector';
 import SoldOutBadge from '../components/SoldOutBadge';
 import { toApiError } from '../hooks/useApi';
-import { exceedsStock } from '../lib/cart';
+import { exceedsStock, isCheckoutReady } from '../lib/cart';
 import { formatPrice } from '../lib/format-price';
 import { focusField } from '../lib/forms';
 import { useCartStore, useCartUnitCount } from '../stores/cart-store';
@@ -14,6 +14,7 @@ import type { CartItem } from '../types/cart';
 
 const TITLE_ID = 'cart-title';
 const EMPTY_TITLE_ID = 'cart-empty-title';
+const CHECKOUT_REASON_ID = 'cart-checkout-reason';
 
 const pageClassName = 'flex flex-1 flex-col bg-scaps-canvas px-6 py-8 lg:px-12 lg:py-12';
 // Centrada, con el mismo ancho que la ficha.
@@ -45,8 +46,9 @@ const headerClassName =
 
 const primaryButtonClassName =
   'flex h-12 items-center justify-center rounded-scaps border border-scaps-border-primary px-6 text-sm font-medium text-scaps-text-on-primary transition-colors hover:bg-scaps-card-highlight';
-const secondaryButtonClassName =
-  'flex h-12 items-center justify-center rounded-scaps border border-scaps-border-input px-6 text-sm font-medium text-scaps-text-secondary transition-colors hover:border-scaps-border-primary hover:text-scaps-text';
+// El resumen ya tiene el fondo del hover de primaryButtonClassName: acá el hover aclara el borde y el fondo.
+const checkoutButtonClassName =
+  'flex h-12 w-full items-center justify-center rounded-scaps border border-scaps-border-primary px-6 text-sm font-medium text-scaps-text-on-primary transition-colors hover:border-scaps-text hover:bg-scaps-text/10 aria-disabled:cursor-not-allowed aria-disabled:border-scaps-border aria-disabled:text-scaps-text-annotation aria-disabled:hover:border-scaps-border aria-disabled:hover:bg-transparent';
 // -my-3 py-3: 44 px de área táctil sin mover el texto, como los enlaces de la ficha.
 const textButtonClassName =
   '-my-3 py-3 font-medium whitespace-nowrap text-scaps-text underline underline-offset-4 hover:text-scaps-text-secondary';
@@ -56,10 +58,6 @@ type Pending = { type: 'update'; quantity: number } | { type: 'remove' };
 
 /** El aviso del último pedido que falló, en la línea que lo pidió. */
 type Failure = { itemId: string; message: string };
-
-function unitsLabel(units: number) {
-  return units === 1 ? '1 unidad' : `${units} unidades`;
-}
 
 function lineNameId(itemId: string) {
   return `cart-line-${itemId}`;
@@ -130,12 +128,7 @@ function CartLine({ item, pending, failure, onQuantityChange, onRemove }: LinePr
           {formatPrice(producto.precio)}
           <span aria-hidden="true"> c/u</span>
         </p>
-        {/* El stock nunca se muestra: el aviso es cualitativo. */}
-        {soldOut && (
-          <div className="mt-1">
-            <LineNotice>Este producto se quedó sin stock: quitalo para continuar.</LineNotice>
-          </div>
-        )}
+        {/* El stock nunca se muestra: el aviso es cualitativo. Sin stock lo dice el cartel, en lugar del selector. */}
         {overStock && (
           <div className="mt-1">
             <LineNotice>No hay unidades suficientes de este producto, ajustá la cantidad.</LineNotice>
@@ -147,9 +140,8 @@ function CartLine({ item, pending, failure, onQuantityChange, onRemove }: LinePr
         <div className="col-start-1 row-span-2 row-start-1 @3xl:row-span-1">
           {soldOut ? (
             // Sin selector: solo se puede quitar.
-            <div className="flex h-11 items-center gap-2 whitespace-nowrap">
+            <div className="flex h-11 items-center">
               <SoldOutBadge />
-              <span className="text-sm text-scaps-text-muted tabular-nums">{unitsLabel(item.cantidad)}</span>
             </div>
           ) : (
             // Por encima del tope (el admin bajó el stock), el componente deshabilita el +
@@ -197,7 +189,19 @@ function CartLine({ item, pending, failure, onQuantityChange, onRemove }: LinePr
   );
 }
 
-function Summary({ units, total, updating }: { units: number; total: string; updating: boolean }) {
+type SummaryProps = {
+  units: number;
+  total: string;
+  /** Hay un cambio viajando: los números todavía no son los finales. */
+  updating: boolean;
+  /** Alguna línea se pasa del stock: no se puede finalizar. */
+  blocked: boolean;
+};
+
+function Summary({ units, total, updating, blocked }: SummaryProps) {
+  const navigate = useNavigate();
+  const unavailable = blocked || updating;
+
   return (
     // sticky: en un carrito largo, el total sigue a la vista mientras se recorren las líneas.
     <aside
@@ -221,10 +225,26 @@ function Summary({ units, total, updating }: { units: number; total: string; upd
           <dd className="text-2xl font-medium text-scaps-text tabular-nums">{formatPrice(total)}</dd>
         </div>
       </dl>
-      <p className="mt-2 text-xs text-scaps-text-muted">Tu carrito queda guardado en tu cuenta.</p>
 
-      {/* Finalizar compra va acá, arriba de Seguir comprando: lo suma la tarea del cierre del pedido. */}
-      <Link to="/catalogo" className={`mt-6 ${secondaryButtonClassName}`}>
+      {/* El único botón del resumen: Seguir comprando va como enlace, así la acción principal no compite.
+          aria-disabled y no disabled: con el foco, un lector de pantalla lee el motivo. */}
+      <button
+        type="button"
+        aria-disabled={unavailable}
+        aria-describedby={blocked ? CHECKOUT_REASON_ID : undefined}
+        onClick={() => {
+          if (!unavailable) void navigate('/pedido');
+        }}
+        className={`mt-6 ${checkoutButtonClassName} ${updating ? 'cursor-progress!' : ''}`}
+      >
+        Finalizar compra
+      </button>
+      {blocked && (
+        <div id={CHECKOUT_REASON_ID} className="mt-3">
+          <LineNotice>Ajustá las cantidades marcadas para continuar.</LineNotice>
+        </div>
+      )}
+      <Link to="/catalogo" className={`mt-5 self-center text-sm ${textButtonClassName} text-scaps-text-secondary hover:text-scaps-text`}>
         Seguir comprando
       </Link>
     </aside>
@@ -360,8 +380,6 @@ export default function Carrito() {
         <h1 id={TITLE_ID} tabIndex={-1} className="mb-[0.25em] font-display text-title text-scaps-text outline-none">
           Carrito
         </h1>
-        {/* min-h-5: reserva el renglón para que nada salte al cargar. */}
-        <p className="min-h-5 text-sm text-scaps-text-muted">{items.length > 0 && unitsLabel(units)}</p>
 
         {/* Siempre montado: un lector de pantalla oye la carga y cada cambio. */}
         <p role="status" className="sr-only">
@@ -411,9 +429,6 @@ export default function Carrito() {
             <h2 id={EMPTY_TITLE_ID} tabIndex={-1} className="font-display text-heading text-scaps-text outline-none">
               Tu carrito está vacío
             </h2>
-            <p className="max-w-sm text-sm text-scaps-text-secondary">
-              Elegí tus gorras en el catálogo. Podés mirarlas en 3D antes de sumarlas.
-            </p>
             <Link to="/catalogo" className={`mt-2 ${primaryButtonClassName}`}>
               Ver catálogo
             </Link>
@@ -427,7 +442,8 @@ export default function Carrito() {
               {/* Solo a la vista: cada línea ya nombra lo suyo para un lector de pantalla. */}
               <div aria-hidden="true" className={headerClassName}>
                 <span>Producto</span>
-                <span>Cantidad</span>
+                {/* La columna mide lo que el selector: centrada, queda sobre el número. */}
+                <span className="text-center">Cantidad</span>
                 <span className="text-right">Subtotal</span>
               </div>
               {/* Vienen ordenadas por nombre desde la API: cambiar una cantidad no mueve la línea. */}
@@ -445,7 +461,9 @@ export default function Carrito() {
               </ul>
             </section>
 
-            {cart && <Summary units={units} total={cart.total} updating={updating} />}
+            {cart && (
+              <Summary units={units} total={cart.total} updating={updating} blocked={!isCheckoutReady(cart)} />
+            )}
           </div>
         )}
       </div>
