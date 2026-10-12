@@ -4,8 +4,8 @@ import CubeIcon from '../components/CubeIcon';
 import ErrorBoundary from '../components/ErrorBoundary';
 import PhotoLightbox from '../components/PhotoLightbox';
 import ProductImage from '../components/ProductImage';
+import PurchaseBlock from '../components/PurchaseBlock';
 import RelatedProducts from '../components/RelatedProducts';
-import SoldOutBadge from '../components/SoldOutBadge';
 import { useApiQuery } from '../hooks/useApi';
 import { useRotateHint } from '../hooks/useRotateHint';
 import { useSwipe } from '../hooks/useSwipe';
@@ -450,10 +450,16 @@ function ProductSkeleton() {
           </div>
         </div>
 
-        <div className={`${descriptionClassName} flex flex-col gap-2.5 py-1.5`}>
-          <div className="h-3 rounded-full bg-scaps-placeholder" />
-          <div className="h-3 rounded-full bg-scaps-placeholder" />
-          <div className="h-3 w-3/5 rounded-full bg-scaps-placeholder" />
+        <div className={`${descriptionClassName} flex flex-col gap-6`}>
+          <div className="flex flex-col gap-2.5 py-1.5">
+            <div className="h-3 rounded-full bg-scaps-placeholder" />
+            <div className="h-3 rounded-full bg-scaps-placeholder" />
+            <div className="h-3 w-3/5 rounded-full bg-scaps-placeholder" />
+          </div>
+          {/* El bloque de compra: la fila del selector y el botón. */}
+          <div className="border-t border-scaps-border pt-6">
+            <div className="h-11 rounded-scaps bg-scaps-placeholder" />
+          </div>
         </div>
       </div>
     </>
@@ -554,24 +560,23 @@ export default function Producto() {
                 >
                   {product.nombre}
                 </h1>
-                <div className="flex flex-wrap items-center gap-3">
-                  <p className="text-xl font-medium text-scaps-text">
-                    {formatPrice(product.precio)}
-                  </p>
-                  {/* La cantidad no se muestra: solo se avisa cuando no queda. */}
-                  {product.stock <= 0 && <SoldOutBadge />}
-                </div>
+                {/* El Sin stock va en el bloque de compra, junto al botón deshabilitado. */}
+                <p className="text-xl font-medium text-scaps-text">
+                  {formatPrice(product.precio)}
+                </p>
               </header>
 
               <Gallery key={product.slug} product={product} />
 
-              {product.descripcion && (
-                <p
-                  className={`${descriptionClassName} text-sm leading-relaxed wrap-break-word whitespace-pre-line text-scaps-text-secondary`}
-                >
-                  {product.descripcion}
-                </p>
-              )}
+              <div className={`${descriptionClassName} flex flex-col gap-6`}>
+                {product.descripcion && (
+                  <p className="text-sm leading-relaxed wrap-break-word whitespace-pre-line text-scaps-text-secondary">
+                    {product.descripcion}
+                  </p>
+                )}
+                {/* key: al pasar a otra ficha, la cantidad y los avisos arrancan de cero. */}
+                <PurchaseBlock key={product.slug} product={product} onStale={reload} />
+              </div>
             </div>
           ) : (
             <ProductSkeleton />
