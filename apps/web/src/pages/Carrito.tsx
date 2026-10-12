@@ -5,11 +5,11 @@ import FormAlert from '../components/FormAlert';
 import ProductImage from '../components/ProductImage';
 import QuantitySelector from '../components/QuantitySelector';
 import SoldOutBadge from '../components/SoldOutBadge';
-import { toApiError } from '../hooks/useApi';
+import { toApiError } from '../lib/api';
 import { exceedsStock, isCheckoutReady } from '../lib/cart';
 import { formatPrice } from '../lib/format-price';
 import { focusField } from '../lib/forms';
-import { useCartStore, useCartUnitCount } from '../stores/cart-store';
+import { useCartStatus, useCartStore, useCartUnitCount } from '../stores/cart-store';
 import type { CartItem } from '../types/cart';
 
 const TITLE_ID = 'cart-title';
@@ -289,7 +289,7 @@ function CartSkeleton() {
 /** Pantalla del carrito. La ruta está protegida: sin sesión manda al login y, al ingresar, vuelve. */
 export default function Carrito() {
   const cart = useCartStore((s) => s.cart);
-  const status = useCartStore((s) => s.status);
+  const status = useCartStatus();
   const loadError = useCartStore((s) => s.error);
   const units = useCartUnitCount();
 
@@ -321,9 +321,8 @@ export default function Carrito() {
   }, [cart]);
 
   const items = cart?.items ?? [];
-  // 'idle': la sesión recién se confirmó y el store todavía no arrancó el pedido.
-  const loading = cart === null && (status === 'loading' || status === 'idle');
-  const failed = cart === null && status === 'error';
+  const loading = status === 'loading';
+  const failed = status === 'error';
   const updating = Object.keys(pending).length > 0;
   // El aviso de una línea que ya no está (por ejemplo, se quitó desde otra pestaña) va arriba de todo.
   const orphanFailure = failure && !items.some((item) => item.id === failure.itemId) ? failure : null;
