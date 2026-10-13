@@ -12,17 +12,25 @@ const CANDIDATES = 24;
 const gridClassName =
   'mt-6 grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-6 md:max-lg:[&>li:nth-child(n+4)]:hidden! lg:grid-cols-4';
 
+type Props = {
+  /** La ficha en la que se está: no se recomienda a sí misma y la lista arranca después de ella. */
+  currentSlug?: string;
+  /** Los que no se muestran: en el carrito, los que ya están adentro. */
+  excludeSlugs?: string[];
+};
+
 /** Otros productos, al pie de la ficha. Si no hay ninguno o el pedido falla, no se muestra. */
-export default function RelatedProducts({currentSlug}: {currentSlug: string}) {
+export default function RelatedProducts({currentSlug, excludeSlugs = []}: Props) {
   // keep: de una ficha a otra la lista es la misma y se ve al instante.
   const { data, loading } = useApiQuery<Paginated<ProductCard>>(`/products?limit=${CANDIDATES}&en_stock=true`, { keep: true });
   // De una ficha a otra, la miga sigue volviendo a la misma búsqueda del catálogo.
   const linkState: unknown = useLocation().state;
   const candidates = data?.data ?? [];
   // Los que siguen al de la ficha, dando la vuelta: cada ficha recomienda otros.
+  // Sin ficha (en el carrito) no hay desde dónde arrancar: quedan en el orden en que llegan.
   const next = candidates.findIndex((product) => product.slug === currentSlug) + 1;
   const products = [...candidates.slice(next), ...candidates.slice(0, next)]
-    .filter((product) => product.slug !== currentSlug)
+    .filter((product) => product.slug !== currentSlug && !excludeSlugs.includes(product.slug))
     .slice(0, MAX_RELATED);
 
   if (!loading && products.length === 0) return null;

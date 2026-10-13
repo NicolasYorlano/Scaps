@@ -5,6 +5,7 @@ import FormAlert from '../components/FormAlert';
 import LineNotice from '../components/LineNotice';
 import ProductImage from '../components/ProductImage';
 import QuantitySelector from '../components/QuantitySelector';
+import RelatedProducts from '../components/RelatedProducts';
 import SoldOutBadge from '../components/SoldOutBadge';
 import { useCartRefresh } from '../hooks/useCartRefresh';
 import { sentence, toApiError } from '../lib/api';
@@ -367,7 +368,7 @@ type CheckoutProps = {
 
 type SummaryProps = CheckoutProps & {
   units: number;
-  /** La pantalla mira si el resumen está a la vista, para mostrar o no la barra del celular. */
+  /** La pantalla mira si ya se llegó al resumen, para mostrar o no la barra del celular. */
   ref: (node: HTMLElement | null) => void;
 };
 
@@ -431,8 +432,8 @@ function Summary({ units, total, updating, reason, finishing, onCheckout, ref }:
 }
 
 /**
- * En el celular, mientras el resumen no está a la vista, el total y Finalizar compra acompañan al pie
- * de la pantalla. Repite al resumen, así que va fuera del Tab y de los lectores de pantalla.
+ * En el celular, hasta llegar al resumen, el total y Finalizar compra acompañan al pie de la
+ * pantalla. Repite al resumen, así que va fuera del Tab y de los lectores de pantalla.
  */
 function CheckoutBar({ total, updating, reason, finishing, onCheckout, hidden }: CheckoutProps & { hidden: boolean }) {
   const blocked = reason !== null;
@@ -546,17 +547,22 @@ export default function Carrito() {
   const navigationType = useNavigationType();
   const { drafts, removing, failure, announcement, setQuantity, remove, settle } = useLineChanges();
   const [finishing, setFinishing] = useState(false);
-  // El resumen, para saber si está a la vista. Hasta medirlo se asume que sí: la barra del celular no asoma de más.
+  // El resumen, para saber si ya se llegó a él. Hasta medirlo se asume que sí: la barra del celular no asoma de más.
   const [summaryNode, setSummaryNode] = useState<HTMLElement | null>(null);
-  const [summaryInView, setSummaryInView] = useState(true);
+  const [summaryReached, setSummaryReached] = useState(true);
   useCartRefresh();
 
   useEffect(() => {
     if (!summaryNode) return;
-    const observer = new IntersectionObserver((entries) => {
-      // Si llegan varios avisos juntos, vale el último.
-      setSummaryInView(entries[entries.length - 1].isIntersecting);
-    });
+    // El margen estira la pantalla hacia arriba: el resumen cuenta como alcanzado también cuando quedó atrás.
+    // Así la barra no vuelve al seguir bajando, donde taparía el pie de página.
+    const observer = new IntersectionObserver(
+      (entries) => {
+        // Si llegan varios avisos juntos, vale el último.
+        setSummaryReached(entries[entries.length - 1].isIntersecting);
+      },
+      { rootMargin: '100000px 0px 0px 0px' },
+    );
     observer.observe(summaryNode);
     return () => observer.disconnect();
   }, [summaryNode]);
@@ -706,12 +712,15 @@ export default function Carrito() {
                   reason={reason}
                   finishing={finishing}
                   onCheckout={() => void checkout()}
-                  hidden={summaryInView}
+                  hidden={summaryReached}
                 />
               </>
             )}
           </div>
         )}
+
+        {/* Recién con el carrito cargado: antes no se sabe cuáles dejar afuera. */}
+        {!loading && !failed && <RelatedProducts excludeSlugs={items.map((item) => item.producto.slug)} />}
       </div>
     </main>
   );
