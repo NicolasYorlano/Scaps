@@ -188,7 +188,7 @@ Configuración del servicio, por si hay que recrearlo:
 
 Variables de entorno:
 
-- `DATABASE_URL`: la cadena directa de `scaps-prod` (sin `-pooler`), con `&connect_timeout=15` al final. Neon suspende la base cuando no se usa, y sin ese margen la API no llega a conectarse al arrancar.
+- `DATABASE_URL`: la cadena directa de `scaps-prod` (sin `-pooler`), con `&connect_timeout=15` al final. Neon suspende la base cuando no se usa, y sin ese margen la API no llega a conectarse al arrancar. `scaps-prod` está en `us-east-1`, la misma región que Render: en otra, cada consulta tarda unos 100 ms más.
 - `JWT_SECRET`: propio de producción, distinto del de desarrollo.
 - `ADMIN_EMAIL` y `ADMIN_PASSWORD`.
 - `CORS_ORIGIN=https://scaps-web.vercel.app,https://scaps-*-nicolas-yorlano.vercel.app`: la producción de Vercel y todos sus previews. El `*` reemplaza un tramo sin puntos.
