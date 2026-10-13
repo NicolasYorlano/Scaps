@@ -1,6 +1,7 @@
-import { useRef, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import QuantitySelector from './QuantitySelector';
+import LineNotice from './LineNotice';
 import LowStockBadge from './LowStockBadge';
 import SoldOutBadge from './SoldOutBadge';
 import { useLoginRedirect } from '../hooks/useLoginRedirect';
@@ -19,7 +20,7 @@ type Props = {
 // aria-disabled y no disabled, como SubmitButton: el botón conserva el foco
 // mientras agrega. Los clics de más los ignora handleAdd.
 const addButtonClassName =
-  'flex h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-scaps border border-scaps-border-primary px-4 text-sm font-medium text-scaps-text-on-primary transition-colors hover:bg-scaps-card-highlight aria-disabled:cursor-not-allowed aria-disabled:border-scaps-border aria-disabled:text-scaps-text-annotation aria-disabled:hover:bg-transparent';
+  'flex h-11 min-w-38 flex-1 items-center justify-center gap-2 rounded-scaps border border-scaps-border-primary px-4 text-sm font-medium text-scaps-text-on-primary transition-colors hover:bg-scaps-card-highlight aria-disabled:cursor-not-allowed aria-disabled:border-scaps-border aria-disabled:text-scaps-text-annotation aria-disabled:hover:bg-transparent';
 
 const noticeClassName = 'text-sm text-scaps-text-secondary';
 
@@ -29,6 +30,7 @@ const linkClassName =
 /** Selector de cantidad y Agregar al carrito, debajo de la descripción de la ficha. El stock nunca se muestra. */
 export default function PurchaseBlock({ product, onStale }: Props) {
   const sessionStatus = useSessionStore((s) => s.status);
+  const userId = useSessionStore((s) => s.user?.id ?? null);
   const cartStatus = useCartStatus();
   const cart = useCartStore((s) => s.cart);
   const goToLogin = useLoginRedirect();
@@ -40,6 +42,12 @@ export default function PurchaseBlock({ product, onStale }: Props) {
   const addingRef = useRef(false);
   const [added, setAdded] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // De qué usuario son esos dos avisos: al cambiar la sesión dejan de mostrarse.
+  const [noticeUserId, setNoticeUserId] = useState<string | null>(null);
+  const addButtonRef = useRef<HTMLButtonElement>(null);
+  const soldOutId = useId();
+  const allInCartId = useId();
+  const cartErrorId = useId();
 
   const isGuest = sessionStatus === 'anonymous';
   const soldOut = product.stock <= 0;
@@ -55,6 +63,13 @@ export default function PurchaseBlock({ product, onStale }: Props) {
   // Si el tope bajó (cargó el carrito, cambió el stock), la cantidad elegida baja con él.
   const value = Math.min(quantity, max);
   const unavailable = soldOut || allInCart || waiting;
+  const cartFailed = !isGuest && cartStatus === 'error';
+  // Deshabilitado, un lector de pantalla lee por qué.
+  const disabledReasonId = soldOut ? soldOutId : allInCart ? allInCartId : cartFailed ? cartErrorId : undefined;
+
+  const ownNotices = noticeUserId === userId;
+  const showAdded = added && ownNotices;
+  const shownError = ownNotices ? error : null;
 
   function changeQuantity(next: number) {
     setQuantity(next);
@@ -75,6 +90,7 @@ export default function PurchaseBlock({ product, onStale }: Props) {
     setAdding(true);
     setAdded(false);
     setError(null);
+    setNoticeUserId(userId);
 
     try {
       await useCartStore.getState().addItem(product.id, value);
@@ -92,6 +108,8 @@ export default function PurchaseBlock({ product, onStale }: Props) {
         void useCartStore.getState().load();
       } else if (apiError.status === 401) {
         // El store ya cerró la sesión: el botón ahora manda al login.
+        // Este aviso es para quien quedó sin sesión.
+        setNoticeUserId(null);
         setError('Tu sesión venció. Ingresá de nuevo para agregar al carrito.');
       } else {
         setError(apiError.message);
@@ -102,14 +120,20 @@ export default function PurchaseBlock({ product, onStale }: Props) {
     }
   }
 
+  function retryCart() {
+    void useCartStore.getState().load();
+    // El botón desaparece al reintentar: el foco pasa a Agregar al carrito en vez de perderse.
+    addButtonRef.current?.focus();
+  }
+
   return (
     <section aria-label="Comprar" className="flex flex-col gap-3 border-t border-scaps-border pt-6">
       {/* Junto al bloque de compra; con 0 va el de Sin stock y LowStockBadge no se dibuja. */}
-      {soldOut && <SoldOutBadge className="self-start" />}
+      {soldOut && <SoldOutBadge id={soldOutId} className="self-start" />}
       <LowStockBadge stock={product.stock} className="self-start" />
 
-      {/* En una fila en cualquier ancho; el botón se estira hasta el borde. */}
-      <div className="flex items-start gap-3">
+      {/* En una fila, con el botón estirado hasta el borde. Si no entra con su texto en un renglón (min-w-38), pasa abajo. */}
+      <div className="flex flex-wrap items-start gap-3">
         {showSelector && (
           <QuantitySelector
             value={value}
@@ -119,16 +143,19 @@ export default function PurchaseBlock({ product, onStale }: Props) {
             label={`Cantidad de ${product.nombre}`}
           />
         )}
+        {/* cursor-progress!: sin el ! le gana el cursor de aria-disabled. */}
         <button
+          ref={addButtonRef}
           type="button"
           aria-disabled={unavailable || adding}
+          aria-describedby={disabledReasonId}
           onClick={() => void handleAdd()}
-          className={`${addButtonClassName} ${adding ? 'cursor-progress' : ''}`}
+          className={`${addButtonClassName} ${adding ? 'cursor-progress!' : ''}`}
         >
           {adding && (
             <span
               aria-hidden="true"
-              className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current/30 border-t-current motion-reduce:animate-none"
+              className="h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-current/30 border-t-current motion-reduce:animate-none"
             />
           )}
           {adding ? 'Agregando…' : 'Agregar al carrito'}
@@ -138,7 +165,7 @@ export default function PurchaseBlock({ product, onStale }: Props) {
       {/* Primero lo que acaba de pasar. Montado aunque esté vacío: así un lector de pantalla lo anuncia.
           Vacío, el margen negativo descuenta su gap, así no separa de más a lo que sigue. */}
       <p role="status" className={`${noticeClassName} -mt-3 not-empty:mt-0`}>
-        {added && (
+        {showAdded && (
           <>
             Agregado al carrito.{' '}
             {/* Con todas en el carrito, el enlace ya está en el aviso de abajo. */}
@@ -153,31 +180,23 @@ export default function PurchaseBlock({ product, onStale }: Props) {
 
       {allInCart && (
         <p className={noticeClassName}>
-          Ya tenés en el carrito todas las unidades disponibles.{' '}
+          <span id={allInCartId}>Ya tenés en el carrito todas las unidades disponibles.</span>{' '}
           <Link to="/carrito" className={linkClassName}>
             Ver carrito
           </Link>
         </p>
       )}
 
-      {!isGuest && cartStatus === 'error' && (
-        <p role="alert" className={noticeClassName}>
-          No pudimos cargar tu carrito.{' '}
-          <button
-            type="button"
-            onClick={() => void useCartStore.getState().load()}
-            className={linkClassName}
-          >
+      {cartFailed && (
+        <LineNotice alert>
+          <span id={cartErrorId}>No pudimos cargar tu carrito.</span>{' '}
+          <button type="button" onClick={retryCart} className={linkClassName}>
             Reintentar
           </button>
-        </p>
+        </LineNotice>
       )}
 
-      {error && (
-        <p role="alert" className={noticeClassName}>
-          {error}
-        </p>
-      )}
+      {shownError && <LineNotice alert>{shownError}</LineNotice>}
     </section>
   );
 }
