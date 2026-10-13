@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import CartIcon from '../components/CartIcon';
 import FormAlert from '../components/FormAlert';
+import LineNotice from '../components/LineNotice';
 import ProductImage from '../components/ProductImage';
 import QuantitySelector from '../components/QuantitySelector';
 import SoldOutBadge from '../components/SoldOutBadge';
@@ -61,23 +62,6 @@ type Failure = { itemId: string; message: string };
 
 function lineNameId(itemId: string) {
   return `cart-line-${itemId}`;
-}
-
-/** Aviso dentro de una línea: el sistema es monocromo, así que lo marca el ícono y no un color. */
-function LineNotice({ children, alert = false }: { children: ReactNode; alert?: boolean }) {
-  return (
-    <p role={alert ? 'alert' : undefined} className="flex gap-2 text-sm text-scaps-text">
-      <svg
-        aria-hidden="true"
-        viewBox="0 0 16 16"
-        className="mt-0.5 h-4 w-4 shrink-0 fill-none stroke-current stroke-[1.25]"
-      >
-        <circle cx="8" cy="8" r="6.5" />
-        <path d="M8 4.75v4M8 11.25v.01" strokeLinecap="round" />
-      </svg>
-      <span className="min-w-0">{children}</span>
-    </p>
-  );
 }
 
 type LineProps = {

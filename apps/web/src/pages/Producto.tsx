@@ -457,8 +457,9 @@ function ProductSkeleton() {
             <div className="h-3 w-3/5 rounded-full bg-scaps-placeholder" />
           </div>
           {/* El bloque de compra: la fila del selector y el botón. */}
-          <div className="border-t border-scaps-border pt-6">
-            <div className="h-11 rounded-scaps bg-scaps-placeholder" />
+          <div className="flex flex-wrap gap-3 border-t border-scaps-border pt-6">
+            <div className="h-11 w-36 rounded-scaps bg-scaps-placeholder" />
+            <div className="h-11 min-w-38 flex-1 rounded-scaps bg-scaps-placeholder" />
           </div>
         </div>
       </div>
