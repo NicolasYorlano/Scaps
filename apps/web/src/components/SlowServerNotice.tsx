@@ -17,10 +17,11 @@ export default function SlowServerNotice() {
   return (
     // inset-x + mx-auto + w-fit y no left-1/2, que lo limita a media pantalla.
     // pointer-events-none: deja pasar los clics a lo que queda debajo.
+    // Con la barra fija del carrito a la vista (celular), sube para no taparla.
     <div
       role="status"
       aria-live="polite"
-      className="pointer-events-none fixed inset-x-4 bottom-4 z-50 mx-auto w-fit max-w-xl rounded-scaps border border-scaps-border-input bg-scaps-card-highlight px-4 py-3 text-center text-sm text-scaps-text"
+      className="pointer-events-none fixed inset-x-4 bottom-4 z-50 mx-auto w-fit max-w-xl rounded-scaps border border-scaps-border-input bg-scaps-card-highlight px-4 py-3 text-center text-sm text-scaps-text bottom-bar:[html:has([data-bottom-bar])_&]:bottom-32"
     >
       {SLOW_SERVER_MESSAGE}
     </div>

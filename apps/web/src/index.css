@@ -117,6 +117,13 @@
   }
 }
 
+/* Donde entra la barra fija del carrito: debajo de lg (1024 px) y con 480 px de alto o más (un celular apaisado no los tiene). */
+@custom-variant bottom-bar {
+  @media (max-width: 63.99rem) and (min-height: 30rem) {
+    @slot;
+  }
+}
+
 @layer base {
   /* Lo que pinta el navegador (autocompletado, scroll, página sin JS) sale oscuro. */
   :root {
@@ -132,6 +139,13 @@
   /* Con un diálogo modal abierto (la foto ampliada), la página de atrás no scrollea. */
   html:has(dialog[open]) {
     overflow: hidden;
+  }
+
+  /* Con la barra fija del carrito a la vista, lo que recibe el foco no queda tapado por ella. */
+  html:has([data-bottom-bar]) {
+    @variant bottom-bar {
+      scroll-padding-bottom: 8rem;
+    }
   }
 
   /* Anillo de foco de toda la app. Va separado para no tapar el borde rojo de un error. */

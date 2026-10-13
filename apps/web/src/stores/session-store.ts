@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { api, ApiError } from '../lib/api';
+import { api, ApiError, toApiError } from '../lib/api';
 import { clearToken, getToken, setToken } from '../lib/token';
 
 // Mismo shape que UserResponse del backend (ver docs/contrato-api): es el
@@ -30,11 +30,17 @@ type SessionStatus =
 type SessionStore = {
   user: SessionUser | null;
   status: SessionStatus;
+  /** El token sigue guardado pero no se pudo verificar (sin red, servidor caído): se puede reintentar. */
+  sessionError: ApiError | null;
+  /** La última sesión terminó porque el token venció: el login lo avisa. */
+  expired: boolean;
   /** Login/registro exitoso: guarda el token y deja al usuario logueado. */
   setSession: (result: AuthResult) => void;
   /** Logout: no hay endpoint en el servidor (JWT sin estado), así que cerrar
    * sesión es solo borrar el token del cliente. */
   clearSession: () => void;
+  /** El servidor rechazó el token (401) a mitad de uso: descarta la sesión. */
+  expireSession: () => void;
   /** Al arrancar la app y cuando otra pestaña cambia el token: si hay uno guardado,
    * confirma con el servidor que sigue vivo antes de dar la sesión por buena. */
   hydrate: () => Promise<void>;
@@ -43,15 +49,22 @@ type SessionStore = {
 export const useSessionStore = create<SessionStore>((set) => ({
   user: null,
   status: 'checking',
+  sessionError: null,
+  expired: false,
 
   setSession: ({ user, token }) => {
     setToken(token);
-    set({ user, status: 'authenticated' });
+    set({ user, status: 'authenticated', sessionError: null, expired: false });
   },
 
   clearSession: () => {
     clearToken();
-    set({ user: null, status: 'anonymous' });
+    set({ user: null, status: 'anonymous', sessionError: null, expired: false });
+  },
+
+  expireSession: () => {
+    clearToken();
+    set({ user: null, status: 'anonymous', sessionError: null, expired: true });
   },
 
   hydrate: async () => {
@@ -59,23 +72,25 @@ export const useSessionStore = create<SessionStore>((set) => ({
 
     if (token === null) {
       // Con un usuario en memoria, es otra pestaña que cerró la sesión.
-      set({ user: null, status: 'anonymous' });
+      set({ user: null, status: 'anonymous', sessionError: null });
       return;
     }
 
     // El usuario que había puede no ser el de este token: otra pestaña cambió de cuenta.
-    set({ user: null, status: 'checking' });
+    set({ user: null, status: 'checking', sessionError: null });
 
     try {
       const user = await api.get<SessionUser>('/auth/me');
       // Un login o logout durante la espera deja vieja esta respuesta.
       if (getToken() !== token) return;
-      set({ user, status: 'authenticated' });
+      set({ user, status: 'authenticated', expired: false });
     } catch (error) {
       if (getToken() !== token) return;
       // Solo un 401 invalida el token: un corte de red o un 5xx no dicen nada de él.
-      if (error instanceof ApiError && error.status === 401) clearToken();
-      set({ user: null, status: 'anonymous' });
+      const expired = error instanceof ApiError && error.status === 401;
+      if (expired) clearToken();
+      // Sin 401 el token queda guardado: lo que falló es la verificación, y se anota.
+      set({ user: null, status: 'anonymous', expired, sessionError: expired ? null : toApiError(error) });
     }
   },
 }));
