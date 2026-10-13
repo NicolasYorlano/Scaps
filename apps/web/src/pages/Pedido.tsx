@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Link, Navigate } from 'react-router';
 import ProductImage from '../components/ProductImage';
+import { useCartRefresh } from '../hooks/useCartRefresh';
 import { isCheckoutReady } from '../lib/cart';
 import { formatPrice } from '../lib/format-price';
 import { focusField } from '../lib/forms';
@@ -130,6 +131,7 @@ export default function Pedido() {
   const loadError = useCartStore((s) => s.error);
   // El foco va al título una sola vez, al llegar: no cada vez que cambia el carrito.
   const focused = useRef(false);
+  useCartRefresh();
 
   // Al recargar, el primer instante el store todavía está vacío: hay que esperar a que cargue
   // antes de decidir, o la recarga redirigiría siempre.

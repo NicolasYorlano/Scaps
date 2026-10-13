@@ -57,7 +57,7 @@ export default function App() {
             <Route
               path="/carrito"
               element={
-                <RequireAuth>
+                <RequireAuth showWhileChecking>
                   <Carrito />
                 </RequireAuth>
               }
@@ -65,7 +65,7 @@ export default function App() {
             <Route
               path="/pedido"
               element={
-                <RequireAuth>
+                <RequireAuth showWhileChecking>
                   <Pedido />
                 </RequireAuth>
               }

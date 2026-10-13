@@ -32,6 +32,11 @@ export function toApiError(error: unknown): ApiError {
   return new ApiError(0, ['Ocurrió un error inesperado.']);
 }
 
+/** Los mensajes del backend llegan sin punto final: lo llevan cuando van junto a un texto propio. */
+export function sentence(message: string): string {
+  return /[.!?…]$/.test(message) ? message : `${message}.`;
+}
+
 type Method = 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';
 
 function baseUrl(): string {

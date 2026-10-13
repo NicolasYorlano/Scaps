@@ -25,6 +25,11 @@ export function exceedsStock(item: CartItem): boolean {
   return item.cantidad > item.producto.stock;
 }
 
+/** El producto se quedó sin stock: la línea no tiene cantidad que ajustar, solo se puede quitar. */
+export function isSoldOut(item: CartItem): boolean {
+  return item.producto.stock <= 0;
+}
+
 /**
  * El carrito se puede cerrar: tiene algo y ninguna línea se pasa del stock.
  * Con esto Finalizar compra se habilita, y /pedido decide si se muestra o

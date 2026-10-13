@@ -30,6 +30,8 @@ type CartStore = {
   updateItem: (itemId: string, quantity: number) => Promise<void>;
   /** DELETE /cart/items/:id. */
   removeItem: (itemId: string) => Promise<void>;
+  /** Para las pantallas que lo muestran: lo vuelve a pedir si la copia tiene más de `maxAge` ms. */
+  refresh: (maxAge?: number) => void;
   /** Vuelve al estado sin sesión. */
   reset: () => void;
 };
@@ -40,6 +42,10 @@ let session = 0;
 // Los pedidos van de a uno, la carga incluida: cada respuesta trae el carrito
 // entero, y dos que se cruzan pueden llegar en otro orden que el del servidor.
 let queue: Promise<unknown> = Promise.resolve();
+// El GET que está en la fila o viajando: pedirlo de nuevo mientras tanto devuelve ese mismo.
+let pendingLoad: Promise<void> | null = null;
+// Cuándo llegó el último carrito, de un GET o de un cambio.
+let syncedAt = 0;
 
 function enqueue<T>(task: () => Promise<T>): Promise<T> {
   const result = queue.then(task);
@@ -54,13 +60,16 @@ export const useCartStore = create<CartStore>((set, get) => {
 
     try {
       const cart = await request();
-      if (ownSession === session) set({ cart, status: 'ready', error: null });
+      if (ownSession === session) {
+        syncedAt = Date.now();
+        set({ cart, status: 'ready', error: null });
+      }
       return null;
     } catch (error) {
       const apiError = toApiError(error);
       // 401: el token venció. Se descarta la sesión y la suscripción vacía el carrito.
       if (apiError.status === 401 && ownSession === session) {
-        useSessionStore.getState().clearSession();
+        useSessionStore.getState().expireSession();
       }
       return apiError;
     }
@@ -89,10 +98,12 @@ export const useCartStore = create<CartStore>((set, get) => {
     load: () => {
       // Solo con sesión: sin ella, GET /cart da 401.
       if (useSessionStore.getState().status !== 'authenticated') return Promise.resolve();
+      // Con la fila única, el que ya está pedido sale después del último cambio: sirve igual.
+      if (pendingLoad) return pendingLoad;
       const ownSession = session;
       if (get().cart === null) set({ status: 'loading', error: null });
 
-      return enqueue(async () => {
+      const pending = enqueue(async () => {
         if (ownSession !== session) return;
         const error = await run(() => api.get<Cart>('/cart'));
         // Cerró sesión (o venció) mientras tanto: el carrito ya quedó vacío.
@@ -100,6 +111,11 @@ export const useCartStore = create<CartStore>((set, get) => {
         // Si ya había un carrito, queda a la vista: el error no lo borra.
         set((s) => ({ error, status: s.cart === null ? 'error' : s.status }));
       });
+      pendingLoad = pending;
+      void pending.finally(() => {
+        if (pendingLoad === pending) pendingLoad = null;
+      });
+      return pending;
     },
 
     addItem: (productId, quantity) =>
@@ -110,10 +126,16 @@ export const useCartStore = create<CartStore>((set, get) => {
 
     removeItem: (itemId) => mutate(() => api.delete<Cart>(`/cart/items/${itemId}`)),
 
+    refresh: (maxAge = 0) => {
+      if (Date.now() - syncedAt >= maxAge) void get().load();
+    },
+
     reset: () => {
       session++;
       // La sesión nueva no espera a los pedidos de la anterior.
       queue = Promise.resolve();
+      pendingLoad = null;
+      syncedAt = 0;
       set({ cart: null, status: 'idle', error: null });
     },
   };

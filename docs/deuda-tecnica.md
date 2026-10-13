@@ -95,3 +95,21 @@ Cada entrada apunta a dónde se decidió. La fuente de verdad sigue siendo ese d
 **Una trampa:** cada lugar de atrás mira al centro desde un ángulo distinto, así que una sola imagen por producto no alcanza para los tres. Hoy la Danlyvostok tiene una por lugar.
 
 **Decidido en:** revisión de UX de la landing, octubre de 2026.
+
+---
+
+## Fotos de producto en un solo tamaño
+
+**Hoy:** cada foto existe en un único archivo de 1200 × 1200 px (entre 15 y 73 kB) y ese mismo archivo se usa en todas las pantallas: la ficha, las cards del catálogo (de 163 a 434 px de ancho) y las líneas del carrito y del pedido (de 56 a 88 px).
+
+**Lo correcto:** que cada pantalla pida un tamaño acorde, con `srcset` y `sizes` en `<ProductImage>`. La salida que no toca la API, el contrato ni la base es el [optimizador de imágenes de Vercel](https://vercel.com/docs/image-optimization) delante de R2: se habilita con la clave `images` de `apps/web/vercel.json` y cada variante se pide a `/_vercel/image?url=…&w=…&q=…`.
+
+**Por qué no ahora:** no produce un error visible, toca todas las pantallas con fotos y hay que medirlo en el catálogo, que es donde rinde: doce cards bajan unos 600 kB. En el carrito el ahorro es chico, porque las fotos suelen venir de la caché.
+
+**Tres trampas:**
+
+- `/_vercel/image` no existe en local: en desarrollo hay que seguir usando la URL original.
+- El plan gratuito incluye 5.000 transformaciones por mes. Pasado el límite, las imágenes nuevas responden `402`: conviene que `<ProductImage>` vuelva a la original si la variante falla.
+- El optimizador solo acepta los anchos listados en `sizes` y los orígenes de `remotePatterns`. Un ancho o un dominio que no esté declarado da error.
+
+**Decidido en:** revisión de UX del carrito, octubre de 2026.

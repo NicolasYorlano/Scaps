@@ -16,7 +16,8 @@ async function bootstrap() {
       transform: true,  // Transforma los payloads a las clases DTO reales
     }),
   );
-  app.enableCors({ origin: parseCorsOrigins(process.env.CORS_ORIGIN) });
+  // maxAge: el navegador recuerda el permiso (Chrome, hasta 2 horas) y no repite el OPTIONS antes de cada pedido.
+  app.enableCors({ origin: parseCorsOrigins(process.env.CORS_ORIGIN), maxAge: 7200 });
   await app.listen(process.env.PORT ?? 3000);
 }
 void bootstrap();

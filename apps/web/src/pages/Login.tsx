@@ -16,6 +16,7 @@ export default function Login() {
   // La ruta a la que volver, si la hay (ver login-redirect); también viaja a /registro.
   const redirectState: unknown = useLocation().state;
   const setSession = useSessionStore((s) => s.setSession);
+  const expired = useSessionStore((s) => s.expired);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -75,6 +76,13 @@ export default function Login() {
         <h1 className="font-display text-heading text-scaps-text">
           Ingresar
         </h1>
+
+        {/* El token venció a mitad de uso: sin esto, la pantalla aparece sin explicación. */}
+        {expired && (
+          <div className="mt-6">
+            <FormAlert messages={['Tu sesión venció. Ingresá de nuevo para seguir.']} />
+          </div>
+        )}
 
         {/* noValidate: los avisos los da el formulario, no el globo del navegador. */}
         <form noValidate className="mt-6 flex flex-col gap-4" onSubmit={(e) => void handleSubmit(e)}>
