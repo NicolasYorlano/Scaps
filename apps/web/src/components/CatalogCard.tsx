@@ -5,11 +5,15 @@ import LowStockBadge from './LowStockBadge';
 import ProductImage from './ProductImage';
 import SoldOutBadge from './SoldOutBadge';
 import { formatPrice } from '../lib/format-price';
+import { lowStockLabel } from '../lib/low-stock';
 import type { ProductCard } from '../types/product';
 
 // flex-1: dentro de un <li className="flex">, se estira al alto de la fila.
 const cardClassName =
   'flex min-w-0 flex-1 flex-col overflow-hidden rounded-scaps border border-scaps-border bg-scaps-card';
+
+// Los dos carteles de stock, en el mismo lugar: arriba a la izquierda de la foto.
+const badgeClassName = 'pointer-events-none absolute top-2 left-2 md:top-3 md:left-3';
 
 type Props = {
   product: ProductCard;
@@ -31,6 +35,9 @@ export default function CatalogCard({ product, action = 'details', titleAs: Titl
   const stock = learned?.source === product ? learned.stock : product.stock;
   const soldOut = stock <= 0;
   const soldOutId = useId();
+  const lowStockId = useId();
+  // El cartel que se ve lo nombra el enlace: con Tab también se oye (en el celular, el enlace es la única parada).
+  const badgeId = soldOut ? soldOutId : lowStockLabel(stock) ? lowStockId : undefined;
 
   // Un botón no puede ir adentro de un enlace: el enlace es el nombre, y su ::after se estira
   // sobre toda la card (relative) para que se pueda tocar en cualquier parte, como antes.
@@ -53,6 +60,7 @@ export default function CatalogCard({ product, action = 'details', titleAs: Titl
           <Link
             to={`/producto/${product.slug}`}
             state={linkState}
+            aria-describedby={badgeId}
             className="outline-none after:absolute after:inset-0 after:rounded-scaps"
           >
             {product.nombre}
@@ -65,13 +73,8 @@ export default function CatalogCard({ product, action = 'details', titleAs: Titl
         {/* Después del precio para que se lea al final; se dibuja sobre la foto y deja pasar el clic al enlace. */}
         {/* Los dos carteles en el mismo lugar y nunca juntos (con 0, LowStockBadge no se dibuja).
             Sobre la foto: no suman alto, así las cards de una fila siguen parejas. */}
-        {soldOut && (
-          <SoldOutBadge id={soldOutId} className="pointer-events-none absolute top-2 left-2 md:top-3 md:left-3" />
-        )}
-        <LowStockBadge
-          stock={stock}
-          className="pointer-events-none absolute top-2 left-2 md:top-3 md:left-3"
-        />
+        {soldOut && <SoldOutBadge id={soldOutId} className={badgeClassName} />}
+        <LowStockBadge id={lowStockId} stock={stock} className={badgeClassName} />
         {action === 'add' ? (
           <AddToCartButton
             product={product}
