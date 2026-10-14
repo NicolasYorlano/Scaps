@@ -1,3 +1,4 @@
+import { useId, useState } from 'react';
 import { Link } from 'react-router';
 import AddToCartButton from './AddToCartButton';
 import LowStockBadge from './LowStockBadge';
@@ -24,7 +25,12 @@ type Props = {
 
 /** Card de producto: la usan el catálogo y los relacionados de la ficha. */
 export default function CatalogCard({ product, action = 'details', titleAs: Title = 'h2', priority = false, linkState }: Props) {
-  const soldOut = product.stock <= 0;
+  // Lo que el botón supo del stock al agregar vale para esta copia de la grilla:
+  // si la grilla se vuelve a pedir, llega otro objeto y manda el dato nuevo.
+  const [learned, setLearned] = useState<{ source: ProductCard; stock: number } | null>(null);
+  const stock = learned?.source === product ? learned.stock : product.stock;
+  const soldOut = stock <= 0;
+  const soldOutId = useId();
 
   // Un botón no puede ir adentro de un enlace: el enlace es el nombre, y su ::after se estira
   // sobre toda la card (relative) para que se pueda tocar en cualquier parte, como antes.
@@ -60,14 +66,19 @@ export default function CatalogCard({ product, action = 'details', titleAs: Titl
         {/* Los dos carteles en el mismo lugar y nunca juntos (con 0, LowStockBadge no se dibuja).
             Sobre la foto: no suman alto, así las cards de una fila siguen parejas. */}
         {soldOut && (
-          <SoldOutBadge className="pointer-events-none absolute top-2 left-2 md:top-3 md:left-3" />
+          <SoldOutBadge id={soldOutId} className="pointer-events-none absolute top-2 left-2 md:top-3 md:left-3" />
         )}
         <LowStockBadge
-          stock={product.stock}
+          stock={stock}
           className="pointer-events-none absolute top-2 left-2 md:top-3 md:left-3"
         />
         {action === 'add' ? (
-          <AddToCartButton product={product} />
+          <AddToCartButton
+            product={product}
+            stock={stock}
+            soldOutId={soldOutId}
+            onStockLearned={(next) => setLearned({ source: product, stock: next })}
+          />
         ) : (
           // span y no botón: queda debajo del enlace estirado y abre la ficha como el resto de la card.
           <span

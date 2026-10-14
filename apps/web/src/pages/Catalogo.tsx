@@ -4,6 +4,7 @@ import CatalogCard, { CatalogCardSkeleton } from '../components/CatalogCard';
 import CatalogToolbar from '../components/CatalogToolbar';
 import CubeIcon from '../components/CubeIcon';
 import { useApiQuery } from '../hooks/useApi';
+import { useCartRefresh } from '../hooks/useCartRefresh';
 import { api, toApiError, type ApiError } from '../lib/api';
 import {countPanelFilters, hasActiveFilters, parseCatalogFilters, toApiPath, toSearchParams, withoutFilters, type CatalogFilters} from '../lib/catalog-filters';
 import { catalogState } from '../lib/catalog-return';
@@ -214,6 +215,8 @@ export default function Catalogo() {
   const noResults = data !== null && data.data.length === 0;
   const onlySearch = filters.q !== '' && countPanelFilters(filters) === 0;
   const search = toSearchParams(filters).toString();
+  // Los botones de las cards dicen qué hay en el carrito: pudo cambiar en otra pestaña.
+  useCartRefresh();
 
   // Lo que oye un lector de pantalla: pasa por "Cargando" y siempre termina en un resultado.
   const status = loading

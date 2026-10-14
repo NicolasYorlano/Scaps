@@ -176,6 +176,29 @@ export function useCartStatus(): Exclude<CartStatus, 'idle'> {
   return useCartStore((s) => (s.status === 'idle' ? 'loading' : s.status));
 }
 
+/**
+ * Se cumple cuando ya se sabe si hay sesión y, con sesión, el carrito terminó
+ * de cargar (bien o mal). Un clic que llega antes espera esto en vez de perderse.
+ */
+export function cartSettled(): Promise<void> {
+  const settled = () => {
+    const session = useSessionStore.getState().status;
+    const cart = useCartStore.getState().status;
+    return session === 'anonymous' || (session === 'authenticated' && (cart === 'ready' || cart === 'error'));
+  };
+  if (settled()) return Promise.resolve();
+
+  return new Promise((resolve) => {
+    const stops: (() => void)[] = [];
+    const check = () => {
+      if (!settled()) return;
+      for (const stop of stops) stop();
+      resolve();
+    };
+    stops.push(useSessionStore.subscribe(check), useCartStore.subscribe(check));
+  });
+}
+
 // Cuando aparece un usuario, carga; cuando se va, se vacía. Cubre el arranque
 // (hydrate() pone el usuario recién después de que /auth/me confirma el token),
 // el login, el registro, el cierre de sesión y el 401 sin tocarlos uno por uno.
