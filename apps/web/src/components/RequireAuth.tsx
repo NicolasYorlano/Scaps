@@ -8,10 +8,12 @@ type Props = {
   children: ReactNode;
   /** La pantalla sabe esperar (muestra su esqueleto): se dibuja también mientras se verifica la sesión. */
   showWhileChecking?: boolean;
+  /** La pantalla es una card angosta (/pedido): el error de sesión sale con esas medidas. */
+  narrow?: boolean;
 };
 
 /** El token está guardado pero el servidor no contestó: se reintenta sin volver a ingresar. */
-function SessionCheckFailed({ message }: { message: string }) {
+function SessionCheckFailed({ message, narrow }: { message: string; narrow: boolean }) {
   function retry() {
     void useSessionStore.getState().hydrate();
     // El botón desaparece al reintentar: el foco va al contenido.
@@ -19,8 +21,13 @@ function SessionCheckFailed({ message }: { message: string }) {
   }
 
   return (
-    <main className="flex flex-1 flex-col bg-scaps-canvas px-6 py-8 lg:px-12 lg:py-12">
-      <section className="mx-auto flex w-full max-w-311 flex-col items-center gap-4 rounded-scaps border border-scaps-border bg-scaps-card px-6 py-16 text-center">
+    <main
+      data-stable-scrollbar={narrow ? '' : undefined}
+      className={`flex flex-1 flex-col bg-scaps-canvas px-6 py-8 ${narrow ? 'md:py-16 md:short:py-4' : 'lg:px-12 lg:py-12'}`}
+    >
+      <section
+        className={`mx-auto flex w-full flex-col items-center gap-4 rounded-scaps border border-scaps-border bg-scaps-card text-center ${narrow ? 'max-w-130 px-5 py-12 md:px-8' : 'max-w-311 px-6 py-16'}`}
+      >
         <h1 className="font-display text-heading text-scaps-text">No pudimos verificar tu sesión</h1>
         <p role="alert" className="max-w-md text-sm text-scaps-text-secondary">
           {message}
@@ -43,7 +50,7 @@ function SessionCheckFailed({ message }: { message: string }) {
 // status es 'checking': todavía no se sabe si hay usuario. No conviene
 // redirigir de una en ese momento, porque mandaría al login a alguien que en
 // realidad sigue logueado — se espera a que 'checking' termine.
-export default function RequireAuth({ children, showWhileChecking = false }: Props) {
+export default function RequireAuth({ children, showWhileChecking = false, narrow = false }: Props) {
   const status = useSessionStore((s) => s.status);
   const sessionError = useSessionStore((s) => s.sessionError);
   const expired = useSessionStore((s) => s.expired);
@@ -54,7 +61,7 @@ export default function RequireAuth({ children, showWhileChecking = false }: Pro
 
   if (status === 'checking') return showWhileChecking ? children : null;
   if (status === 'anonymous') {
-    if (sessionError) return <SessionCheckFailed message={sessionError.message} />;
+    if (sessionError) return <SessionCheckFailed message={sessionError.message} narrow={narrow} />;
     // Cerró sesión, acá o en otra pestaña: a la portada. Si venció, al login, que lo avisa.
     if (hadSession && !expired) return <Navigate to="/" replace />;
     // Lleva la ruta pedida, para volver a ella después de ingresar.

@@ -483,3 +483,92 @@ Authorization: Bearer {{tokenA}}
 
 ### 55 · Quitar sin token → 401
 DELETE {{host}}/cart/items/{{vanarsdaleItemId}}
+
+### 56 · Comprar sin token → 401
+POST {{host}}/cart/purchase
+
+### 57 · Comprar con el carrito vacío → 400
+POST {{host}}/cart/purchase
+Authorization: Bearer {{tokenA}}
+
+### 58 · Agregar 2 Vanarsdale → 200, total "53998.00"
+POST {{host}}/cart/items
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "producto_id": "{{vanarsdaleId}}",
+  "cantidad": 2
+}
+
+### 59 · Agregar 1 Filipmatlak Oliva → 200, dos líneas y total "76497.00"
+POST {{host}}/cart/items
+Authorization: Bearer {{tokenA}}
+Content-Type: application/json
+
+{
+  "producto_id": "{{olivaId}}",
+  "cantidad": 1
+}
+
+### 60 · Bajar el stock de Vanarsdale a 1 → 200
+PATCH {{host}}/products/{{vanarsdaleId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "stock": 1
+}
+
+### 61 · Comprar → 409
+# La Vanarsdale no alcanza. Es todo o nada: la Oliva tampoco se descuenta.
+POST {{host}}/cart/purchase
+Authorization: Bearer {{tokenA}}
+
+### 62 · Carrito de A → 200, intacto: las dos líneas y la Oliva con stock 35
+GET {{host}}/cart
+Authorization: Bearer {{tokenA}}
+
+### 63 · Restaurar el stock de Vanarsdale → 200, stock 25
+PATCH {{host}}/products/{{vanarsdaleId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "stock": 25
+}
+
+### 64 · Comprar → 200, compra con las dos líneas y total "76497.00", carrito vacío
+# Compra simulada: descuenta el stock y vacía el carrito. No crea una orden.
+POST {{host}}/cart/purchase
+Authorization: Bearer {{tokenA}}
+
+### 65 · Ficha de Vanarsdale → 200, stock 23
+GET {{host}}/products/cap-vanarsdale
+
+### 66 · Ficha de Filipmatlak Oliva → 200, stock 34
+GET {{host}}/products/cap-filipmatlak-oliva
+
+### 67 · Comprar otra vez → 400
+# El carrito ya está vacío: repetir el pedido no descuenta dos veces.
+POST {{host}}/cart/purchase
+Authorization: Bearer {{tokenA}}
+
+### 68 · Reponer el stock de Vanarsdale → 200, stock 25
+# Con esto y el caso que sigue, los productos quedan como los dejó el seed.
+PATCH {{host}}/products/{{vanarsdaleId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "stock": 25
+}
+
+### 69 · Reponer el stock de Filipmatlak Oliva → 200, stock 35
+PATCH {{host}}/products/{{olivaId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "stock": 35
+}

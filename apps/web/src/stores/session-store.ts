@@ -48,7 +48,8 @@ type SessionStore = {
 
 export const useSessionStore = create<SessionStore>((set) => ({
   user: null,
-  status: 'checking',
+  // Sin token guardado no hay nada que verificar: las rutas protegidas deciden de entrada.
+  status: getToken() === null ? 'anonymous' : 'checking',
   sessionError: null,
   expired: false,
 

@@ -588,16 +588,16 @@ export default function Carrito() {
 
   async function checkout() {
     if (finishing) return;
-    let settled = true;
+    setFinishing(true);
     // Con cambios viajando, espera: /pedido tiene que mostrar el carrito como quedó.
-    if (updating) {
-      setFinishing(true);
-      settled = await settle();
-      setFinishing(false);
-    }
-    const latest = useCartStore.getState().cart;
+    const settled = updating ? await settle() : true;
+    // Antes de pasar se vuelve a pedir: el stock o un precio pudieron cambiar por otro lado.
+    if (settled) await useCartStore.getState().load();
+    setFinishing(false);
+    const { cart: latest, error } = useCartStore.getState();
     // Si algún cambio falló, se queda acá: el aviso de la línea dice qué pasó.
-    if (settled && latest && isCheckoutReady(latest)) void navigate('/pedido');
+    // Igual si falló el pedido de recién: su aviso va arriba de la lista.
+    if (settled && error === null && latest && isCheckoutReady(latest)) void navigate('/pedido');
   }
 
   function retry() {

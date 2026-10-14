@@ -41,6 +41,12 @@ export interface CartResponse {
   actualizado_en: Date;
 }
 
+// La compra simulada: lo que se descontó y el carrito, ya vacío.
+export interface PurchaseResponse {
+  compra: CartResponse;
+  carrito: CartResponse;
+}
+
 // El precio se lee del producto en cada respuesta. Las cuentas van en Decimal:
 // ningún monto pasa por un float.
 export function toCart(row: CartRow): CartResponse {

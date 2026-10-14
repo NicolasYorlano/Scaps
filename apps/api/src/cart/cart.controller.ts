@@ -2,7 +2,7 @@ import { BadRequestException, Body, Controller, Delete, Get, HttpCode, HttpStatu
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import type { UserResponse } from '../auth/user-response';
-import type { CartResponse } from './cart-response';
+import type { CartResponse, PurchaseResponse } from './cart-response';
 import { CartService } from './cart.service';
 import { AddCartItemDto } from './dto/add-cart-item.dto';
 import { UpdateCartItemDto } from './dto/update-cart-item.dto';
@@ -37,5 +37,12 @@ export class CartController {
   @Delete('items/:id')
   removeItem(@CurrentUser() user: UserResponse, @ItemId() id: string): Promise<CartResponse> {
     return this.cart.removeItem(user.id, id);
+  }
+
+  // Compra simulada, sin body. 200 y no 201, como al agregar.
+  @Post('purchase')
+  @HttpCode(HttpStatus.OK)
+  purchase(@CurrentUser() user: UserResponse): Promise<PurchaseResponse> {
+    return this.cart.purchase(user.id);
   }
 }
