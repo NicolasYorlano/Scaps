@@ -104,10 +104,13 @@
 }
 
 /* Fondo de las fotos de producto: un foco, casi blanco detrás de la gorra y gris claro hacia las esquinas.
-   Las fotos traen fondo blanco: con mix-blend-multiply toman este, sin regenerarlas. */
+   Las fotos traen fondo blanco: con mix-blend-multiply toman este, sin regenerarlas.
+   Es parte de la foto: en alto contraste (colores forzados) el navegador no lo toca. Si lo pintara
+   de negro, como hace con un tema oscuro, la foto multiplicada sobre él desaparecería. */
 @utility bg-scaps-photo {
   background-color: #e3e3e3;
   background-image: radial-gradient(ellipse 72% 72% at 50% 47%, #f0f0f0, #e6e6e6 48%, #cdcdcd);
+  forced-color-adjust: none;
 }
 
 /* Pantalla baja (menos de 760 px de alto): si además es apaisada, la landing pone el texto al costado de la gorra. */

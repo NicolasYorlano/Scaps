@@ -7,6 +7,7 @@ import SoldOutBadge from './SoldOutBadge';
 import { useLoginRedirect } from '../hooks/useLoginRedirect';
 import { toApiError } from '../lib/api';
 import { getAvailableToAdd } from '../lib/cart';
+import { lowStockLabel } from '../lib/low-stock';
 import { useCartStatus, useCartStore } from '../stores/cart-store';
 import { useSessionStore } from '../stores/session-store';
 import type { ProductDetail } from '../types/product';
@@ -47,6 +48,7 @@ export default function PurchaseBlock({ product, onStale }: Props) {
   const addButtonRef = useRef<HTMLButtonElement>(null);
   const soldOutId = useId();
   const allInCartId = useId();
+  const lowStockId = useId();
 
   const isGuest = sessionStatus === 'anonymous';
   const soldOut = product.stock <= 0;
@@ -58,15 +60,18 @@ export default function PurchaseBlock({ product, onStale }: Props) {
   // Sin sesión, el tope es el stock.
   const available = isGuest ? product.stock : getAvailableToAdd(product, cart);
   const allInCart = !soldOut && !waiting && available <= 0;
-  const showSelector = !soldOut && !allInCart;
   // Mientras espera al carrito, el selector se ve (así nada salta) pero quieto.
   const max = waiting ? Math.max(product.stock, 1) : Math.max(available, 1);
+  // Con una sola para agregar no hay nada que elegir: va el botón solo, sin el aviso de tope.
+  const showSelector = !soldOut && !allInCart && max > 1;
   // Si el tope bajó (cargó el carrito, cambió el stock), la cantidad elegida baja con él.
   const value = Math.min(quantity, max);
   const unavailable = soldOut || allInCart || waiting;
   const cartFailed = !isGuest && cartStatus === 'error';
   // Deshabilitado, un lector de pantalla lee por qué.
   const disabledReasonId = soldOut ? soldOutId : allInCart ? allInCartId : undefined;
+  // Habilitado, oye el cartel de pocas unidades si lo hay.
+  const describedById = disabledReasonId ?? (lowStockLabel(product.stock) ? lowStockId : undefined);
 
   const ownNotices = noticeUserId === userId;
   const showAdded = added && ownNotices;
@@ -131,7 +136,7 @@ export default function PurchaseBlock({ product, onStale }: Props) {
     <section aria-label="Comprar" className="flex flex-col gap-3 border-t border-scaps-border pt-6">
       {/* Junto al bloque de compra; con 0 va el de Sin stock y LowStockBadge no se dibuja. */}
       {soldOut && <SoldOutBadge id={soldOutId} className="self-start" />}
-      <LowStockBadge stock={product.stock} className="self-start" />
+      <LowStockBadge id={lowStockId} stock={product.stock} className="self-start" />
 
       {/* En una fila, con el botón estirado hasta el borde. Si no entra con su texto en un renglón (min-w-38), pasa abajo. */}
       <div className="flex flex-wrap items-start gap-3">
@@ -149,7 +154,7 @@ export default function PurchaseBlock({ product, onStale }: Props) {
           ref={addButtonRef}
           type="button"
           aria-disabled={unavailable || adding}
-          aria-describedby={disabledReasonId}
+          aria-describedby={describedById}
           onClick={() => void handleAdd()}
           className={`${addButtonClassName} ${adding ? 'cursor-progress!' : ''}`}
         >

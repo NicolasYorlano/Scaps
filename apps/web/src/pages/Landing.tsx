@@ -128,7 +128,7 @@ function FeaturedInfo({ product }: { product: ProductDetail }) {
       </h2>
       <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-sm font-medium text-scaps-text-secondary tabular-nums md:text-[0.9375rem] landscape:short:justify-start">
         {formatPrice(product.precio)}
-        {/* Como en la ficha: solo se avisa cuando no queda. */}
+        {/* Solo Sin stock: el de pocas unidades, pegado al precio gris, le ganaría (va en la card y en la ficha). */}
         {product.stock <= 0 && <SoldOutBadge />}
         {/* A la vista dice a dónde lleva; para un lector de pantalla el enlace ya es el nombre. */}
         <span aria-hidden="true" className="text-scaps-border-input">
