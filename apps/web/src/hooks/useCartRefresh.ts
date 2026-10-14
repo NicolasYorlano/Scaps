@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useCartStore } from '../stores/cart-store';
 
 // Viniendo de agregar algo, la copia en memoria tiene segundos: al entrar no se vuelve a pedir.
-const FRESH_MS = 30_000;
+export const FRESH_MS = 30_000;
 
 /**
  * El carrito se carga una vez por sesión. La pantalla que lo muestra lo pone al día al entrar

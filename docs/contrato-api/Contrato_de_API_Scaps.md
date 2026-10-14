@@ -96,6 +96,7 @@ Los recursos que no paginan (el carrito, una ficha) devuelven el objeto directo,
 | `POST /cart/items` | Autenticado | Agregar / sumar producto |
 | `PATCH /cart/items/:id` | Autenticado | Cambiar cantidad |
 | `DELETE /cart/items/:id` | Autenticado | Quitar ítem |
+| `POST /cart/purchase` | Autenticado | Compra simulada: descuenta el stock y vacía el carrito |
 | `POST /orders` | Autenticado | Checkout: crear orden + preferencia MP |
 | `GET /orders` | Autenticado | Mis órdenes |
 | `GET /orders/:id` | Autenticado / Admin | Detalle de una orden |
@@ -486,6 +487,23 @@ Quita el ítem. Response `200` — el **Carrito** actualizado.
 **Notas**
 - `400` si el `id` no es un uuid; `404` si el ítem no existe o no es de este carrito.
 - Un ítem oculto por la baja de su producto sí se puede quitar.
+
+### `POST /cart/purchase` · Autenticado
+Compra simulada del MVP: descuenta del stock las unidades de cada ítem y vacía el carrito. No crea una orden ni cobra nada. Sin body.
+
+**Response** `200`
+```json
+{
+  "compra": { "id": "…", "items": [ … ], "total": "53998.00", "actualizado_en": "…" },
+  "carrito": { "id": "…", "items": [], "total": "0.00", "actualizado_en": "…" }
+}
+```
+
+**Notas**
+- `compra` es el **Carrito** tal como se compró, con sus ítems, subtotales y total (el `stock` de cada producto es el de antes de descontar); `carrito` es el mismo **Carrito**, ya vacío.
+- Todo o nada: `409` si algún ítem supera el stock, con el mismo mensaje que al agregar, y no se descuenta ninguno. `400` si el carrito está vacío.
+- Vacía el carrito entero: los ítems ocultos por la baja de su producto no se compran, pero también se quitan.
+- Ocupa el lugar del flujo de pago de la sección 8 mientras no exista: ahí el stock se descuenta y el carrito se vacía recién al confirmarse el pago.
 
 ---
 

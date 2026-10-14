@@ -1,9 +1,9 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 import { isPrismaError } from '../prisma/prisma-errors';
 import { PrismaService } from '../prisma/prisma.service';
 import { PUBLIC_WHERE } from '../products/product-filters';
-import { CART_SELECT, toCart, type CartResponse } from './cart-response';
+import { CART_SELECT, toCart, type CartResponse, type PurchaseResponse } from './cart-response';
 import type { AddCartItemDto } from './dto/add-cart-item.dto';
 import type { UpdateCartItemDto } from './dto/update-cart-item.dto';
 
@@ -102,6 +102,42 @@ export class CartService {
     });
 
     return this.read(userId);
+  }
+
+  // Compra simulada: descuenta del stock lo que hay en el carrito y lo vacía,
+  // todo o nada. No crea una orden ni cobra.
+  async purchase(userId: string): Promise<PurchaseResponse> {
+    const compra = await this.prisma.serializable(async (tx) => {
+      await touchCart(tx, userId);
+      const cart = await tx.carrito.findUniqueOrThrow({
+        where: { usuario_id: userId },
+        select: CART_SELECT,
+      });
+
+      if (cart.items.length === 0) {
+        throw new BadRequestException('Tu carrito está vacío'); /* 400 */
+      }
+
+      // Se valida todo antes de descontar: si una línea no alcanza, no se toca ninguna.
+      const short = cart.items.find((item) => item.cantidad > item.producto.stock);
+      if (short) {
+        throw insufficientStock(short.producto.nombre);
+      }
+
+      for (const item of cart.items) {
+        await tx.producto.update({
+          where: { id: item.producto.id },
+          data: { stock: { decrement: item.cantidad } },
+        });
+      }
+
+      // Sin filtrar por producto: también se van las líneas ocultas por una baja.
+      await tx.itemCarrito.deleteMany({ where: { carrito_id: cart.id } });
+
+      return toCart(cart);
+    });
+
+    return { compra, carrito: await this.read(userId) };
   }
 
   private async read(userId: string): Promise<CartResponse> {

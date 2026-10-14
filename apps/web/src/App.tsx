@@ -65,7 +65,7 @@ export default function App() {
             <Route
               path="/pedido"
               element={
-                <RequireAuth showWhileChecking>
+                <RequireAuth showWhileChecking narrow>
                   <Pedido />
                 </RequireAuth>
               }

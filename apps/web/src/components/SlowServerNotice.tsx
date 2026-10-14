@@ -1,4 +1,4 @@
-import { useLocation } from 'react-router';
+import { useLocation, useMatch } from 'react-router';
 import { useRequestStore } from '../stores/request-store';
 
 // Se monta una sola vez en App y cubre toda la app: cualquier llamada que pase
@@ -10,9 +10,11 @@ export const SLOW_SERVER_MESSAGE =
 export default function SlowServerNotice() {
   const isSlow = useRequestStore((state) => state.isSlow);
   const { pathname } = useLocation();
+  // /pedido lo dice dentro de su card: acá abajo taparía las acciones.
+  const inOrder = useMatch('/pedido') !== null;
 
   // La landing lo dice dentro de su escena: acá abajo taparía el cartel y el botón.
-  if (!isSlow || pathname === '/') return null;
+  if (!isSlow || pathname === '/' || inOrder) return null;
 
   return (
     // inset-x + mx-auto + w-fit y no left-1/2, que lo limita a media pantalla.
