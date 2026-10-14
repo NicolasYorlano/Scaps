@@ -47,13 +47,14 @@ export default function PurchaseBlock({ product, onStale }: Props) {
   const addButtonRef = useRef<HTMLButtonElement>(null);
   const soldOutId = useId();
   const allInCartId = useId();
-  const cartErrorId = useId();
 
   const isGuest = sessionStatus === 'anonymous';
   const soldOut = product.stock <= 0;
   // Con sesión, el tope sale del carrito: hasta que cargue no se sabe. También
-  // mientras se verifica la sesión, que todavía no se sabe si hay.
-  const waiting = !isGuest && cartStatus !== 'ready';
+  // mientras se verifica la sesión, que todavía no se sabe si hay. Si la carga
+  // falló, el botón sigue andando: el backend valida el stock y su respuesta
+  // deja el carrito cargado.
+  const waiting = !isGuest && cartStatus === 'loading';
   // Sin sesión, el tope es el stock.
   const available = isGuest ? product.stock : getAvailableToAdd(product, cart);
   const allInCart = !soldOut && !waiting && available <= 0;
@@ -65,7 +66,7 @@ export default function PurchaseBlock({ product, onStale }: Props) {
   const unavailable = soldOut || allInCart || waiting;
   const cartFailed = !isGuest && cartStatus === 'error';
   // Deshabilitado, un lector de pantalla lee por qué.
-  const disabledReasonId = soldOut ? soldOutId : allInCart ? allInCartId : cartFailed ? cartErrorId : undefined;
+  const disabledReasonId = soldOut ? soldOutId : allInCart ? allInCartId : undefined;
 
   const ownNotices = noticeUserId === userId;
   const showAdded = added && ownNotices;
@@ -187,9 +188,10 @@ export default function PurchaseBlock({ product, onStale }: Props) {
         </p>
       )}
 
+      {/* Informa y nada más: el botón sigue andando. */}
       {cartFailed && (
         <LineNotice alert>
-          <span id={cartErrorId}>No pudimos cargar tu carrito.</span>{' '}
+          No pudimos cargar tu carrito.{' '}
           <button type="button" onClick={retryCart} className={linkClassName}>
             Reintentar
           </button>

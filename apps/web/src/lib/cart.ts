@@ -1,5 +1,10 @@
 import type { Cart, CartItem } from '../types/cart';
 
+/** La línea del carrito de un producto, si está. */
+export function findCartItem(productId: string, cart: Cart | null): CartItem | undefined {
+  return cart?.items.find((item) => item.producto.id === productId);
+}
+
 /**
  * Unidades de un producto que todavía se pueden agregar: el stock menos las que
  * ya están en el carrito. Es el tope del botón Agregar al carrito, en la ficha
@@ -10,8 +15,7 @@ import type { Cart, CartItem } from '../types/cart';
  * cuando el admin bajó el stock por debajo de lo que hay en el carrito).
  */
 export function getAvailableToAdd(product: { id: string; stock: number }, cart: Cart | null): number {
-  const inCart = cart?.items.find((item) => item.producto.id === product.id)?.cantidad ?? 0;
-  return product.stock - inCart;
+  return product.stock - (findCartItem(product.id, cart)?.cantidad ?? 0);
 }
 
 /**
