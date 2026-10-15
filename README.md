@@ -73,6 +73,8 @@ Se hace una sola vez.
 | Database name | El que viene por defecto (`neondb`) |
 
 > La versión tiene que coincidir con la de producción y la del resto del equipo. Si se desparejan, aparecen errores que solo le pasan a uno.
+>
+> La región, en cambio, no: a tu base la consulta la API que levantás en tu máquina, desde Argentina, y a `scaps-prod`, la API de Render, en Virginia (`us-east-1`). Cada base va cerca de quien la consulta.
 
 **3.** En el panel de Neon, abrí **Connect to your database**, copiá la connection string con el botón **Copy snippet** y pegala en `apps/api/.env` como `DATABASE_URL`.
 
