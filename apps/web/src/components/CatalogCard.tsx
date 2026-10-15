@@ -83,13 +83,17 @@ export default function CatalogCard({ product, action = 'details', titleAs: Titl
             onStockLearned={(next) => setLearned({ source: product, stock: next })}
           />
         ) : (
-          // span y no botón: queda debajo del enlace estirado y abre la ficha como el resto de la card.
-          <span
+          // Encima del enlace estirado (relative z-10), para marcarse solo con el mouse encima, como Agregar
+          // al carrito. Abre la misma ficha; el nombre ya es el enlace: este no se anuncia ni para el Tab.
+          <Link
+            to={`/producto/${product.slug}`}
+            state={linkState}
             aria-hidden="true"
-            className="hidden h-10 items-center justify-center rounded-scaps border border-scaps-border-input text-sm font-medium text-scaps-text-secondary transition-colors group-hover:border-scaps-border-primary group-hover:bg-scaps-card-highlight group-hover:text-scaps-text-on-primary md:flex"
+            tabIndex={-1}
+            className="relative z-10 hidden h-10 items-center justify-center rounded-scaps border border-scaps-border-input text-sm font-medium text-scaps-text-secondary transition-colors hover:border-scaps-border-primary hover:bg-scaps-card-highlight hover:text-scaps-text-on-primary md:flex"
           >
             Ver detalles
-          </span>
+          </Link>
         )}
       </div>
     </div>

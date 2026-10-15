@@ -67,7 +67,7 @@ Se hace una sola vez.
 
 | Campo | Valor |
 |---|---|
-| Project name | `scaps-dev-nico`, `scaps-dev-pablo`, `scaps-dev-gonzalo` o `scaps-dev-mauro` |
+| Project name | `scaps-dev-nico`, `scaps-dev-pablo`,  o `scaps-dev-mauro` |
 | Postgres version | **18** — siempre 18, aunque aparezca una más nueva |
 | Region | La más cercana a Argentina (São Paulo si está). **No se puede cambiar después.** |
 | Database name | El que viene por defecto (`neondb`) |
