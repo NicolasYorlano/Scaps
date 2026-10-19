@@ -28,19 +28,20 @@ function NavLinks({ onNavigate, showName }: { onNavigate: () => void; showName: 
           Catálogo
         </NavLink>
       </li>
-      {status === 'authenticated' && user?.es_admin && (
-        <li className="relative">
-          <NavLink to="/admin" className={navLinkClassName} onClick={onNavigate}>
-            Panel
-          </NavLink>
-        </li>
-      )}
       {status === 'authenticated' && user ? (
         <>
-          {/* Sin tope de largo en el registro: se corta con "…" para no romper la barra. */}
+          {user.es_admin && (
+            <li className="relative">
+              <NavLink to="/admin" className={navLinkClassName} onClick={onNavigate}>
+                Panel
+              </NavLink>
+            </li>
+          )}
+          {/* La raya separa la cuenta de la navegación y el gris dice que el nombre no es un
+              enlace. Sin tope de largo en el registro: se corta con "…" para no romper la barra. */}
           {showName && (
             <li
-              className="max-w-56 truncate text-sm text-scaps-text-secondary"
+              className="max-w-56 truncate border-l border-scaps-border pl-6 text-sm text-scaps-text-muted"
               title={user.nombre}
             >
               {user.nombre}
