@@ -1,19 +1,22 @@
 import type { ReactNode } from 'react';
-import { Navigate, useLocation } from 'react-router';
-import { loginState } from '../lib/login-redirect';
+import { Navigate } from 'react-router';
 import { useSessionStore } from '../stores/session-store';
+import RequireAuth from './RequireAuth';
 
-// Igual que RequireAuth, pero además exige es_admin. Un usuario común va a la
-// landing: no hay pantalla de "no tenés permiso", y /login lo rebotaría.
+// RequireAuth más es_admin: sin sesión, al cerrarla o si no se pudo verificar,
+// hace lo mismo que las otras rutas con sesión. Un usuario común va a la landing:
+// no hay pantalla de "no tenés permiso", y /login lo rebotaría.
 export default function RequireAdmin({ children }: { children: ReactNode }) {
-  const status = useSessionStore((s) => s.status);
-  const isAdmin = useSessionStore((s) => s.user?.es_admin ?? false);
-  const location = useLocation();
+  return (
+    <RequireAuth>
+      <AdminOnly>{children}</AdminOnly>
+    </RequireAuth>
+  );
+}
 
-  if (status === 'checking') return null;
-  if (status === 'anonymous') {
-    return <Navigate to="/login" replace state={loginState(location)} />;
-  }
+// Adentro de RequireAuth: solo se dibuja con sesión, y ahí ya se sabe si es admin.
+function AdminOnly({ children }: { children: ReactNode }) {
+  const isAdmin = useSessionStore((s) => s.user?.es_admin ?? false);
   if (!isAdmin) return <Navigate to="/" replace />;
 
   return children;
