@@ -28,6 +28,13 @@ function NavLinks({ onNavigate, showName }: { onNavigate: () => void; showName: 
           Catálogo
         </NavLink>
       </li>
+      {status === 'authenticated' && user?.es_admin && (
+        <li className="relative">
+          <NavLink to="/admin" className={navLinkClassName} onClick={onNavigate}>
+            Panel
+          </NavLink>
+        </li>
+      )}
       {status === 'authenticated' && user ? (
         <>
           {/* Sin tope de largo en el registro: se corta con "…" para no romper la barra. */}

@@ -17,6 +17,8 @@ import Pedido from './pages/Pedido';
 import Login from './pages/Login';
 import Registro from './pages/Registro';
 import Admin from './pages/Admin';
+import NuevoProducto from './pages/NuevoProducto';
+import EditarProducto from './pages/EditarProducto';
 import Health from './pages/Health';
 import Creditos from './pages/Creditos';
 import NotFound from './pages/NotFound';
@@ -91,6 +93,22 @@ export default function App() {
               element={
                 <RequireAdmin>
                   <Admin />
+                </RequireAdmin>
+              }
+            />
+            <Route
+              path="/admin/productos/nuevo"
+              element={
+                <RequireAdmin>
+                  <NuevoProducto />
+                </RequireAdmin>
+              }
+            />
+            <Route
+              path="/admin/productos/:id"
+              element={
+                <RequireAdmin>
+                  <EditarProducto />
                 </RequireAdmin>
               }
             />
