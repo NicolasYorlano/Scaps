@@ -1,12 +1,4 @@
-import {
-  useEffect,
-  useId,
-  useRef,
-  useState,
-  type KeyboardEvent,
-  type ReactNode,
-  type SyntheticEvent,
-} from 'react';
+import {useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode, type SyntheticEvent} from 'react';
 import FormAlert from './FormAlert';
 import { toApiError, type ApiError } from '../lib/api';
 
@@ -28,21 +20,13 @@ const confirmClassName =
   'border-scaps-border-primary text-scaps-text-on-primary hover:bg-scaps-card-highlight aria-disabled:cursor-progress';
 
 const cancelClassName =
-  'border-scaps-border-input text-scaps-text-secondary hover:border-scaps-border-primary hover:bg-scaps-card-highlight hover:text-scaps-text-on-primary aria-disabled:cursor-not-allowed aria-disabled:hover:border-scaps-border-input aria-disabled:hover:bg-transparent aria-disabled:hover:text-scaps-text-secondary';
+  'border-scaps-border-input text-scaps-text-secondary hover:border-scaps-border-primary hover:bg-scaps-card-highlight hover:text-scaps-text-on-primary aria-disabled:cursor-not-allowed aria-disabled:border-scaps-border aria-disabled:text-scaps-text-annotation aria-disabled:hover:border-scaps-border aria-disabled:hover:bg-transparent aria-disabled:hover:text-scaps-text-annotation';
 
 /**
- * Pide confirmación antes de una acción que no se deshace sola. Es un <dialog>
- * modal, como PhotoLightbox: el navegador atrapa el foco adentro, cierra con
- * Esc y lo devuelve al botón que lo abrió.
+ * Pide confirmación antes de una acción que no se deshace sola. Para la baja y
+ * el borrado de imágenes. Es un <dialog> modal, como PhotoLightbox.
  */
-export default function ConfirmDialog({
-  open,
-  title,
-  message,
-  confirmLabel,
-  onConfirm,
-  onClose,
-}: Props) {
+export default function ConfirmDialog({open, title, message, confirmLabel, onConfirm, onClose}: Props) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const messageId = useId();
@@ -99,14 +83,14 @@ export default function ConfirmDialog({
     >
       <h2
         id={titleId}
-        className="font-display text-[1.75rem] leading-tight font-medium text-scaps-text"
+        className="font-display text-[1.75rem] leading-tight font-medium wrap-break-word text-scaps-text"
       >
         {title}
       </h2>
 
       <div
         id={messageId}
-        className="mt-3 flex flex-col gap-2 text-sm leading-relaxed text-scaps-text-secondary"
+        className="mt-3 flex flex-col gap-2 text-sm leading-relaxed wrap-break-word text-scaps-text-secondary"
       >
         {message}
       </div>
