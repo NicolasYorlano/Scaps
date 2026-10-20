@@ -5,7 +5,8 @@
 # coincidir, cambió el comportamiento del endpoint.
 #
 # Requiere la extensión REST Client (humao.rest-client) y la API corriendo
-# sobre una base con el seed:
+# sobre una base con el seed, con STORAGE_KEY_PREFIX en dev/ (el caso 31 sube
+# una imagen al bucket):
 #
 #     npm run seed -w @scaps/api
 #     npm run start:dev -w @scaps/api
@@ -37,6 +38,10 @@
 @unaImagenProductId = {{crearUnaImagen.response.body.$.id}}
 @unaImagenId = {{crearUnaImagen.response.body.$.imagenes[0].id}}
 @llenoProductId = {{crearLleno.response.body.$.id}}
+
+@boundary = ScapsBoundary
+@subidaUrl = {{subirImagen.response.body.$.url}}
+@subidaId = {{agregarSubida.response.body.$.id}}
 
 ### 1 · Login del admin del seed → 200 + { user, token }, es_admin: true
 # Pide el ADMIN_EMAIL y el ADMIN_PASSWORD de apps/api/.env: la clave no va
@@ -313,6 +318,8 @@ Content-Type: application/json
 }
 
 ### 27 · Borrar la portada ("atrás") → 204
+# Es una foto del seed: se borra el registro, y el archivo sigue en la raíz del
+# bucket, porque la API solo borra los de su carpeta (STORAGE_KEY_PREFIX).
 DELETE {{host}}/products/{{productId}}/images/{{atrasId}}
 Authorization: Bearer {{adminToken}}
 
@@ -331,20 +338,52 @@ Authorization: Bearer {{adminToken}}
 DELETE {{host}}/products/{{productId}}/images/{{atrasId}}
 Authorization: Bearer {{adminToken}}
 
-### 31 · Elegir el destacado sin token → 401
+### 31 · Subir una imagen → 201 + { url }, .../dev/<uuid>.webp
+# Queda en la carpeta del entorno. Su URL se abre en el navegador como imagen.
+# @name subirImagen
+POST {{host}}/uploads/image
+Authorization: Bearer {{adminToken}}
+Content-Type: multipart/form-data; boundary={{boundary}}
+
+--{{boundary}}
+Content-Disposition: form-data; name="file"; filename="hero-gorra.webp"
+Content-Type: image/webp
+
+< ../../web/public/images/hero-gorra.webp
+--{{boundary}}--
+
+### 32 · Agregar la imagen subida → 201, orden: 6, es_principal: false
+# @name agregarSubida
+POST {{host}}/products/{{productId}}/images
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "url": "{{subidaUrl}}",
+  "alt": "Gorra de prueba subida desde el panel"
+}
+
+### 33 · Borrar la imagen subida → 204, y el archivo desaparece de dev/
+# La URL del caso 31 deja de abrirse en el navegador (404). Con un
+# STORAGE_ENDPOINT inventado en apps/api/.env (y la API reiniciada después del
+# 32), responde 204 igual y el error queda en el log de la API.
+DELETE {{host}}/products/{{productId}}/images/{{subidaId}}
+Authorization: Bearer {{adminToken}}
+
+### 34 · Elegir el destacado sin token → 401
 PUT {{host}}/products/featured
 Content-Type: application/json
 
 {}
 
-### 32 · Elegir el destacado con un usuario común → 403
+### 35 · Elegir el destacado con un usuario común → 403
 PUT {{host}}/products/featured
 Authorization: Bearer {{userToken}}
 Content-Type: application/json
 
 {}
 
-### 33 · Un product_id que no es uuid → 400
+### 36 · Un product_id que no es uuid → 400
 PUT {{host}}/products/featured
 Authorization: Bearer {{adminToken}}
 Content-Type: application/json
@@ -353,14 +392,14 @@ Content-Type: application/json
   "product_id": "abc"
 }
 
-### 34 · Sin product_id → 400
+### 37 · Sin product_id → 400
 PUT {{host}}/products/featured
 Authorization: Bearer {{adminToken}}
 Content-Type: application/json
 
 {}
 
-### 35 · Un uuid que no existe → 404
+### 38 · Un uuid que no existe → 404
 PUT {{host}}/products/featured
 Authorization: Bearer {{adminToken}}
 Content-Type: application/json
@@ -369,7 +408,7 @@ Content-Type: application/json
   "product_id": "00000000-0000-4000-8000-000000000000"
 }
 
-### 36 · Destacar el producto de prueba → 200, destacado: true
+### 39 · Destacar el producto de prueba → 200, destacado: true
 PUT {{host}}/products/featured
 Authorization: Bearer {{adminToken}}
 Content-Type: application/json
@@ -378,14 +417,14 @@ Content-Type: application/json
   "product_id": "{{productId}}"
 }
 
-### 37 · Destacado público → 200, es el producto de prueba
+### 40 · Destacado público → 200, es el producto de prueba
 GET {{host}}/products/featured
 
-### 38 · Ficha de Danlyvostok → 200, destacado: false
+### 41 · Ficha de Danlyvostok → 200, destacado: false
 # Hay un solo destacado: elegir uno nuevo reemplaza al anterior.
 GET {{host}}/products/cap-danlyvostok
 
-### 39 · Destacar el mismo otra vez → 200, destacado: true
+### 42 · Destacar el mismo otra vez → 200, destacado: true
 PUT {{host}}/products/featured
 Authorization: Bearer {{adminToken}}
 Content-Type: application/json
@@ -394,15 +433,15 @@ Content-Type: application/json
   "product_id": "{{productId}}"
 }
 
-### 40 · Dar de baja el destacado con DELETE → 204
+### 43 · Dar de baja el destacado con DELETE → 204
 DELETE {{host}}/products/{{productId}}
 Authorization: Bearer {{adminToken}}
 
-### 41 · Destacado público → 404
+### 44 · Destacado público → 404
 # La baja le sacó el flag, y el backend no promueve otro: el lugar queda vacío.
 GET {{host}}/products/featured
 
-### 42 · Destacar un producto inactivo → 409
+### 45 · Destacar un producto inactivo → 409
 PUT {{host}}/products/featured
 Authorization: Bearer {{adminToken}}
 Content-Type: application/json
@@ -411,7 +450,7 @@ Content-Type: application/json
   "product_id": "{{productId}}"
 }
 
-### 43 · Reactivar → 200, activo: true y destacado: false
+### 46 · Reactivar → 200, activo: true y destacado: false
 # Reactivar no lo vuelve a destacar.
 PATCH {{host}}/products/{{productId}}
 Authorization: Bearer {{adminToken}}
@@ -421,7 +460,7 @@ Content-Type: application/json
   "activo": true
 }
 
-### 44 · Destacarlo de nuevo → 200, destacado: true
+### 47 · Destacarlo de nuevo → 200, destacado: true
 PUT {{host}}/products/featured
 Authorization: Bearer {{adminToken}}
 Content-Type: application/json
@@ -430,7 +469,7 @@ Content-Type: application/json
   "product_id": "{{productId}}"
 }
 
-### 45 · Dar de baja el destacado con PATCH → 200, activo: false y destacado: false
+### 48 · Dar de baja el destacado con PATCH → 200, activo: false y destacado: false
 # La otra vía de baja: también le saca el flag.
 PATCH {{host}}/products/{{productId}}
 Authorization: Bearer {{adminToken}}
@@ -440,10 +479,10 @@ Content-Type: application/json
   "activo": false
 }
 
-### 46 · Destacado público → 404
+### 49 · Destacado público → 404
 GET {{host}}/products/featured
 
-### 47 · Restaurar el destacado del seed → 200, Danlyvostok con destacado: true
+### 50 · Restaurar el destacado del seed → 200, Danlyvostok con destacado: true
 PUT {{host}}/products/featured
 Authorization: Bearer {{adminToken}}
 Content-Type: application/json
@@ -452,11 +491,11 @@ Content-Type: application/json
   "product_id": "{{danlyvostokId}}"
 }
 
-### 48 · Dar de baja el producto de una imagen → 204
+### 51 · Dar de baja el producto de una imagen → 204
 # Para que los productos de prueba no queden en el catálogo público.
 DELETE {{host}}/products/{{unaImagenProductId}}
 Authorization: Bearer {{adminToken}}
 
-### 49 · Dar de baja el producto de 10 imágenes → 204
+### 52 · Dar de baja el producto de 10 imágenes → 204
 DELETE {{host}}/products/{{llenoProductId}}
 Authorization: Bearer {{adminToken}}
