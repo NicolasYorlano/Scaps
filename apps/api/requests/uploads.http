@@ -1,0 +1,226 @@
+# Subida de archivos a R2 (administración) — llamadas de prueba contra la API
+# local.
+#
+# Cada caso anota al lado la respuesta que se espera. Si alguna deja de
+# coincidir, cambió el comportamiento del endpoint.
+#
+# Requiere la extensión REST Client (humao.rest-client), la API corriendo sobre
+# una base con el seed y las seis variables STORAGE_* de apps/api/.env, con
+# STORAGE_KEY_PREFIX en dev/:
+#
+#     npm run seed -w @scaps/api
+#     npm run start:dev -w @scaps/api
+#
+# Mandá primero el 1 y el 2: los demás usan sus tokens. El 2 usa el usuario que
+# crea el caso 1 de auth.http. Del 3 en adelante, en cualquier orden.
+#
+# Todo lo que se sube acá queda en la carpeta dev/ del bucket y no lo usa
+# ningún producto: se puede vaciar de una vez desde el panel de Cloudflare.
+#
+# Los casos 6, 13 y 14 necesitan archivos que no están en el repositorio: una
+# JPG, una imagen de más de 2 MB y un archivo de más de 20 MB. Cambiá la ruta
+# de cada uno por la de un archivo tuyo, fuera del repositorio.
+
+@host = http://localhost:3000/api
+@boundary = ScapsBoundary
+
+@adminToken = {{loginAdmin.response.body.$.token}}
+@userToken = {{loginUser.response.body.$.token}}
+
+### 1 · Login del admin del seed → 200 + { user, token }, es_admin: true
+# Pide el ADMIN_EMAIL y el ADMIN_PASSWORD de apps/api/.env: la clave no va
+# escrita acá porque este archivo se commitea.
+# @name loginAdmin
+# @prompt adminEmail ADMIN_EMAIL de apps/api/.env
+# @prompt adminPassword ADMIN_PASSWORD de apps/api/.env
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{adminEmail}}",
+  "password": "{{adminPassword}}"
+}
+
+### 2 · Login del usuario común → 200 + { user, token }, es_admin: false
+# @name loginUser
+POST {{host}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "test-auth@scaps.dev",
+  "password": "una-clave-segura"
+}
+
+### 3 · Subir un .glb → 201 + { url }, .../dev/<uuid>.glb
+# Para ver que el modelo llegó bien: desde apps/api, npx prisma studio, pegar
+# la URL como glb_url de un producto de tu base y abrir su ficha en Ver en 3D.
+# Después, npm run seed -w @scaps/api lo devuelve a como estaba.
+POST {{host}}/uploads/model
+Authorization: Bearer {{adminToken}}
+Content-Type: multipart/form-data; boundary={{boundary}}
+
+--{{boundary}}
+Content-Disposition: form-data; name="file"; filename="cap-vanarsdale.glb"
+Content-Type: model/gltf-binary
+
+< ../../../docs/glb/comprimidos/cap-vanarsdale.glb
+--{{boundary}}--
+
+### 4 · El mismo .glb como application/octet-stream → 201 + { url }
+# Es lo que suele mandar el navegador con un .glb: el tipo no se mira.
+POST {{host}}/uploads/model
+Authorization: Bearer {{adminToken}}
+Content-Type: multipart/form-data; boundary={{boundary}}
+
+--{{boundary}}
+Content-Disposition: form-data; name="file"; filename="cap-vanarsdale.glb"
+Content-Type: application/octet-stream
+
+< ../../../docs/glb/comprimidos/cap-vanarsdale.glb
+--{{boundary}}--
+
+### 5 · Subir un PNG → 201 + { url }, .../dev/<uuid>.png
+# La URL se abre en el navegador como imagen.
+POST {{host}}/uploads/image
+Authorization: Bearer {{adminToken}}
+Content-Type: multipart/form-data; boundary={{boundary}}
+
+--{{boundary}}
+Content-Disposition: form-data; name="file"; filename="apple-touch-icon.png"
+Content-Type: image/png
+
+< ../../web/public/apple-touch-icon.png
+--{{boundary}}--
+
+### 6 · Subir un JPG → 201 + { url }, .../dev/<uuid>.jpg
+POST {{host}}/uploads/image
+Authorization: Bearer {{adminToken}}
+Content-Type: multipart/form-data; boundary={{boundary}}
+
+--{{boundary}}
+Content-Disposition: form-data; name="file"; filename="foto.jpg"
+Content-Type: image/jpeg
+
+< /ruta/a/una-foto.jpg
+--{{boundary}}--
+
+### 7 · Subir un WebP → 201 + { url }, .../dev/<uuid>.webp
+POST {{host}}/uploads/image
+Authorization: Bearer {{adminToken}}
+Content-Type: multipart/form-data; boundary={{boundary}}
+
+--{{boundary}}
+Content-Disposition: form-data; name="file"; filename="hero-gorra.webp"
+Content-Type: image/webp
+
+< ../../web/public/images/hero-gorra.webp
+--{{boundary}}--
+
+### 8 · Un archivo de texto renombrado a .glb → 400, "El archivo tiene que ser un modelo .glb"
+# La extensión está bien, pero los primeros 4 bytes no dicen glTF.
+POST {{host}}/uploads/model
+Authorization: Bearer {{adminToken}}
+Content-Type: multipart/form-data; boundary={{boundary}}
+
+--{{boundary}}
+Content-Disposition: form-data; name="file"; filename="gorra.glb"
+Content-Type: model/gltf-binary
+
+Esto no es un modelo 3D.
+--{{boundary}}--
+
+### 9 · Un .gltf → 400, "El archivo tiene que ser un modelo .glb"
+# Es el mismo formato en texto (JSON), y suele venir con archivos aparte.
+POST {{host}}/uploads/model
+Authorization: Bearer {{adminToken}}
+Content-Type: multipart/form-data; boundary={{boundary}}
+
+--{{boundary}}
+Content-Disposition: form-data; name="file"; filename="gorra.gltf"
+Content-Type: model/gltf+json
+
+{ "asset": { "version": "2.0" } }
+--{{boundary}}--
+
+### 10 · Un PDF como imagen → 400, "La imagen tiene que ser PNG, JPG o WebP"
+POST {{host}}/uploads/image
+Authorization: Bearer {{adminToken}}
+Content-Type: multipart/form-data; boundary={{boundary}}
+
+--{{boundary}}
+Content-Disposition: form-data; name="file"; filename="creditos.pdf"
+Content-Type: application/pdf
+
+< ../../../docs/glb/Creditos_Modelos_3D_Scaps.pdf
+--{{boundary}}--
+
+### 11 · Un modelo sin archivo → 400, "Falta el archivo en el campo file"
+# Viene un campo de texto, pero ningún archivo.
+POST {{host}}/uploads/model
+Authorization: Bearer {{adminToken}}
+Content-Type: multipart/form-data; boundary={{boundary}}
+
+--{{boundary}}
+Content-Disposition: form-data; name="nombre"
+
+gorra
+--{{boundary}}--
+
+### 12 · Una imagen sin archivo → 400, "Falta el archivo en el campo file"
+POST {{host}}/uploads/image
+Authorization: Bearer {{adminToken}}
+Content-Type: multipart/form-data; boundary={{boundary}}
+
+--{{boundary}}
+Content-Disposition: form-data; name="nombre"
+
+gorra
+--{{boundary}}--
+
+### 13 · Una imagen de 3 MB → 400, "La imagen supera los 2 MB"
+# Sin el filtro del endpoint, NestJS respondería 413 "File too large".
+POST {{host}}/uploads/image
+Authorization: Bearer {{adminToken}}
+Content-Type: multipart/form-data; boundary={{boundary}}
+
+--{{boundary}}
+Content-Disposition: form-data; name="file"; filename="grande.jpg"
+Content-Type: image/jpeg
+
+< /ruta/a/una-imagen-de-3-mb.jpg
+--{{boundary}}--
+
+### 14 · Un modelo de 21 MB → 400, "El modelo supera los 20 MB"
+POST {{host}}/uploads/model
+Authorization: Bearer {{adminToken}}
+Content-Type: multipart/form-data; boundary={{boundary}}
+
+--{{boundary}}
+Content-Disposition: form-data; name="file"; filename="grande.glb"
+Content-Type: model/gltf-binary
+
+< /ruta/a/un-archivo-de-mas-de-20-mb.glb
+--{{boundary}}--
+
+### 15 · Subir sin token → 401
+POST {{host}}/uploads/image
+Content-Type: multipart/form-data; boundary={{boundary}}
+
+--{{boundary}}
+Content-Disposition: form-data; name="file"; filename="apple-touch-icon.png"
+Content-Type: image/png
+
+< ../../web/public/apple-touch-icon.png
+--{{boundary}}--
+
+### 16 · Subir con un usuario común → 403
+POST {{host}}/uploads/model
+Authorization: Bearer {{userToken}}
+Content-Type: multipart/form-data; boundary={{boundary}}
+
+--{{boundary}}
+Content-Disposition: form-data; name="file"; filename="cap-vanarsdale.glb"
+Content-Type: model/gltf-binary
+
+< ../../../docs/glb/comprimidos/cap-vanarsdale.glb
+--{{boundary}}--

@@ -113,3 +113,37 @@ Cada entrada apunta a dónde se decidió. La fuente de verdad sigue siendo ese d
 - El optimizador solo acepta los anchos listados en `sizes` y los orígenes de `remotePatterns`. Un ancho o un dominio que no esté declarado da error.
 
 **Decidido en:** revisión de UX del carrito, octubre de 2026.
+
+---
+
+## Imágenes sin comprimir en el backend
+
+**Hoy:** `POST /uploads/image` guarda la imagen tal cual llega: el formato, el tamaño en píxeles y el peso que traiga, hasta el tope de 2 MB. Una foto de celular en JPG pesa decenas de veces más que las del seed (1200 × 1200 px en WebP, entre 15 y 73 kB), y esa misma foto es la que bajan después el catálogo, la ficha y el carrito.
+
+**Lo correcto:** que el backend la normalice al subirla, como ya prevé el contrato al elegir la subida por el backend: llevarla a WebP y a un tamaño máximo (el de las fotos del seed) antes de mandarla a R2, con una librería de imágenes como [sharp](https://sharp.pixelplumbing.com).
+
+**Por qué no ahora:** el Sprint 4 admite una sola librería nueva, el cliente de S3, y sharp sería otra. Mientras el único que sube es el admin, alcanza con que prepare las fotos antes, como se prepararon las del seed.
+
+**Dos trampas:**
+
+- sharp trae un binario nativo por sistema operativo: el `package-lock.json` que genera una máquina con Windows puede no traer el de Linux que necesita Render.
+- Al convertir a WebP cambia la extensión y el `ContentType`, que hoy salen del tipo que manda el navegador.
+
+**Decidido en:** backlog del Sprint 4, *"Antes de arrancar"* · tarjeta *"[dashboard] Subida de archivos a R2 en la API"*.
+
+---
+
+## Archivos huérfanos en R2
+
+**Hoy:** lo que se sube a R2 y no termina en un producto queda en el bucket para siempre. Pasa cuando el admin sube el `.glb` y las fotos y después cancela el alta, cuando reemplaza el `.glb` de un producto (el anterior no se borra) y cuando falla R2 al borrar el archivo de una imagen que ya se sacó de la galería.
+
+**Lo correcto:** una limpieza periódica que liste la carpeta del entorno (`STORAGE_KEY_PREFIX`), la compare con las URLs que hay en la base (`Producto.glb_url` y `ProductoImagen.url`) y borre lo que no aparezca en ninguna.
+
+**Por qué no ahora:** con un solo admin y pocos productos, lo que se junta son unos megas, y el plan gratuito de R2 incluye 10 GB. Lo que se acumula en `dev/` probando se vacía de una vez desde el panel de Cloudflare.
+
+**Dos trampas:**
+
+- Cada limpieza ve una sola base, y los archivos los comparten varias. Las fotos y los modelos del seed, en la raíz, los usan producción y todas las bases de desarrollo: quedan fuera por estar fuera de la carpeta. Pero `dev/` también es compartida, por todo el equipo con bases distintas, así que ahí la limpieza borraría lo que suben los demás: solo tiene sentido en `prod/`.
+- Un archivo recién subido todavía no está en la base mientras el admin completa el alta: hay que dejar fuera los de las últimas horas o la limpieza le borra la subida en curso.
+
+**Decidido en:** backlog del Sprint 4, *"Antes de arrancar"* · tarjeta *"[dashboard] Subida de archivos a R2 en la API"*.
