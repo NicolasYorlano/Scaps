@@ -1,121 +1,77 @@
-import { useState } from 'react';
 import TextField from './TextField';
-import { parsePriceInput, formatPriceInput } from '../lib/format-price';
+import {
+  PRODUCT_FIELD_IDS,
+  validateProductFields,
+  type ProductField,
+  type ProductFieldsInput,
+} from '../lib/product-fields';
 
-export interface ProductFieldsValues {
-  nombre: string;
-  descripcion: string | null;
-  precio: string; // formato contrato, ej: "15999.50"
-  stock: string;  // string numérico entero
-}
-
-interface ProductFieldsProps {
-  initialValues?: Partial<ProductFieldsValues>;
+type Props = {
+  /** Lo escrito en cada campo. La pantalla lo arranca con productFieldsInput (vacío, o con el producto en la edición). */
+  value: ProductFieldsInput;
+  onChange: (value: ProductFieldsInput) => void;
+  /** La pantalla ya intentó guardar: desde ahí se ven los errores, y se van solos al corregir el campo. */
   submitAttempted: boolean;
-  onValidChange?: (values: ProductFieldsValues, isValid: boolean) => void;
-}
+};
 
-const MAX_STOCK = 1000000;
+/**
+ * Nombre, descripción, precio y stock, con sus validaciones. No llama a la API: la pantalla
+ * usa validateProductFields para obtener los valores en el formato del contrato y el primer campo con error.
+ */
+export default function ProductFields({ value, onChange, submitAttempted }: Props) {
+  const shown = submitAttempted ? validateProductFields(value).errors : null;
 
-export const PRODUCT_FIELDS_ORDER = ['nombre', 'descripcion', 'precio', 'stock'] as const;
-
-export function validateProductFields(values: { nombre: string; descripcion: string; precioInput: string; stockInput: string }) {
-  const trimmedName = values.nombre.trim();
-  const nombreError = trimmedName === '' ? 'Ingresá el nombre del producto' : null;
-
-  const priceResult = parsePriceInput(values.precioInput);
-  const precioError = priceResult.error ?? null;
-
-  let stockError: string | null = null;
-  const trimmedStock = values.stockInput.trim();
-  if (trimmedStock === '') {
-    stockError = 'Ingresá el stock';
-  } else if (!/^\d+$/.test(trimmedStock)) {
-    stockError = 'El stock debe ser un número entero';
-  } else {
-    const stockNum = Number(trimmedStock);
-    if (stockNum < 0 || stockNum > MAX_STOCK) {
-      stockError = `El stock debe estar entre 0 y ${MAX_STOCK.toLocaleString('es-AR')}`;
-    }
+  function update(field: ProductField) {
+    return (text: string) => onChange({ ...value, [field]: text });
   }
-
-  return {
-    errors: {
-      nombre: nombreError,
-      descripcion: null, // opcional
-      precio: precioError,
-      stock: stockError,
-    },
-    values: {
-      nombre: trimmedName,
-      descripcion: values.descripcion.trim() === '' ? null : values.descripcion,
-      precio: priceResult.value ?? '',
-      stock: trimmedStock,
-    },
-    isValid: !nombreError && !precioError && !stockError,
-  };
-}
-
-export default function ProductFields({ initialValues, submitAttempted }: ProductFieldsProps) {
-  const [nombre, setNombre] = useState(initialValues?.nombre ?? '');
-  const [descripcion, setDescripcion] = useState(initialValues?.descripcion ?? '');
-  const [precioInput, setPrecioInput] = useState(formatPriceInput(initialValues?.precio));
-  const [stockInput, setStockInput] = useState(initialValues?.stock ?? '');
-
-  const validation = validateProductFields({ nombre, descripcion, precioInput, stockInput });
-  const shown = submitAttempted ? validation.errors : null;
 
   return (
     <div className="flex flex-col gap-4">
       <TextField
-        id="nombre"
+        id={PRODUCT_FIELD_IDS.nombre}
         label="Nombre"
-        required
         autoComplete="off"
-        value={nombre}
-        onChange={setNombre}
+        value={value.nombre}
+        onChange={update('nombre')}
         error={shown?.nombre}
       />
 
+      {/* TextField solo arma un <input>: la descripción es un <textarea> con las mismas clases. */}
       <div className="flex flex-col gap-1.5">
         <label
-          htmlFor="descripcion"
+          htmlFor={PRODUCT_FIELD_IDS.descripcion}
           className="text-xs font-medium uppercase tracking-[0.06em] text-scaps-text-muted"
         >
           Descripción
         </label>
         <textarea
-          id="descripcion"
-          name="descripcion"
-          rows={3}
-          value={descripcion}
-          onChange={(e) => setDescripcion(e.target.value)}
-          className="rounded-scaps border border-scaps-border-input bg-scaps-sunken px-3.5 py-2.5 text-base text-scaps-text md:text-sm focus:outline-none focus:ring-1 focus:ring-scaps-text"
+          id={PRODUCT_FIELD_IDS.descripcion}
+          name={PRODUCT_FIELD_IDS.descripcion}
+          rows={4}
+          value={value.descripcion}
+          onChange={(e) => update('descripcion')(e.target.value)}
+          className="rounded-scaps border border-scaps-border-input bg-scaps-sunken px-3.5 py-2.5 text-base text-scaps-text md:text-sm"
         />
       </div>
 
       <TextField
-        id="precio"
+        id={PRODUCT_FIELD_IDS.precio}
         label="Precio"
-        required
         inputMode="decimal"
         autoComplete="off"
-        value={precioInput}
-        onChange={setPrecioInput}
+        value={value.precio}
+        onChange={update('precio')}
         error={shown?.precio}
-        hint="Ej: 15.999,50"
       />
 
       <TextField
-        id="stock"
+        id={PRODUCT_FIELD_IDS.stock}
         label="Stock"
-        required
         inputMode="numeric"
         autoComplete="off"
-        value={stockInput}
-        onChange={setStockInput}
+        value={value.stock}
+        onChange={update('stock')}
         error={shown?.stock}
-        hint="Número entero (hasta 1.000.000)"
       />
     </div>
   );

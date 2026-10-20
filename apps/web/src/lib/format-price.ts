@@ -14,83 +14,53 @@ export function formatPrice(amount: string): string {
   return ars.format(Number(amount));
 }
 
-/**
- * Pasa un valor del campo de texto al formato del contrato (string numérico tipo "15999.50").
- * Devuelve un objeto con el valor parseado o el mensaje de error correspondiente.
- */
-export function parsePriceInput(input: string): { value?: string; error?: string } {
-  const clean = input.replace(/[\s$]/g, '');
+// El tope del contrato, 99999999.99: hasta ocho cifras enteras.
+const MAX_PRICE_DIGITS = 8;
 
-  if (clean === '') {
-    return { error: 'Ingresá un precio' };
-  }
+export type PriceInputResult = { value: string; error: null } | { value: null; error: string };
 
-  if (!/^[\d.,]+$/.test(clean)) {
-    return { error: 'El precio contiene caracteres no válidos' };
-  }
-
-  const commaCount = (clean.match(/,/g) || []).length;
-  const dotCount = (clean.match(/\./g) || []).length;
-
-  if (commaCount > 1) {
-    return { error: 'El precio no puede tener más de una coma' };
-  }
-  if (dotCount > 3) {
-    return { error: 'Formato de precio inválido' };
-  }
-
-  if (commaCount === 0 && dotCount === 1) {
-    const parts = clean.split('.');
-    if (parts[1] && parts[1].length === 2 && parts[0].length <= 2) {
-      return { error: 'Para los centavos usá coma: 15,99' };
-    }
-  }
-
-  let normalized = clean;
-  if (commaCount === 1) {
-    const [integerPart, decimalPart] = clean.split(',');
-    if (decimalPart.length > 2) {
-      return { error: 'El precio admite hasta dos decimales' };
-    }
-    if (dotCount > 0) {
-      const intParts = integerPart.split('.');
-      if (intParts[0].length > 3 || intParts.slice(1).some((p: string) => p.length !== 3)) {
-        return { error: 'Los puntos deben separar grupos de tres cifras' };
-      }
-    }
-    normalized = integerPart.replace(/\./g, '') + '.' + decimalPart;
-  } else {
-    if (dotCount > 0) {
-      const intParts = clean.split('.');
-      if (intParts[0].length > 3 || intParts.slice(1).some((p: string) => p.length !== 3)) {
-        return { error: 'Los puntos deben separar grupos de tres cifras' };
-      }
-    }
-    normalized = clean.replace(/\./g, '');
-  }
-
-  const numValue = Number(normalized);
-  if (isNaN(numValue) || numValue <= 0) {
-    return { error: 'El precio debe ser mayor a cero' };
-  }
-  if (numValue > 99999999.99) {
-    return { error: 'El precio máximo es 99.999.999,99' };
-  }
-
-  const [intStr, decStr = ''] = normalized.split('.');
-  const paddedDec = decStr.padEnd(2, '0');
-  return { value: `${intStr}.${paddedDec}` };
+function priceError(error: string): PriceInputResult {
+  return { value: null, error };
 }
 
 /**
- * Hace el camino inverso para precargar la edición: "15999.00" → "15.999", "15999.50" → "15.999,50".
+ * Del campo al string del contrato, como se escribe en Argentina: el punto separa
+ * los miles y la coma, los centavos. "15.999" → "15999.00" · "15999,5" → "15999.50".
+ * De texto a texto, sin pasar por número: parseFloat y toFixed redondean.
  */
-export function formatPriceInput(amount?: string | null): string {
-  if (!amount) return '';
-  const [integerPart, decimalPart] = amount.split('.');
-  const formattedInt = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-  if (!decimalPart || decimalPart === '00') {
-    return formattedInt;
+export function parsePriceInput(input: string): PriceInputResult {
+  // El $ y los espacios se descartan (\s también cubre el no separable de formatPrice).
+  const clean = input.replace(/[\s$]/g, '');
+  if (clean === '') return priceError('Ingresá el precio');
+  if (clean.startsWith('-')) return priceError('El precio tiene que ser mayor que cero');
+
+  const match = /^(\d+(?:\.\d+)*)(?:,(\d+))?$/.exec(clean);
+  if (!match) return priceError('Usá solo números, con punto para los miles y coma para los centavos');
+  const [, integer, decimals = ''] = match;
+
+  const groups = integer.split('.');
+  const validThousands = groups.slice(1).every((group) => group.length === 3) && groups[0].length <= 3;
+  if (groups.length > 1 && !validThousands) {
+    // Un solo punto con una o dos cifras detrás: es un precio escrito a la inglesa.
+    const english = groups.length === 2 && decimals === '' && groups[1].length <= 2;
+    return priceError(english ? 'Para los centavos usá coma: 15,99' : 'Los puntos tienen que separar grupos de tres cifras');
   }
-  return `${formattedInt},${decimalPart.replace(/0+$/, '')}`;
+  if (decimals.length > 2) return priceError('Usá hasta dos decimales');
+
+  const digits = groups.join('').replace(/^0+(?=\d)/, '');
+  const cents = decimals.padEnd(2, '0');
+  if (digits === '0' && cents === '00') return priceError('El precio tiene que ser mayor que cero');
+  if (digits.length > MAX_PRICE_DIGITS) return priceError('El precio no puede superar los $ 99.999.999,99');
+
+  return { value: `${digits}.${cents}`, error: null };
+}
+
+/**
+ * El camino inverso, para precargar la edición: lo mismo que formatPrice, sin el $.
+ * "15999.00" → "15.999" · "15999.50" → "15.999,50".
+ */
+export function formatPriceInput(amount: string): string {
+  const [integer, cents = '00'] = amount.split('.');
+  const grouped = integer.replace(/\B(?=(\d{3})+$)/g, '.');
+  return cents === '00' ? grouped : `${grouped},${cents}`;
 }
