@@ -46,7 +46,9 @@ cp apps/web/.env.example apps/web/.env
 
 Los archivos `.env` están ignorados por git y **nunca deben subirse al repositorio**.
 
-Para desarrollar tenés que completar `DATABASE_URL`, con la cadena de tu base de Neon (ver la sección siguiente), y `ADMIN_EMAIL` / `ADMIN_PASSWORD`, las credenciales del admin que crea el seed. Si además vas a correr los tests, sumá `DATABASE_URL_TEST`. Las de Mercado Pago y almacenamiento todavía no se usan.
+Para desarrollar tenés que completar `DATABASE_URL`, con la cadena de tu base de Neon (ver la sección siguiente), y `ADMIN_EMAIL` / `ADMIN_PASSWORD`, las credenciales del admin que crea el seed. Si además vas a correr los tests, sumá `DATABASE_URL_TEST`. Las de Mercado Pago todavía no se usan.
+
+También las seis de almacenamiento (`STORAGE_*`), con las que la API sube los archivos del panel a Cloudflare R2: sin ellas no arranca, ni para correr los tests. Las credenciales son las del token de desarrollo, `scaps-api-dev`, y te las pasa por mensaje privado quien administra la cuenta de Cloudflare. `STORAGE_KEY_PREFIX` va en `dev/`: todo lo que subas probando queda en esa carpeta del bucket, que se puede vaciar desde el panel de Cloudflare sin tocar los archivos de producción.
 
 ---
 
@@ -194,6 +196,7 @@ Variables de entorno:
 - `JWT_SECRET`: propio de producción, distinto del de desarrollo.
 - `ADMIN_EMAIL` y `ADMIN_PASSWORD`.
 - `CORS_ORIGIN=https://scaps-web.vercel.app,https://scaps-*-nicolas-yorlano.vercel.app`: la producción de Vercel y todos sus previews. El `*` reemplaza un tramo sin puntos.
+- Las seis de almacenamiento: `STORAGE_ENDPOINT`, `STORAGE_ACCESS_KEY` y `STORAGE_SECRET_KEY` con el token de producción de R2 (`scaps-api-prod`), `STORAGE_BUCKET=scaps-assets`, `STORAGE_PUBLIC_URL` (la base pública del bucket, sin barra al final) y `STORAGE_KEY_PREFIX=prod/`.
 - `NODE_VERSION=24.14.1`.
 
 No hay que cargar `NODE_ENV=production`: con esa variable, `npm ci` omite las devDependencies y el build se queda sin Prisma ni Nest CLI. El seed tampoco va en el deploy, porque cada corrida pisa los productos de demo y la clave del admin.
