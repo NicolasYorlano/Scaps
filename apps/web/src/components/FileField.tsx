@@ -72,7 +72,7 @@ export default function FileField({ id, label, kind, onSelect, multiple = false,
         onChange={handleChange}
         aria-invalid={marked ? true : undefined}
         aria-describedby={marked || hint ? messageId : undefined}
-        className={`max-w-full cursor-pointer self-start rounded-scaps text-[0px] file:mr-0 file:h-11file:cursor-pointer file:rounded-scaps file:border file:bg-transparent file:px-5 file:text-sm file:font-medium file:transition-colors disabled:cursor-not-allowed disabled:file:cursor-not-allowed disabled:file:border-scaps-border disabled:file:text-scaps-text-annotation ${marked ? 'file:border-scaps-error' : 'file:border-scaps-border-input enabled:hover:file:border-scaps-border-primary'} file:text-scaps-text-secondary enabled:hover:file:bg-scaps-card-highlight enabled:hover:file:text-scaps-text-on-primary`}
+        className={`max-w-full cursor-pointer self-start rounded-scaps text-[0px] file:mr-0 file:h-11 file:cursor-pointer file:rounded-scaps file:border file:bg-transparent file:px-5 file:text-sm file:font-medium file:transition-colors disabled:cursor-not-allowed disabled:file:cursor-not-allowed disabled:file:border-scaps-border disabled:file:text-scaps-text-annotation ${marked ? 'file:border-scaps-error' : 'file:border-scaps-border-input enabled:hover:file:border-scaps-border-primary'} file:text-scaps-text-secondary enabled:hover:file:bg-scaps-card-highlight enabled:hover:file:text-scaps-text-on-primary`}
       />
       {marked ? (
         <div
