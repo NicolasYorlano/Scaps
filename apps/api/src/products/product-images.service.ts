@@ -1,6 +1,7 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { StorageService } from '../storage/storage.service';
 import { MAX_IMAGES, type ProductImageDto } from './dto/product-image.dto';
 import type { UpdateProductImageDto } from './dto/update-product-image.dto';
 import { toProductImage, type ProductImageResponse } from './product-response';
@@ -10,7 +11,10 @@ import { toProductImage, type ProductImageResponse } from './product-response';
 // transacción serializable.
 @Injectable()
 export class ProductImagesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly storage: StorageService,
+  ) {}
 
   add(productId: string, dto: ProductImageDto): Promise<ProductImageResponse> {
     return this.prisma.serializable(async (tx) => {
@@ -71,12 +75,14 @@ export class ProductImagesService {
     });
   }
 
-  // Borra solo el registro: el archivo queda en R2.
+  // Primero el registro, después el archivo: si fallara la base después de
+  // borrar el archivo, quedaría en la galería una imagen que apunta a la nada.
+  // Al revés, lo peor es un archivo huérfano en R2, que es deuda ya anotada.
   async remove(productId: string, imageId: string): Promise<void> {
-    await this.prisma.serializable(async (tx) => {
+    const url = await this.prisma.serializable(async (tx) => {
       const images = await tx.productoImagen.findMany({
         where: { producto_id: productId },
-        select: { id: true, es_principal: true },
+        select: { id: true, es_principal: true, url: true },
         orderBy: [{ orden: 'asc' }, { id: 'asc' }],
       });
       const image = images.find((imagen) => imagen.id === imageId);
@@ -96,7 +102,12 @@ export class ProductImagesService {
       if (image.es_principal && next) {
         await tx.productoImagen.update({ where: { id: next.id }, data: { es_principal: true } });
       }
+      return image.url;
     });
+
+    // Una foto del seed o de otro entorno no se toca, y si R2 falla, el 204 sale
+    // igual: para el admin, la imagen ya no está, que es lo que pidió.
+    await this.storage.remove(url);
   }
 }
 

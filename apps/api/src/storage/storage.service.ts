@@ -1,5 +1,9 @@
 import { randomUUID } from 'node:crypto';
-import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import {
+  DeleteObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from '@aws-sdk/client-s3';
 import {
   Injectable,
   InternalServerErrorException,
@@ -100,6 +104,28 @@ export class StorageService {
       ); /* 500 */
     }
     return `${this.publicUrl}/${key}`;
+  }
+
+  // Borra el archivo de una URL pública, solo si es de la carpeta del entorno:
+  // las fotos del seed, en la raíz del bucket, las comparten producción y todas
+  // las bases de desarrollo, y el token de R2 no se puede limitar a una carpeta.
+  // Una URL de afuera no se toca. Nunca falla: si R2 no responde, el error queda
+  // en el log y el archivo, huérfano (ver docs/deuda-tecnica.md).
+  async remove(url: string): Promise<void> {
+    const folderUrl = `${this.publicUrl}/${this.keyPrefix}`;
+    if (!url.startsWith(folderUrl) || url.length === folderUrl.length) {
+      return;
+    }
+    const key = url.slice(this.publicUrl.length + 1);
+    try {
+      await this.client.send(
+        new DeleteObjectCommand({ Bucket: this.bucket, Key: key }),
+      );
+    } catch (error) {
+      this.logger.error(
+        `No se pudo borrar ${key} de R2: ${describeError(error)}`,
+      );
+    }
   }
 }
 
