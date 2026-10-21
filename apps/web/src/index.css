@@ -112,11 +112,12 @@
      campo con el dato inválido — el resto del sistema sigue monocromo. */
   --color-scaps-error: #ef4444; /* no más oscuro: como texto de 12 px necesita 4,5:1 */
 
-  /* Solo en el panel admin: cada acción con su color, para reconocerla de un vistazo. */
+  /* En el panel admin, cada acción con su color, para reconocerla de un vistazo.
+     El de advertencia es el único que también va en la tienda: el cartel de pocas unidades. */
   --color-scaps-danger: #f87171; /* dar de baja, borrar, quitar */
   --color-scaps-feature: #facc15; /* destacar, portada */
   --color-scaps-edit: #4ade80; /* editar */
-  --color-scaps-warning: #fb923c; /* sin stock */
+  --color-scaps-warning: #fb923c; /* sin stock en el panel · pocas unidades en la tienda */
 }
 
 /* Fondo de las fotos de producto: un foco, casi blanco detrás de la gorra y gris claro hacia las esquinas.
