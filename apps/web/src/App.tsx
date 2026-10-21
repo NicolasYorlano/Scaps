@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router';
 import Navbar from './components/Navbar';
+import Marquee from './components/Marquee';
 import Footer from './components/Footer';
 import SlowServerNotice from './components/SlowServerNotice';
 import RequireAdmin from './components/RequireAdmin';
@@ -47,6 +48,12 @@ export default function App() {
           Saltar al contenido
         </a>
         <Navbar />
+        {/* La barra en movimiento va solo en el catálogo y la ficha. */}
+        <Routes>
+          <Route path="/catalogo" element={<Marquee />} />
+          <Route path="/producto/:slug" element={<Marquee />} />
+          <Route path="*" element={null} />
+        </Routes>
         <div
           id="contenido"
           tabIndex={-1}

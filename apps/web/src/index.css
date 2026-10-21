@@ -98,6 +98,15 @@
       transform: translateX(8px);
     }
   }
+
+  /* Barra en movimiento (Marquee): corre una de sus dos tiras por vuelta. 90 s son unos 40 px por segundo. */
+  --animate-marquee: marquee 90s linear infinite;
+  @keyframes marquee {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
   /* Excepción a "sin colores de sistema", a pedido explícito: marca el
      campo con el dato inválido — el resto del sistema sigue monocromo. */
   --color-scaps-error: #ef4444; /* no más oscuro: como texto de 12 px necesita 4,5:1 */
