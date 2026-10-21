@@ -19,10 +19,5 @@ function AdminOnly({ children }: { children: ReactNode }) {
   const isAdmin = useSessionStore((s) => s.user?.es_admin ?? false);
   if (!isAdmin) return <Navigate to="/" replace />;
 
-  // data-admin tiñe la pantalla con los colores del panel (index.css). contents: no altera el layout.
-  return (
-    <div data-admin className="contents">
-      {children}
-    </div>
-  );
+  return children;
 }
