@@ -583,7 +583,7 @@ export default function Producto() {
             <ProductSkeleton />
           )}
 
-          <RelatedProducts currentSlug={slug} />
+          <RelatedProducts currentSlug={slug} currentName={product?.nombre} />
         </div>
       )}
     </main>

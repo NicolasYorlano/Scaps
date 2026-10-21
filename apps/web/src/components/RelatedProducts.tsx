@@ -15,14 +15,18 @@ const gridClassName =
 type Props = {
   /** La ficha en la que se está: no se recomienda a sí misma y la lista arranca después de ella. */
   currentSlug?: string;
+  /** Su nombre: otro producto con el mismo se ve igual y tampoco se recomienda. */
+  currentName?: string;
   /** Los que no se muestran: en el carrito, los que ya están adentro. */
   excludeSlugs?: string[];
 };
 
 /** Otros productos, al pie de la ficha. Si no hay ninguno o el pedido falla, no se muestra. */
-export default function RelatedProducts({currentSlug, excludeSlugs = []}: Props) {
-  // keep: de una ficha a otra la lista es la misma y se ve al instante.
-  const { data, loading } = useApiQuery<Paginated<ProductCard>>(`/products?limit=${CANDIDATES}&en_stock=true`, { keep: true });
+export default function RelatedProducts({currentSlug, currentName, excludeSlugs = []}: Props) {
+  // keep: de una ficha a otra la lista es la misma y no se vuelve a esperar.
+  const { data, loading: listLoading } = useApiQuery<Paginated<ProductCard>>(`/products?limit=${CANDIDATES}&en_stock=true`, { keep: true });
+  // En la ficha, sin el nombre todavía no se sabe cuáles van: así ninguna card cambia después de aparecer.
+  const loading = listLoading || (currentSlug !== undefined && currentName === undefined);
   // De una ficha a otra, la miga sigue volviendo a la misma búsqueda del catálogo.
   const linkState: unknown = useLocation().state;
   const candidates = data?.data ?? [];
@@ -30,7 +34,7 @@ export default function RelatedProducts({currentSlug, excludeSlugs = []}: Props)
   // Sin ficha (en el carrito) no hay desde dónde arrancar: quedan en el orden en que llegan.
   const next = candidates.findIndex((product) => product.slug === currentSlug) + 1;
   const products = [...candidates.slice(next), ...candidates.slice(0, next)]
-    .filter((product) => product.slug !== currentSlug && !excludeSlugs.includes(product.slug))
+    .filter((product) => product.slug !== currentSlug && product.nombre !== currentName && !excludeSlugs.includes(product.slug))
     .slice(0, MAX_RELATED);
 
   if (!loading && products.length === 0) return null;
