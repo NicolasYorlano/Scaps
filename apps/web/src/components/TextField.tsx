@@ -14,15 +14,31 @@ type Props = InputProps & {
   /** Lo marca en rojo sin mensaje propio: el error se lee en otro campo. */
   invalid?: boolean;
   hint?: string;
+  /** Un botón al lado del input, como el Guardar del texto alternativo en la galería. Si no entra, baja. */
+  action?: ReactNode;
   /** Lo que va debajo del mensaje, como "Mostrar contraseña". */
   children?: ReactNode;
 };
 
 /** Campo de un formulario: etiqueta, input y su ayuda o su error. */
-export default function TextField({ id, label, onChange, error, invalid = false, hint, children, ...input }: Props) {
+export default function TextField({ id, label, onChange, error, invalid = false, hint, action, children, ...input }: Props) {
   const marked = invalid || Boolean(error);
   // El mensaje queda atado al input: un lector de pantalla lo lee al entrar al campo.
   const messageId = `${id}-message`;
+
+  const field = (
+    // name = id por defecto: es lo que leen los gestores de contraseñas.
+    // 16 px en el celular: con menos, iOS acerca la página al enfocar el campo.
+    <input
+      name={id}
+      {...input}
+      id={id}
+      onChange={(e) => onChange(e.target.value)}
+      aria-invalid={marked ? true : undefined}
+      aria-describedby={error || hint ? messageId : undefined}
+      className={`h-11 rounded-scaps border ${marked ? 'border-scaps-error' : 'border-scaps-border-input'} bg-scaps-sunken px-3.5 text-base text-scaps-text md:text-sm ${action ? 'min-w-0 flex-[1_1_10rem]' : ''}`}
+    />
+  );
 
   return (
     <div className="flex flex-col gap-1.5">
@@ -32,17 +48,14 @@ export default function TextField({ id, label, onChange, error, invalid = false,
       >
         {label}
       </label>
-      {/* name = id por defecto: es lo que leen los gestores de contraseñas. */}
-      {/* 16 px en el celular: con menos, iOS acerca la página al enfocar el campo. */}
-      <input
-        name={id}
-        {...input}
-        id={id}
-        onChange={(e) => onChange(e.target.value)}
-        aria-invalid={marked ? true : undefined}
-        aria-describedby={error || hint ? messageId : undefined}
-        className={`h-11 rounded-scaps border ${marked ? 'border-scaps-error' : 'border-scaps-border-input'} bg-scaps-sunken px-3.5 text-base text-scaps-text md:text-sm`}
-      />
+      {action ? (
+        <div className="flex flex-wrap gap-2">
+          {field}
+          {action}
+        </div>
+      ) : (
+        field
+      )}
       {error ? (
         <p
           id={messageId}
