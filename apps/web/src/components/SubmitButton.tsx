@@ -4,18 +4,26 @@ type Props = {
   loading: boolean;
   /** Texto mientras el pedido está en curso, por ejemplo "Ingresando…". */
   loadingLabel: string;
+  /** No hay nada para enviar (la edición sin cambios): se ve apagado. */
+  disabled?: boolean;
   children: ReactNode;
 };
 
+// Los colores van por separado: con los dos juegos en la misma lista, cuál gana depende del CSS.
+const enabledClassName = 'border-scaps-border-primary text-scaps-text-on-primary hover:bg-scaps-card-highlight';
+const disabledClassName = 'cursor-not-allowed border-scaps-border text-scaps-text-annotation';
+
 /** Botón de envío de un formulario que espera a la API. */
-export default function SubmitButton({loading, loadingLabel, children}: Props) {
+export default function SubmitButton({loading, loadingLabel, disabled = false, children}: Props) {
+  const off = disabled && !loading;
+
   return (
     // aria-disabled y no disabled: un botón deshabilitado suelta el foco.
-    // Quien ignora el envío mientras carga es el formulario.
+    // Quien ignora el envío mientras carga o sin nada para enviar es el formulario.
     <button
       type="submit"
-      aria-disabled={loading}
-      className={`flex h-12 items-center justify-center gap-2 rounded-scaps border border-scaps-border-primary bg-transparent px-6 text-sm font-medium text-scaps-text-on-primary transition-colors hover:bg-scaps-card-highlight ${loading ? 'cursor-progress' : ''}`}
+      aria-disabled={loading || disabled}
+      className={`flex h-12 items-center justify-center gap-2 rounded-scaps border bg-transparent px-6 text-sm font-medium transition-colors ${off ? disabledClassName : enabledClassName} ${loading ? 'cursor-progress' : ''}`}
     >
       {loading && (
         <span
