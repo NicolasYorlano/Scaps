@@ -10,14 +10,10 @@ import { useApiAction } from '../hooks/useApi';
 import { api, sentence, toApiError } from '../lib/api';
 import { focusField } from '../lib/forms';
 import { panelNoticeState } from '../lib/panel-notice';
+import { MAX_ALT_LENGTH, MAX_IMAGES, altError } from '../lib/product-images';
 import { productFieldsInput, validateProductFields, type ProductFieldsInput } from '../lib/product-fields';
 import { uploadImage, uploadModel } from '../lib/uploads';
 import type { ProductDetail } from '../types/product';
-
-// El tope del contrato: entre 1 y 10 imágenes por producto.
-const MAX_IMAGES = 10;
-// El tope del backend para el texto alternativo.
-const MAX_ALT_LENGTH = 150;
 
 const MODEL_ID = 'product-modelo';
 const IMAGES_ID = 'product-imagenes';
@@ -118,7 +114,6 @@ export default function NuevoProducto() {
   const fieldsResult = validateProductFields(fields);
   const modelError = model === null ? 'Elegí un modelo .glb' : null;
   const imagesError = images.length === 0 ? 'Elegí al menos una imagen' : null;
-  const altError = (image: PickedImage) => (image.alt.trim() === '' ? 'Ingresá el texto alternativo' : null);
 
   const alertMessages = uploadError ? [uploadError] : createFailed && create.error ? create.error.messages : null;
 
@@ -172,7 +167,7 @@ export default function NuevoProducto() {
       fieldsResult.firstInvalid ??
       (modelError ? MODEL_ID : null) ??
       (imagesError ? IMAGES_ID : null) ??
-      images.filter((image) => altError(image)).map(altId)[0] ??
+      images.filter((image) => altError(image.alt)).map(altId)[0] ??
       null;
     if (firstInvalid || !fieldsResult.values || !model) {
       if (firstInvalid) focusField(firstInvalid);
@@ -293,7 +288,7 @@ export default function NuevoProducto() {
                           maxLength={MAX_ALT_LENGTH}
                           value={image.alt}
                           onChange={(alt) => updateAlt(image.key, alt)}
-                          error={submitAttempted ? altError(image) : null}
+                          error={submitAttempted ? altError(image.alt) : null}
                         />
                       </div>
 

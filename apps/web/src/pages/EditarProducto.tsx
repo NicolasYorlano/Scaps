@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useParams } from 'react-router';
 import FileField from '../components/FileField';
 import FormAlert from '../components/FormAlert';
+import GalleryEditor from '../components/GalleryEditor';
 import ProductFields from '../components/ProductFields';
 import SubmitButton from '../components/SubmitButton';
 import { useApiAction, useApiQuery } from '../hooks/useApi';
@@ -214,6 +215,9 @@ function EditForm({ product }: FormProps) {
           </p>
         </div>
       </form>
+
+      {/* Las imágenes no van en el formulario: cada acción se guarda en el momento. */}
+      <GalleryEditor productId={product.id} initialImages={product.imagenes} />
     </div>
   );
 }
