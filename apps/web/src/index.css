@@ -3,7 +3,9 @@
 /* Guía visual Scaps (docs/wireframes/Guía visual Scaps e-commerce.pdf) —
    sistema oscuro monocromo, sin color de acento ni colores de sistema (nada de rojo/verde):
    la jerarquía se hace con fondos "de profundo a elevado", con la tipografía
-   y con línea, nunca con relleno saturado. */
+   y con línea, nunca con relleno saturado.
+   Excepción: el panel admin, tirando a azul acero y con un color por acción, para que se
+   note que es una zona solo para administradores. */
 @theme {
   /* Tipografía (dirección B2 · Pasarela): Bodoni para la marca, los títulos y los
      nombres de producto; Jost, geométrica, para todo lo que se opera.
@@ -110,6 +112,12 @@
   /* Excepción a "sin colores de sistema", a pedido explícito: marca el
      campo con el dato inválido — el resto del sistema sigue monocromo. */
   --color-scaps-error: #ef4444; /* no más oscuro: como texto de 12 px necesita 4,5:1 */
+
+  /* Solo en el panel admin: cada acción con su color, para reconocerla de un vistazo. */
+  --color-scaps-danger: #f87171; /* dar de baja, borrar, quitar */
+  --color-scaps-feature: #facc15; /* destacar, portada */
+  --color-scaps-edit: #4ade80; /* editar */
+  --color-scaps-warning: #fb923c; /* sin stock */
 }
 
 /* Fondo de las fotos de producto: un foco, casi blanco detrás de la gorra y gris claro hacia las esquinas.
@@ -146,6 +154,22 @@
      siempre a la vista: si aparece y desaparece, el contenido centrado se corre unos píxeles. */
   html:has([data-stable-scrollbar]) {
     overflow-y: scroll;
+  }
+
+  /* Panel admin (RequireAdmin marca la pantalla con data-admin): los mismos fondos y bordes,
+     tirando a azul acero. Los textos no cambian. */
+  :root:has([data-admin]) {
+    --color-scaps-page: #070a0f;
+    --color-scaps-sunken: #0a0e15;
+    --color-scaps-canvas: #0e131c;
+    --color-scaps-card: #131a26;
+    --color-scaps-nav: #18202e;
+    --color-scaps-card-highlight: #1c2636;
+    --color-scaps-placeholder: #212c3d;
+    --color-scaps-border: #2d3a4f;
+    --color-scaps-border-row: #1f2939;
+    --color-scaps-border-input: #5d6f8c; /* sigue con 3:1 contra la card */
+    --color-scaps-border-primary: #7f9bc4;
   }
 
   /* Con un diálogo modal abierto (la foto ampliada), la página de atrás no scrollea. */

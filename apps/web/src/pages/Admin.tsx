@@ -31,11 +31,15 @@ const contentClassName = 'mx-auto flex w-full max-w-311 flex-col';
 
 const primaryButtonClassName =
   'flex h-12 items-center justify-center rounded-scaps border border-scaps-border-primary px-6 text-sm font-medium text-scaps-text-on-primary transition-colors hover:bg-scaps-card-highlight';
-const secondaryButtonClassName =
-  'flex items-center justify-center gap-2 rounded-scaps border border-scaps-border-input text-sm font-medium whitespace-nowrap text-scaps-text-secondary transition-colors hover:border-scaps-border-primary hover:bg-scaps-card-highlight hover:text-scaps-text-on-primary';
 // Las acciones de una fila, con ícono: en la tarjeta se reparten el ancho, con 44 px de alto como pide
 // el celular; en la tabla son cuadradas.
-const actionClassName = `${secondaryButtonClassName} h-11 flex-1 lg:h-10 lg:w-10 lg:flex-none`;
+const actionClassName =
+  'flex h-11 flex-1 items-center justify-center rounded-scaps border transition-colors lg:h-10 lg:w-10 lg:flex-none';
+// Cada una con su color: destacar en amarillo, editar en verde, dar de baja en rojo. Reactivar, neutra.
+const neutralActionClassName = `${actionClassName} border-scaps-border-input text-scaps-text-secondary hover:border-scaps-border-primary hover:bg-scaps-card-highlight hover:text-scaps-text-on-primary`;
+const featureActionClassName = `${actionClassName} border-scaps-feature/60 text-scaps-feature hover:border-scaps-feature hover:bg-scaps-feature/10`;
+const editActionClassName = `${actionClassName} border-scaps-edit/60 text-scaps-edit hover:border-scaps-edit hover:bg-scaps-edit/10`;
+const dangerActionClassName = `${actionClassName} border-scaps-danger/60 text-scaps-danger hover:border-scaps-danger hover:bg-scaps-danger/10`;
 const actionIconClassName = 'size-4.5';
 // Las otras acciones del producto, mientras corre una: apagadas, como Cancelar en ConfirmDialog.
 const actionDisabledClassName =
@@ -58,12 +62,12 @@ const infoCellClassName = 'col-start-2 row-start-1 flex min-w-0 flex-col items-s
 // Pegadas a la derecha: sin Destacar (el destacado, los inactivos), Editar y la baja quedan en su lugar.
 const actionsCellClassName = 'col-span-2 flex gap-2 lg:col-span-1 lg:justify-end';
 
-// La forma de los carteles de la tienda (SoldOutBadge). Destacado, invertido como LowStockBadge:
+// La forma de los carteles de la tienda (SoldOutBadge). Destacado, relleno en el amarillo de Destacar:
 // es el que se busca de un vistazo.
 const badgeClassName =
   'rounded-full border px-2 py-0.5 text-[11px] font-medium tracking-wider whitespace-nowrap uppercase';
 const inactiveBadgeClassName = `${badgeClassName} border-scaps-border-input bg-scaps-canvas text-scaps-text-secondary`;
-const featuredBadgeClassName = `${badgeClassName} border-scaps-page/15 bg-scaps-text text-scaps-page`;
+const featuredBadgeClassName = `${badgeClassName} border-scaps-page/15 bg-scaps-feature text-scaps-page`;
 
 function countLabel(total: number) {
   return total === 1 ? '1 producto' : `${total} productos`;
@@ -189,10 +193,10 @@ function Spinner() {
 }
 
 function Stock({ stock }: { stock: number }) {
-  // El stock en 0 es lo que hay que atender: lo marca el ícono, no un color.
+  // El stock en 0 es lo que hay que atender: lo marcan el ícono y el naranja.
   if (stock <= 0) {
     return (
-      <p className="flex items-center gap-1.5 text-sm font-medium text-scaps-text tabular-nums">
+      <p className="flex items-center gap-1.5 text-sm font-medium text-scaps-warning tabular-nums">
         <AlertIcon className="h-4 w-4 shrink-0" />
         <span>
           <span className="lg:sr-only">Stock: </span>0 · Sin stock
@@ -337,7 +341,7 @@ function ProductRow({ product, onUpdate, onFeaturedChange }: RowProps) {
             aria-label={`Destacar ${product.nombre}`}
             title="Destacar"
             onClick={() => void perform('feature')}
-            className={`${actionClassName} ${busy && lastAction === 'feature' ? 'cursor-progress' : actionDisabledClassName}`}
+            className={`${featureActionClassName} ${busy && lastAction === 'feature' ? 'cursor-progress' : actionDisabledClassName}`}
           >
             {busy && lastAction === 'feature' ? <Spinner /> : <StarIcon className={actionIconClassName} />}
           </button>
@@ -346,7 +350,7 @@ function ProductRow({ product, onUpdate, onFeaturedChange }: RowProps) {
           to={`/admin/productos/${product.id}`}
           aria-label={`Editar ${product.nombre}`}
           title="Editar"
-          className={actionClassName}
+          className={editActionClassName}
         >
           <PencilIcon className={actionIconClassName} />
         </Link>
@@ -358,7 +362,7 @@ function ProductRow({ product, onUpdate, onFeaturedChange }: RowProps) {
           aria-label={`${toggleLabel} ${product.nombre}`}
           title={toggleLabel}
           onClick={inactive ? () => void perform('reactivate') : openConfirm}
-          className={`${actionClassName} ${busy && lastAction === 'reactivate' ? 'cursor-progress' : actionDisabledClassName}`}
+          className={`${inactive ? neutralActionClassName : dangerActionClassName} ${busy && lastAction === 'reactivate' ? 'cursor-progress' : actionDisabledClassName}`}
         >
           {busy && lastAction === 'reactivate' ? (
             <Spinner />

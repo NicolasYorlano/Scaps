@@ -6,7 +6,7 @@ type Props = {
   open: boolean;
   title: string;
   message: ReactNode;
-  /** Lo que hace el botón, por ejemplo "Dar de baja": el peligro lo dice el texto, no un color. */
+  /** Lo que hace el botón, por ejemplo "Dar de baja". Va en rojo: las acciones que se confirman sacan algo. */
   confirmLabel: string;
   /** Rechaza si falla (como api.delete): el error se muestra adentro y el diálogo sigue abierto. */
   onConfirm: () => Promise<unknown>;
@@ -17,7 +17,7 @@ const buttonClassName =
   'flex h-12 items-center justify-center gap-2 rounded-scaps border px-6 text-sm font-medium transition-colors sm:min-w-36';
 
 const confirmClassName =
-  'border-scaps-border-primary text-scaps-text-on-primary hover:bg-scaps-card-highlight aria-disabled:cursor-progress';
+  'border-scaps-danger/70 text-scaps-danger hover:border-scaps-danger hover:bg-scaps-danger/10 aria-disabled:cursor-progress';
 
 const cancelClassName =
   'border-scaps-border-input text-scaps-text-secondary hover:border-scaps-border-primary hover:bg-scaps-card-highlight hover:text-scaps-text-on-primary aria-disabled:cursor-not-allowed aria-disabled:border-scaps-border aria-disabled:text-scaps-text-annotation aria-disabled:hover:border-scaps-border aria-disabled:hover:bg-transparent aria-disabled:hover:text-scaps-text-annotation';

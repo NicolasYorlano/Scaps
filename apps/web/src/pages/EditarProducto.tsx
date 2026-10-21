@@ -38,7 +38,7 @@ const labelClassName = 'text-xs font-medium uppercase tracking-[0.06em] text-sca
 const badgeClassName =
   'rounded-full border px-2 py-0.5 text-[11px] font-medium tracking-wider whitespace-nowrap uppercase';
 const inactiveBadgeClassName = `${badgeClassName} border-scaps-border-input bg-scaps-canvas text-scaps-text-secondary`;
-const featuredBadgeClassName = `${badgeClassName} border-scaps-page/15 bg-scaps-text text-scaps-page`;
+const featuredBadgeClassName = `${badgeClassName} border-scaps-page/15 bg-scaps-feature text-scaps-page`;
 
 /** El archivo elegido y, cuando ya subió, su URL: si falla el PATCH, al reintentar no se vuelve a subir. */
 type PickedModel = { file: File; url: string | null };

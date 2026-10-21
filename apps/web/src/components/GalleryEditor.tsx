@@ -34,7 +34,11 @@ const actionsCellClassName = 'col-span-2 flex gap-2 @lg:col-span-1 @lg:justify-e
 // Las acciones de una imagen, con ícono, como las del listado del panel: en la tarjeta se reparten el ancho,
 // con 44 px de alto; en la lista son cuadradas.
 const actionClassName =
-  'flex h-11 flex-1 items-center justify-center rounded-scaps border border-scaps-border-input text-scaps-text-secondary transition-colors hover:border-scaps-border-primary hover:bg-scaps-card-highlight hover:text-scaps-text-on-primary @lg:h-10 @lg:w-10 @lg:flex-none';
+  'flex h-11 flex-1 items-center justify-center rounded-scaps border transition-colors @lg:h-10 @lg:w-10 @lg:flex-none';
+// Con los colores del listado: Hacer portada en amarillo, como Destacar; Borrar en rojo. Subir y Bajar, neutras.
+const neutralActionClassName = `${actionClassName} border-scaps-border-input text-scaps-text-secondary hover:border-scaps-border-primary hover:bg-scaps-card-highlight hover:text-scaps-text-on-primary`;
+const coverActionClassName = `${actionClassName} border-scaps-feature/60 text-scaps-feature hover:border-scaps-feature hover:bg-scaps-feature/10`;
+const deleteActionClassName = `${actionClassName} border-scaps-danger/60 text-scaps-danger hover:border-scaps-danger hover:bg-scaps-danger/10`;
 const actionIconClassName = 'size-4.5';
 // Apagadas mientras corre otra acción o cuando no hay nada que hacer, como en el listado del panel.
 const disabledClassName =
@@ -46,10 +50,10 @@ const saveClassName =
 const saveEnabledClassName = 'border-scaps-border-primary text-scaps-text-on-primary hover:bg-scaps-card-highlight';
 const saveDisabledClassName = 'cursor-not-allowed border-scaps-border text-scaps-text-annotation';
 
-// La forma de los carteles de la tienda, sobre la foto como Sin stock en la card. Invertido como Destacado:
+// La forma de los carteles de la tienda, sobre la foto como Sin stock en la card. En amarillo como Destacado:
 // es la que se busca de un vistazo.
 const coverBadgeClassName =
-  'pointer-events-none absolute top-1 left-1 rounded-full border border-scaps-page/15 bg-scaps-text px-2 py-0.5 text-[11px] font-medium tracking-wider whitespace-nowrap text-scaps-page uppercase @lg:top-1.5 @lg:left-1.5';
+  'pointer-events-none absolute top-1 left-1 rounded-full border border-scaps-page/15 bg-scaps-feature px-2 py-0.5 text-[11px] font-medium tracking-wider whitespace-nowrap text-scaps-page uppercase @lg:top-1.5 @lg:left-1.5';
 
 type RowAction = 'alt' | 'cover' | 'delete';
 type Direction = -1 | 1;
@@ -505,7 +509,7 @@ export default function GalleryEditor({ productId, initialImages }: Props) {
                     onClick={() => {
                       if (!locked) makeCover(image);
                     }}
-                    className={`${actionClassName} ${stateClassName(action === 'cover')}`}
+                    className={`${coverActionClassName} ${stateClassName(action === 'cover')}`}
                   >
                     {action === 'cover' ? <Spinner /> : <ImageIcon className={actionIconClassName} />}
                   </button>
@@ -517,7 +521,7 @@ export default function GalleryEditor({ productId, initialImages }: Props) {
                   aria-label={`Subir imagen ${position}`}
                   title="Subir"
                   onClick={() => void move(index, -1)}
-                  className={`${actionClassName} ${stateClassName(movingThis(-1))}`}
+                  className={`${neutralActionClassName} ${stateClassName(movingThis(-1))}`}
                 >
                   {movingThis(-1) ? <Spinner /> : <ArrowIcon className={actionIconClassName} />}
                 </button>
@@ -528,7 +532,7 @@ export default function GalleryEditor({ productId, initialImages }: Props) {
                   aria-label={`Bajar imagen ${position}`}
                   title="Bajar"
                   onClick={() => void move(index, 1)}
-                  className={`${actionClassName} ${stateClassName(movingThis(1))}`}
+                  className={`${neutralActionClassName} ${stateClassName(movingThis(1))}`}
                 >
                   {movingThis(1) ? <Spinner /> : <ArrowIcon down className={actionIconClassName} />}
                 </button>
@@ -540,7 +544,7 @@ export default function GalleryEditor({ productId, initialImages }: Props) {
                   aria-describedby={onlyOne ? deleteReasonId(image) : undefined}
                   title="Borrar"
                   onClick={() => openConfirm(image, position)}
-                  className={`${actionClassName} ${stateClassName(action === 'delete')}`}
+                  className={`${deleteActionClassName} ${stateClassName(action === 'delete')}`}
                 >
                   {action === 'delete' ? <Spinner /> : <TrashIcon className={actionIconClassName} />}
                 </button>

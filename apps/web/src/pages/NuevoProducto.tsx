@@ -24,7 +24,9 @@ const secondaryButtonClassName =
   'flex items-center justify-center rounded-scaps border border-scaps-border-input text-sm font-medium whitespace-nowrap text-scaps-text-secondary transition-colors hover:border-scaps-border-primary hover:bg-scaps-card-highlight hover:text-scaps-text-on-primary';
 // Mientras se guarda, Cancelar queda apagado, como en ConfirmDialog.
 const cancelClassName = `${secondaryButtonClassName} h-12 px-6 aria-disabled:cursor-not-allowed aria-disabled:border-scaps-border aria-disabled:text-scaps-text-annotation aria-disabled:hover:border-scaps-border aria-disabled:hover:bg-transparent aria-disabled:hover:text-scaps-text-annotation`;
-const removeClassName = `${secondaryButtonClassName} h-11 px-4 disabled:cursor-not-allowed disabled:border-scaps-border disabled:text-scaps-text-annotation disabled:hover:bg-transparent`;
+// Quitar, en el rojo de las acciones que sacan algo (como Borrar en la galería).
+const removeClassName =
+  'flex h-11 items-center justify-center rounded-scaps border border-scaps-danger/60 px-4 text-sm font-medium whitespace-nowrap text-scaps-danger transition-colors hover:border-scaps-danger hover:bg-scaps-danger/10 disabled:cursor-not-allowed disabled:border-scaps-border disabled:text-scaps-text-annotation disabled:hover:border-scaps-border disabled:hover:bg-transparent';
 
 // Cada imagen:
 //   celular: la vista previa y Quitar arriba; el texto alternativo y Portada abajo
